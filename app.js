@@ -4,14 +4,25 @@ import {createVirtualTryOn} from './tryon.js';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const app=$('#app'),toast=$('#toast'),modal=$('#modal-backdrop'),modalContent=$('#modal-content');
 let manifest, cache=new Map(), verifyFiles=[], verifyAnalyses=[], selfieFile=null, selfieResult=null;
-const PARTS={'ysl-610':2,'ysl-1936':2,'lancome-274':3,'lancome-275':3};
+const PARTS={'ysl-610':4,'ysl-1936':4,'lancome-274':0,'lancome-275':0};
 const fmt=n=>new Intl.NumberFormat('zh-CN').format(n||0);
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const color=p=>{const c=p.analysis.center;return hsvToHex(c.hue,c.saturation,c.brightness)};
 function toastMsg(s){toast.textContent=s;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1900)}
 async function ungzipB64(parts){const txt=(await Promise.all(parts.map(u=>fetch(u).then(r=>{if(!r.ok)throw Error('数据文件未部署完整');return r.text()})))).join('').trim();const bin=Uint8Array.from(atob(txt),c=>c.charCodeAt(0));if(!('DecompressionStream'in window))throw Error('当前浏览器不支持数据解压，请使用最新版 Chrome / Edge / Safari');const stream=new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip'));return JSON.parse(await new Response(stream).text())}
 async function getManifest(){if(manifest)return manifest;manifest=await fetch('./data/manifest.json').then(r=>r.json());return manifest}
-async function getProduct(k){if(cache.has(k))return cache.get(k);const n=PARTS[k],urls=Array.from({length:n},(_,i)=>`./data/full/${k}.${i+1}.b64`);const p=await ungzipB64(urls);cache.set(k,p);return p}
+function summaryFallback(k){
+ const m=manifest.products.find(x=>x.key===k);
+ if(!m)throw Error('未找到该色号数据');
+ return {...m,media:[],reviews:[],asks:[],_summaryOnly:true};
+}
+async function getProduct(k){
+ if(cache.has(k))return cache.get(k);
+ const n=PARTS[k]||0;
+ if(!n){const p=summaryFallback(k);cache.set(k,p);return p}
+ const urls=Array.from({length:n},(_,i)=>`./data/full/${k}.${i+1}.b64`);
+ const p=await ungzipB64(urls);cache.set(k,p);return p
+}
 function meta(k){return manifest.products.find(x=>x.key===k)}
 function page(x){app.innerHTML=`<div class="page">${x}</div>`;window.scrollTo(0,0)}
 function go(h){location.hash=h}
@@ -42,6 +53,49 @@ async function search(){
 }
 
 async function shade(k){
+ const m=meta(k);
+ if(!m)return home();
+ page(`<div class="route-head"><a class="backlink" href="#/search">← 返回色号库</a><div class="eyebrow" style="margin-top:22px">${esc(m.brand)} · ${esc(m.product)}</div><h1>#${m.shade} ${esc(m.name)}</h1><p>先从消费者的购买问题出发。点击分析后，TrueTone 才会读取当前色号的证据集，并依次运行颜色/环境、风险审查、消费者报告与创作者建议四个模块。</p></div>
+ <section class="analysis-start">
+  <div class="panel analysis-intro">
+   <div class="eyebrow">本次分析证据集</div>
+   <h2>不是先给你一个分数，而是先看证据。</h2>
+   <div class="source-counts"><span><b>${m.analysis.counts.visual}</b> 份视觉素材</span><span><b>${fmt(m.analysis.counts.text)}</b> 条文字证据</span><span><b>${m.analysis.counts.sources}</b> 类来源</span><span><b>${m.analysis.counts.skus}</b> 个 SKU / 产品线标签</span></div>
+   ${m.skuLines?.length>1?`<div class="sku-warning">同一色号包含多个 SKU / 产品线：${m.skuLines.map(esc).join('、')}。系统会保留这些边界，避免把产品差异误判成内容失真。</div>`:''}
+   <div class="plain-note" style="margin-top:14px">真实性评分与证据充分度是两个不同概念；“正面评价”也不会直接被当成“真实”。</div>
+  </div>
+  <div class="panel">
+   <div class="eyebrow">TrueTone 4-Agent Flow</div>
+   <div class="agent-steps" id="product-agent-steps">
+    <div class="agent-step" data-a="1">Agent 1 · 色彩 / ROI / 光照</div>
+    <div class="agent-step" data-a="2">Agent 2 · 风险 / 跨图一致性 / 评分</div>
+    <div class="agent-step" data-a="3">Agent 3 · 消费者报告 / Top 3 / 评论证据</div>
+    <div class="agent-step" data-a="4">Agent 4 · 内容改进 / 可解释建议</div>
+   </div>
+   <button class="primary-btn" id="start-product-analysis" style="width:100%;margin-top:16px">开始 TrueTone 分析</button>
+   <div class="progress" style="margin-top:12px"><i id="product-progress"></i></div>
+  </div>
+ </section>`);
+ $('#start-product-analysis').onclick=async()=>{
+   const btn=$('#start-product-analysis'),steps=$$('#product-agent-steps .agent-step'),bar=$('#product-progress');
+   btn.disabled=true;btn.textContent='正在读取证据集…';
+   try{
+     await getProduct(k);
+     const labels=['正在分析颜色与拍摄环境…','正在交叉核验风险与一致性…','正在整理消费者最有用的证据…','正在生成改进建议…'];
+     for(let i=0;i<steps.length;i++){
+       steps.forEach((s,j)=>{if(j<i)s.className='agent-step done';else if(j===i)s.className='agent-step active';else s.className='agent-step'});
+       btn.textContent=labels[i];bar.style.width=((i+1)/steps.length*100)+'%';await wait(i===0?360:260);
+     }
+     steps.forEach(s=>s.className='agent-step done');
+     await shadeReport(k);
+   }catch(e){
+     btn.disabled=false;btn.textContent='重新尝试';
+     toastMsg('数据读取失败：'+e.message);
+   }
+ }
+}
+
+async function shadeReport(k){
  const p=await getProduct(k),a=p.analysis,c=buildProductConsumerSummary(p),top=c.top,sku=p.skuLines||[];
  page(`<div class="route-head"><a class="backlink" href="#/search">← 返回色号库</a><div class="eyebrow" style="margin-top:22px">${esc(p.brand)} · ${esc(p.product)}</div><h1>#${p.shade} ${esc(p.name)}</h1><p>先给购买结论，再展开依据。下面的分数、排序和统计来自当前真实 sample data 与可复现分析逻辑，不是写死的展示数字。</p>${sku.length>1?`<div class="sku-warning">SKU 提醒：当前样本同一色号包含 <b>${sku.length}</b> 个产品线 / SKU：${sku.map(esc).join('、')}。系统保留 SKU 边界，不把不同产品本身的差异误判成“P 图”。</div>`:''}</div>
  <section class="report-hero"><div class="panel"><div class="eyebrow">一句话结论</div><div class="conclusion">${esc(c.conclusion)}</div><div class="source-counts"><span><b>${a.counts.visual}</b> 份视觉素材</span><span><b>${fmt(a.counts.text)}</b> 条文字证据</span><span><b>${a.counts.sources}</b> 类来源</span></div><div class="filter-row" style="margin-top:18px"><span style="font-size:11px;color:var(--muted);align-self:center">更像你的情况：</span><button class="filter-btn active" data-prof="all">全部</button><button class="filter-btn" data-prof="深唇">深唇</button><button class="filter-btn" data-prof="浅唇">浅唇</button><button class="filter-btn" data-prof="素颜">素颜</button></div></div>
