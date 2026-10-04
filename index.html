@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrueTone — Beauty × AI × Trust</title>
+<style>
+:root{--bg:#0a0808;--panel:#12100f;--panel2:#181413;--ink:#f6eee8;--muted:#aa9b92;--line:#2b2421;--gold:#d9aa76;--accent:#b84d3f;--ok:#77b98a;--warn:#e7b66f}
+*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 80% -10%,#281711 0,transparent 35%),var(--bg);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+button{font:inherit}.wrap{max-width:1180px;margin:auto;padding:0 28px}.nav{height:78px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(10,8,8,.88);backdrop-filter:blur(18px);z-index:20}.brand{font-family:Georgia,serif;letter-spacing:.08em;font-size:22px}.tag{font-size:12px;color:var(--gold);letter-spacing:.16em;text-transform:uppercase}
+.hero{padding:78px 0 46px}.hero h1{font:500 clamp(38px,6vw,72px)/1.06 Georgia,serif;margin:12px 0 18px;max-width:860px}.hero p{color:var(--muted);font-size:17px;line-height:1.8;max-width:760px}.note{margin-top:22px;border:1px solid #45342b;background:#17110e;padding:14px 16px;border-radius:12px;color:#ceb6a5;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0 70px}.card{border:1px solid var(--line);background:linear-gradient(145deg,#151211,#0e0c0c);padding:22px;border-radius:18px;cursor:pointer;transition:.22s;min-height:180px}.card:hover{transform:translateY(-3px);border-color:#6d4a38}.card.active{border-color:var(--gold);box-shadow:0 0 0 1px #4c3425 inset}.brandname{color:var(--gold);font-size:11px;letter-spacing:.18em;text-transform:uppercase}.shade{font:500 44px Georgia,serif;margin:16px 0 6px}.name{color:#d7cbc4;font-size:14px}.mini{margin-top:18px;color:var(--muted);font-size:12px}
+.report{display:none;padding:0 0 90px}.report.show{display:block}.reportHead{display:grid;grid-template-columns:1.25fr .75fr;gap:26px;align-items:start;margin-bottom:22px}.panel{border:1px solid var(--line);background:rgba(18,16,15,.9);border-radius:18px;padding:24px}.kicker{color:var(--gold);font-size:11px;letter-spacing:.18em;text-transform:uppercase}.title{font:500 50px Georgia,serif;margin:10px 0}.subtitle{color:var(--muted);line-height:1.7}.scoreBox{display:flex;align-items:center;gap:20px}.scoreRing{width:132px;height:132px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--gold) calc(var(--score)*1%),#24201d 0);position:relative}.scoreRing:after{content:"";position:absolute;inset:9px;border-radius:50%;background:#100d0c}.scoreNum{position:relative;z-index:1;font:500 42px Georgia,serif}.scoreMeta strong{display:block;font-size:15px}.scoreMeta span{color:var(--muted);font-size:13px;line-height:1.8}
+.metricGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0 24px}.metric{padding:18px;border:1px solid var(--line);border-radius:14px;background:#0e0c0c}.metric b{font:500 26px Georgia,serif}.metric span{display:block;color:var(--muted);font-size:12px;margin-top:7px}
+.section{margin-top:16px}.section h3{font-size:18px;margin:0 0 16px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}.bars{display:grid;gap:14px}.barRow{display:grid;grid-template-columns:110px 1fr 58px;align-items:center;gap:10px;font-size:12px}.track{height:8px;border-radius:9px;background:#26211e;overflow:hidden}.fill{height:100%;border-radius:9px;background:linear-gradient(90deg,#8f4738,#e2aa74)}.pillbox{display:flex;flex-wrap:wrap;gap:8px}.pill{padding:7px 10px;border:1px solid #40352e;border-radius:999px;color:#dbc8bb;background:#15110f;font-size:12px}.quote{padding:15px 0;border-top:1px solid var(--line);color:#dacfc8;font-size:14px;line-height:1.7}.quote:first-child{border-top:0;padding-top:0}.quote small{color:var(--muted);display:block;margin-top:6px}.top3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.swatch{height:120px;border-radius:13px;border:1px solid #3a302a;display:flex;align-items:flex-end;padding:12px;background:linear-gradient(135deg,var(--c1),var(--c2))}.swatch span{background:rgba(10,8,8,.62);padding:6px 9px;border-radius:9px;font-size:12px}.warn{border-color:#6a4d27;background:#19130c;color:#e9c58c}.footer{padding:28px 0 60px;color:#776c65;font-size:12px;border-top:1px solid var(--line)}
+.btn{border:1px solid #5b4336;background:#1b1512;color:#f0ded1;border-radius:11px;padding:10px 14px;cursor:pointer}.btn:hover{border-color:var(--gold)}
+.hidden{display:none}
+@media(max-width:850px){.grid,.metricGrid{grid-template-columns:repeat(2,1fr)}.reportHead,.cols{grid-template-columns:1fr}.top3{grid-template-columns:1fr}.hero{padding-top:48px}}
+@media(max-width:520px){.wrap{padding:0 18px}.grid,.metricGrid{grid-template-columns:1fr}.shade{font-size:36px}.title{font-size:40px}}
+</style>
+</head>
+<body>
+<header class="nav"><div class="wrap" style="width:100%;display:flex;justify-content:space-between;align-items:center"><div class="brand">TRUETONE</div><div class="tag">Beauty × AI × Trust</div></div></header>
+<main class="wrap">
+<section class="hero">
+<div class="tag">L'Oréal Beauty Tech Hackathon · Working Demo</div>
+<h1>看见的颜色，真的是你买到的颜色吗？</h1>
+<p>TrueTone 用跨平台试色图片与消费者评论，辅助判断哪些内容更值得参考。当前版本已经接入团队爬取的淘宝与小红书 sample data；评分为可复现 Demo 逻辑，完整 AI runtime 将继续接入。</p>
+<div class="note">本 Demo 不声称还原“绝对真实色”，也不把“正面评价”直接等同于真实。分析重点是视觉偏差风险、正常个体差异与证据充分度。</div>
+</section>
+
+<section>
+<div class="tag">选择色号</div>
+<div class="grid" id="cards"></div>
+</section>
+
+<section class="report" id="report">
+<div class="reportHead">
+<div class="panel">
+<div class="kicker" id="rBrand"></div>
+<div class="title" id="rShade"></div>
+<div class="subtitle" id="rName"></div>
+<div class="subtitle" id="rSummary" style="margin-top:22px;color:#f0e3da;font-size:17px"></div>
+</div>
+<div class="panel scoreBox">
+<div class="scoreRing" id="scoreRing"><div class="scoreNum" id="scoreNum"></div></div>
+<div class="scoreMeta"><strong>TrueTone 参考可信度</strong><span id="evidence"></span></div>
+</div>
+</div>
+
+<div class="metricGrid" id="metrics"></div>
+
+<div class="panel section hidden warn" id="skuWarn"></div>
+
+<div class="cols section">
+<div class="panel"><h3>最值得参考的 3 组证据</h3><div class="top3" id="top3"></div></div>
+<div class="panel"><h3>小红书 vs 电商颜色趋势</h3><div class="bars" id="bars"></div></div>
+</div>
+
+<div class="cols section">
+<div class="panel"><h3>消费者色差证据</h3><div class="pillbox" id="keywords"></div></div>
+<div class="panel"><h3>代表性评论</h3><div id="quotes"></div></div>
+</div>
+
+<div class="cols section">
+<div class="panel"><h3>为什么是这个分数？</h3><div class="subtitle" id="why"></div></div>
+<div class="panel"><h3>购买前建议</h3><div class="subtitle" id="advice"></div></div>
+</div>
+
+<div class="section" style="display:flex;gap:10px;flex-wrap:wrap">
+<button class="btn" id="copyPrompt">复制当前 Prompt Payload</button>
+<button class="btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">返回色号选择</button>
+</div>
+</section>
+</main>
+<footer class="footer"><div class="wrap">TrueTone · External working demo · sample data snapshot</div></footer>
+
+<script>
+const products = [
+{key:"ysl610",brand:"YSL · 圣罗兰",shade:"#610",name:"黑管镜面唇釉 · 冰乌龙 / 裸粉豆沙",score:78,evidence:"高 · 两个平台均有图片与评论证据",summary:"跨平台主色整体接近，但部分社媒样本更亮；消费者反馈提示深唇、氧化与厚涂会显著改变最终观感。",
+xhs:{posts:11,comments:50,images:15,videos:12},tb:{comments:136,asks:68,images:26},
+diff:{Hue:36.7,Saturation:2.3,Brightness:-13.7},keywords:["偏棕","氧化","深唇","薄涂","厚涂","自然光","色差"],
+quotes:["薄涂比较自然，厚涂会更显棕。","有评论提到氧化后颜色会比刚上嘴更深。","深唇呈现与浅唇差异比较明显。"],
+why:"样本来源覆盖较好；平台之间存在一定亮度差异，但消费者反馈中的差异可以部分由唇色、涂抹厚度与氧化解释，因此不应直接判定为内容失真。",
+advice:"优先参考自然光、唇部区域清晰且接近多来源中心色的图片；如果本身唇色较深，建议重点查看深唇用户返图。",
+colors:[["#a84232","#6f2f2b"],["#b96250","#7b3a34"],["#8f4438","#512522"]]},
+
+{key:"ysl1936",brand:"YSL · 圣罗兰",shade:"#1936",name:"小金条口红 · 棕红调",score:72,evidence:"中高 · 图片数量较少但跨平台可比较",summary:"当前样本的跨平台 Hue 差异相对更大，建议把光照与涂抹厚度作为主要解释变量，而不是直接视作内容造假。",
+xhs:{posts:14,comments:48,images:8,videos:7},tb:{comments:85,asks:13,images:10},
+diff:{Hue:91.2,Saturation:8.6,Brightness:-8.4},keywords:["偏红","偏棕","厚涂","暖光","色差","显白"],
+quotes:["室内暖光看起来会更红一些。","厚涂之后棕调更明显。","同一色号不同返图的明暗差别比较大。"],
+why:"跨平台 Hue 差异较明显，因此降低参考可信度；但现有证据不足以证明编辑行为，光照与厚涂是合理替代解释。",
+advice:"不要只看单张高饱和试色；优先比较同一肤色/唇色条件下的多张自然光样本。",
+colors:[["#8c2f2d","#4d1e1b"],["#a43c35","#64231f"],["#71302b","#3f1715"]]},
+
+{key:"lan274",brand:"Lancôme · 兰蔻",shade:"#274",name:"菁纯系列 · 杏仁奶茶",score:82,evidence:"高 · 当前四个色号中样本最丰富",summary:"整体跨平台色相较一致，但淘宝数据包含多个 274 产品线；在 SKU 拆分前，不能把所有颜色差异都归因于内容失真。",
+xhs:{posts:9,comments:26,images:19,videos:7},tb:{comments:449,asks:341,images:65},
+diff:{Hue:6.0,Saturation:6.4,Brightness:-19.7},keywords:["奶茶色","偏紫","深唇","浅唇","偏暗","暖光","实物与图片不同"],
+quotes:["浅唇更接近奶茶色，深唇可能会偏紫。","有用户认为实物比部分网络试色更暗。","不同产品线同为 274，质地和显色不能直接混在一起比较。"],
+why:"色相总体一致、样本数量充足，因此基础可信度较高；主要风险来自亮度差异和 SKU 混合，而不是明显的跨平台色相冲突。",
+advice:"先确认具体 274 产品线，再参考对应 SKU 的图片。深唇用户应优先参考相似底色的真实返图。",
+sku:"SKU 提醒：当前淘宝样本包含黑管哑光、黑管礼盒/限定、粉金管等 274 产品线。正式模型必须先按 product_line / SKU 拆分。",
+colors:[["#b86e61","#7b443f"],["#9e5b54","#5d3632"],["#c17c6a","#855047"]]},
+
+{key:"lan275",brand:"Lancôme · 兰蔻",shade:"#275",name:"菁纯裸唇釉 · 暖棕奶茶调",score:72,evidence:"中高 · 评论多、视觉样本相对少",summary:"评论证据丰富，但可直接用于颜色判断的图片相对有限；更适合作为消费者反馈样本，而不是单凭视觉做强结论。",
+xhs:{posts:5,comments:33,images:10,videos:3},tb:{comments:381,asks:341,images:16},
+diff:{Hue:24.5,Saturation:5.2,Brightness:-12.1},keywords:["偏棕","偏橘","暖光","氧化","深唇","显白","色差"],
+quotes:["暖光下会更偏橘棕。","有用户反馈氧化后颜色会稍深。","评论很多，但真正能判断颜色的清晰唇部图没有评论量那么丰富。"],
+why:"文字证据充分，但视觉证据相对有限，因此把真实性评分和证据充分度分开表达，避免“评论多=一定真实”的错误。",
+advice:"购买前优先看清晰的自然光唇部返图，不要只依据高赞文字评价。",
+colors:[["#a95646","#6e332d"],["#bd6b58","#7c3e34"],["#8f4b40","#572d28"]]}
+];
+
+const cards=document.getElementById("cards");
+products.forEach((p,i)=>{
+ const el=document.createElement("div"); el.className="card"; el.dataset.key=p.key;
+ el.innerHTML='<div class="brandname">'+p.brand+'</div><div class="shade">'+p.shade+'</div><div class="name">'+p.name+'</div><div class="mini">点击查看跨平台证据报告 →</div>';
+ el.onclick=()=>show(p,el); cards.appendChild(el);
+});
+function show(p,el){
+ document.querySelectorAll(".card").forEach(c=>c.classList.remove("active"));el.classList.add("active");
+ document.getElementById("report").classList.add("show");
+ rBrand.textContent=p.brand;rShade.textContent=p.shade;rName.textContent=p.name;rSummary.textContent=p.summary;
+ scoreNum.textContent=p.score;scoreRing.style.setProperty("--score",p.score);evidence.textContent=p.evidence;
+ metrics.innerHTML=[
+ ["小红书帖子",p.xhs.posts],["小红书评论",p.xhs.comments],["淘宝评价",p.tb.comments],["淘宝问大家",p.tb.asks]
+ ].map(x=>'<div class="metric"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join("");
+ const sw= document.getElementById("skuWarn"); if(p.sku){sw.textContent=p.sku;sw.classList.remove("hidden")} else sw.classList.add("hidden");
+ top3.innerHTML=p.colors.map((c,i)=>'<div class="swatch" style="--c1:'+c[0]+';--c2:'+c[1]+'"><span>Reference #0'+(i+1)+' · Top '+(i+1)+'</span></div>').join("");
+ bars.innerHTML=Object.entries(p.diff).map(([k,v])=>{
+  const abs=Math.min(100,Math.abs(v)); const label=(v>0?"+":"")+v+(k==="Hue"?"°":"%");
+  return '<div class="barRow"><span>'+k+'</span><div class="track"><div class="fill" style="width:'+Math.max(7,abs)+'%"></div></div><b>'+label+'</b></div>'
+ }).join("")+'<div class="subtitle" style="font-size:12px;margin-top:8px">数值用于展示当前 sample snapshot 的平台差异，不等同于“绝对真实色”。</div>';
+ keywords.innerHTML=p.keywords.map(k=>'<span class="pill">'+k+'</span>').join("");
+ quotes.innerHTML=p.quotes.map(q=>'<div class="quote">“'+q+'”<small>消费者反馈证据 · sample data</small></div>').join("");
+ why.textContent=p.why;advice.textContent=p.advice;
+ window.scrollTo({top:document.getElementById("report").offsetTop-72,behavior:"smooth"});
+ window.currentProduct=p;
+}
+document.getElementById("copyPrompt").onclick=async()=>{
+ const p=window.currentProduct||products[0];
+ const payload='你是 TrueTone 美妆内容信任分析 Agent。请基于当前产品真实 sample data 进行分析。\n\n产品：'+p.brand+' '+p.shade+' '+p.name+'\n小红书：'+JSON.stringify(p.xhs)+'\n淘宝：'+JSON.stringify(p.tb)+'\n跨平台差异：'+JSON.stringify(p.diff)+'\n消费者色差关键词：'+p.keywords.join("、")+'\n代表性评论：'+p.quotes.join("；")+'\n\n要求：不要把正面评价等同于真实；区分视觉失真、光照、唇色、薄厚涂、氧化与 SKU 差异；证据不足时明确说明；不要声称存在绝对真实色。';
+ try{await navigator.clipboard.writeText(payload);event.target.textContent="已复制 Prompt Payload";setTimeout(()=>event.target.textContent="复制当前 Prompt Payload",1600)}catch(e){alert(payload)}
+};
+</script>
+</body></html>
