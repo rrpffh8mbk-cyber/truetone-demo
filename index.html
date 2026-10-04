@@ -2,115 +2,40 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0f0d0d" />
-  <meta name="description" content="TrueTone — AI辅助筛选更值得参考的口红试色与消费评价" />
-  <title>TrueTone · 你的线上口红 BA</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0808" />
+  <title>TrueTone｜看见的颜色，真的是你买到的颜色吗？</title>
+  <meta name="description" content="TrueTone：结合真实试色、消费者反馈与可解释视觉分析，帮助你判断哪些美妆内容更值得参考。" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <header class="topbar">
-    <a class="logo" href="#home" aria-label="TrueTone 首页">TRUE<span>TONE</span></a>
-    <nav class="navlinks" aria-label="主导航">
-      <button data-nav="home">首页</button>
-      <button data-nav="verify">核验试色</button>
-      <button data-nav="selfie">自拍试色</button>
-      <button data-nav="compare">色号对比</button>
-    </nav>
-    <div class="badge">Beauty × AI × Trust</div>
-  </header>
+  <div id="app-shell">
+    <header class="topbar">
+      <a class="wordmark" href="#/">TRUETONE</a>
+      <nav class="desktop-nav" aria-label="主导航">
+        <a href="#/search">找色号</a>
+        <a href="#/verify">核验试色</a>
+        <a href="#/tryon">自拍试色</a>
+        <a href="#/compare">对比色号</a>
+      </nav>
+      <button class="nav-more" id="open-method" type="button">关于分析</button>
+    </header>
+    <main id="app" tabindex="-1"></main>
+    <footer class="footer">
+      <div><span class="serif">TrueTone</span> · Beauty × AI × Trust</div>
+      <div>比赛 Demo · 结论用于辅助参考，不替代线下试色。</div>
+    </footer>
+  </div>
 
-  <main id="app">
-    <section class="view is-active" id="view-home">
-      <div class="hero shell">
-        <div class="eyebrow">TRUE TONE · YOUR ONLINE BEAUTY ADVISOR</div>
-        <h1>看见的颜色，<br><em>真的是你买到的颜色吗？</em></h1>
-        <p class="hero-copy">AI 分析试色图片的颜色、光照与跨内容差异，先帮你筛掉“不值得参考”的内容，再从真实样本里找到更贴近你唇色、肤色呈现与妆感需求的证据。</p>
-        <div class="hero-actions">
-          <button class="primary-action" data-go="selfie"><span class="action-icon">✦</span><span><b>上传自拍，看看色号在你脸上怎么呈现</b><small>个性化参考 · 可选虚拟试色</small></span><i>→</i></button>
-          <button class="secondary-action" data-go="verify"><span class="action-icon">◎</span><span><b>上传试色图，核验内容是否值得参考</b><small>支持单图 / 多图 · 给出可疑点与依据</small></span><i>→</i></button>
-        </div>
-        <div class="search-card">
-          <div>
-            <span class="search-label">或者，直接搜索你正在纠结的色号</span>
-            <div class="search-row"><input id="shadeSearch" autocomplete="off" placeholder="试试：YSL 610 / 兰蔻 274" /><button id="searchBtn">查看真实样本</button></div>
-            <div id="searchSuggestions" class="suggestions"></div>
-          </div>
-          <div class="search-note">跨平台试色 · 消费者评论 · 可信度 · 适合性证据</div>
-        </div>
-      </div>
-      <div class="shell demo-zone">
-        <div class="section-heading"><div><span class="eyebrow">TRY A REAL SAMPLE</span><h2>先试试两个主 Demo</h2></div><p>不是“看一堆技术指标”，而是先告诉你：<strong>哪些内容最值得看、为什么、和你有什么关系。</strong></p></div>
-        <div class="demo-grid">
-          <button class="demo-product" data-product="ysl610"><div class="lip-orb orb-610"></div><div><span>YSL 圣罗兰</span><h3>#610</h3><p>冰乌龙 / 冷萃奶茶 · 镜面唇釉</p></div><b>查看 →</b></button>
-          <button class="demo-product" data-product="lancome274"><div class="lip-orb orb-274"></div><div><span>Lancôme 兰蔻</span><h3>#274</h3><p>杏仁奶茶 / 奶茶裸 · 多产品线</p></div><b>查看 →</b></button>
-        </div>
-      </div>
-      <div class="shell promise-strip">
-        <div><b>先去伪存真</b><span>先判断一条内容“是否值得参考”，而不是直接把漂亮图片当真实。</span></div>
-        <div><b>再看与你是否匹配</b><span>深唇、浅唇、自然光、薄涂厚涂、氧化等因素分开解释。</span></div>
-        <div><b>最后才推荐相似色号</b><span>先建立信任，再帮助你发现更适合的欧莱雅集团色号。</span></div>
-      </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="modal-backdrop" id="modal-backdrop" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="modal-close" id="modal-close" aria-label="关闭">×</button>
+      <div id="modal-content"></div>
     </section>
+  </div>
 
-    <section class="view" id="view-shade">
-      <div class="shell shade-hero">
-        <button class="back-link" data-go="home">← 返回首页</button>
-        <div class="shade-hero-grid">
-          <div><div class="eyebrow" id="shadeBrand">—</div><div class="shade-title-row"><h1 id="shadeCode">#—</h1><span id="shadeFinish">—</span></div><p id="shadeDisplay">—</p><div class="spectrum-mini" id="referenceSpectrum"></div><small>TrueTone 参考色域 · 不代表“绝对真实色”</small></div>
-          <div class="shade-start-card" id="shadeStartCard"><span>我们会使用当前色号的真实 sample data</span><h3>先筛内容，再帮你做购买判断</h3><p id="shadeDatasetSummary">—</p><button class="cta" id="runShadeAnalysis">开始 TrueTone 分析</button><small>分析开始前不会预先显示或写死结论。</small></div>
-        </div>
-      </div>
-      <div class="shell hidden" id="shadeReport">
-        <div class="consumer-summary">
-          <div class="score-dial" id="scoreDial"><span id="scoreValue">—</span><small>参考可信度</small></div>
-          <div class="summary-copy"><div class="status-line"><span id="scoreLevel">—</span><span id="evidenceLevel">证据充分度：—</span></div><h2 id="oneLineConclusion">—</h2><button class="text-button" id="whyToggle">为什么是这个分数？ ↓</button><div class="why-box hidden" id="whyBox"></div></div>
-        </div>
-        <section class="report-section priority-section"><div class="section-heading compact"><div><span class="eyebrow">LOOK HERE FIRST</span><h2>你最值得先看的 3 条证据</h2></div><p>不是点赞最高，而是综合可信度、信息量和与你的匹配度。</p></div><div class="reference-grid" id="topReferences"></div></section>
-        <section class="personal-fit report-section">
-          <div class="fit-intro"><span class="eyebrow">MAKE IT ABOUT YOU</span><h2>这些样本，哪些和你更相关？</h2><p>我们不会从照片推断你的永久肤色或身份。你可以主动告诉我们当前最关心的条件，系统只用它重新排序证据。</p></div>
-          <div class="fit-controls">
-            <div class="chip-group" data-profile="lip"><span>我的唇色</span><button data-value="浅唇">浅唇</button><button data-value="中等唇色">中等</button><button data-value="深唇">深唇</button></div>
-            <div class="chip-group" data-profile="style"><span>我更常</span><button data-value="素颜">素颜</button><button data-value="日常">日常淡妆</button><button data-value="浓妆">完整妆</button></div>
-            <div class="chip-group" data-profile="finish"><span>我更关心</span><button data-value="薄涂">薄涂</button><button data-value="厚涂">厚涂</button><button data-value="氧化">氧化后</button></div>
-          </div>
-          <div class="matched-evidence" id="matchedEvidence"></div>
-        </section>
-        <section class="report-section"><div class="section-heading compact"><div><span class="eyebrow">REAL PEOPLE SAID</span><h2>消费者色差证据</h2></div><p>正面评价 ≠ 真实。我们优先找“偏紫、偏暗、氧化、深唇、自然光”等可解释差异。</p></div><div class="evidence-cloud" id="keywordCloud"></div><div class="comments-list" id="commentEvidence"></div></section>
-        <section class="report-section detail-card"><div class="section-heading compact"><div><span class="eyebrow">SOURCE DIFFERENCE</span><h2>小红书和电商，颜色趋势一样吗？</h2></div><button class="text-button" id="techToggle">展开详细证据 ↓</button></div><div class="source-compare" id="sourceCompare"></div><div id="technicalEvidence" class="technical hidden"></div></section>
-        <section class="decision-card report-section"><div><span class="eyebrow">NEXT DECISION</span><h2>看完这些，你还想买这个色号吗？</h2><p>你的回答不会改变真实性评分，只决定下一步推荐。</p></div><div class="decision-actions"><button class="cta" id="likeShade">适合我，看看相似色号</button><button class="ghost" id="dislikeShade">不太对，帮我换个方向</button></div><div class="recommendations hidden" id="recommendations"></div></section>
-      </div>
-    </section>
-
-    <section class="view" id="view-verify">
-      <div class="shell workflow-hero"><button class="back-link" data-go="home">← 返回首页</button><span class="eyebrow">VERIFY A SWATCH</span><h1>这张试色，<em>值得我参考吗？</em></h1><p>上传 1–多张试色图。TrueTone 的 4 个 Agent 会实际读取像素、光照与跨图差异，再给出证据，不会随机生成评分。</p></div>
-      <div class="shell two-column-workflow">
-        <div class="upload-panel"><label class="dropzone" id="verifyDropzone"><input type="file" id="verifyFiles" accept="image/jpeg,image/png,image/webp" multiple /><span class="drop-icon">＋</span><b>点击或拖入试色图片</b><small>JPG / PNG / WEBP · 可多选</small></label><div id="verifyPreviews" class="preview-grid"></div><div class="source-select-row"><label>这些图片主要来自</label><select id="verifySource"><option>小红书 / 社媒</option><option>淘宝 / 电商</option><option>用户实拍</option><option>品牌官方</option></select></div><button class="cta full" id="runVerify" disabled>运行 4 Agent 核验</button></div>
-        <div class="workflow-guide" id="agentGuide"><h3>这次分析会发生什么？</h3><ol><li><span>01</span><div><b>色彩分析师</b><p>真实像素 HSV、亮度、饱和度；若能稳定检测人脸，会优先分析唇部 ROI。</p></div></li><li><span>02</span><div><b>鉴伪审查员</b><p>找异常增饱和、过曝、强冷暖光和跨图不一致，并标注置信度。</p></div></li><li><span>03</span><div><b>报告撰写员</b><p>把技术发现翻译成“这会不会影响你的购买判断”。</p></div></li><li><span>04</span><div><b>创作者顾问</b><p>告诉内容创作者如何补拍、标注光照或增加素唇对比。</p></div></li></ol></div>
-      </div>
-      <div class="shell hidden" id="verifyResults"></div>
-    </section>
-
-    <section class="view" id="view-selfie">
-      <div class="shell workflow-hero"><button class="back-link" data-go="home">← 返回首页</button><span class="eyebrow">PERSONAL TRUE TONE</span><h1>这个色号在你脸上，<em>可能怎么呈现？</em></h1><p>自拍只用于本次浏览器内分析，不加入产品数据集，不做人脸身份识别，也不判断年龄、种族、健康或颜值。</p></div>
-      <div class="shell selfie-layout">
-        <div class="selfie-stage"><label class="selfie-uploader" id="selfieDropzone"><input type="file" id="selfieFile" accept="image/jpeg,image/png,image/webp" /><span>上传正脸自拍</span><small>建议自然光、无滤镜、嘴唇无遮挡</small></label><div class="selfie-canvas-wrap hidden" id="selfieCanvasWrap"><canvas id="selfieCanvas"></canvas><div class="canvas-switch"><button class="active" data-canvas-mode="original">原自拍</button><button data-canvas-mode="tryon">虚拟试色</button></div></div><div class="privacy-note">🔒 自拍仅用于本次个性化分析。页面不会上传或保存你的自拍。</div></div>
-        <div class="selfie-controls"><h3>选择你想试的色号</h3><div id="selfieShadeOptions" class="shade-options"></div><div class="chip-group" id="selfieLipProfile"><span>补充你的自然唇色</span><button data-value="浅唇">浅唇</button><button data-value="中等唇色">中等</button><button data-value="深唇">深唇</button></div><button class="cta full" id="runSelfie" disabled>分析当前自拍</button><div class="model-status" id="modelStatus">Face Landmarker 将在需要时加载。</div></div>
-      </div>
-      <div class="shell hidden" id="selfieResults"></div>
-    </section>
-
-    <section class="view" id="view-compare">
-      <div class="shell workflow-hero"><button class="back-link" data-go="home">← 返回首页</button><span class="eyebrow">SIDE BY SIDE</span><h1>纠结两个色号？<em>放在同一套证据里看。</em></h1><p>比较的不是宣传色卡，而是来源覆盖、色差证据、参考色域和消费者反馈。</p></div>
-      <div class="shell compare-controls"><select id="compareA"></select><span>VS</span><select id="compareB"></select><button class="cta" id="runCompare">开始对比</button></div>
-      <div class="shell" id="compareResults"></div>
-    </section>
-  </main>
-
-  <footer class="footer shell"><div class="logo">TRUE<span>TONE</span></div><p>消费者端工作原型 · 数据来自团队采集的淘宝与小红书 sample data。结论用于辅助判断，不替代实物试色。</p></footer>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
   <script type="module" src="./app.js"></script>
 </body>
 </html>
