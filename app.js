@@ -14,7 +14,15 @@ async function getManifest(){if(manifest)return manifest;manifest=await fetch('.
 function summaryFallback(k){
  const m=manifest.products.find(x=>x.key===k);
  if(!m)throw Error('未找到该色号数据');
- return {...m,media:[],reviews:[],asks:[],_summaryOnly:true};
+ const ids=m.analysis?.topMediaIds||[];
+ const media=ids.map((id,i)=>{
+   const platform=id.startsWith('xhs-')?'小红书':'淘宝';
+   const pm=m.analysis?.platform?.[platform]||m.analysis?.center||{hue:0,saturation:0,brightness:50};
+   return {id,platform,type:'离线真实媒体记录',thumb:null,referenceScore:null,
+     metrics:{hue:pm.hue,saturation:pm.saturation,brightness:pm.brightness,sceneBrightness:pm.brightness,lighting:'媒体记录',dominant:hsvToHex(pm.hue,pm.saturation,pm.brightness)},
+     reasons:['该媒体 ID 来自完整离线数据的 Top reference 排名；公开静态页未重复发布原始高分辨率文件']};
+ });
+ return {...m,media,reviews:[],asks:[],_summaryOnly:true};
 }
 async function getProduct(k){
  if(cache.has(k))return cache.get(k);
@@ -30,7 +38,7 @@ function shadeCard(p){return `<a class="shade-card" href="#/shade/${p.key}"><div
 function opts(sel){return manifest.products.map(p=>`<option value="${p.key}" ${p.key===sel?'selected':''}>${esc(p.brand)} #${p.shade} ${esc(p.name)}</option>`).join('')}
 function highlight(t){let s=esc(t);for(const k of ANALYSIS_KEYWORDS)s=s.replaceAll(k,`<mark class="highlight">${k}</mark>`);return s}
 function reviewCard(r){return `<article class="review"><p>${highlight(r.text)}</p><small><span>${r.platform}</span><span>${r.type||'评论'}</span>${r.sku?`<span>${esc(r.sku)}</span>`:''}${r.repeatBuyer?'<span>复购线索</span>':''}${r.negativeEvidence?'<span>含负向体验</span>':''}</small></article>`}
-function mediaCard(m,i){return `<article class="media-card" data-media="${m.id}">${m.thumb?`<img src="${m.thumb}" alt="真实试色参考图 ${i+1}">`:'<div class="skeleton" style="height:210px"></div>'}<div class="media-card-body"><div class="rank">#${i+1} · ${Math.round(m.referenceScore||0)}/100</div><div class="source-line">${m.platform} · ${m.metrics?.lighting||m.type}</div><div class="reason">${esc((m.reasons||[])[0]||'接近多来源参考色域')}</div></div></article>`}
+function mediaCard(m,i){const score=Number.isFinite(m.referenceScore)?Math.round(m.referenceScore)+'/100':'Top reference';return `<article class="media-card" data-media="${m.id}">${m.thumb?`<img src="${m.thumb}" alt="真实试色参考图 ${i+1}">`:'<div class="skeleton media-placeholder" style="height:210px"><span>真实媒体记录<br><small>原图未在公开静态页重发</small></span></div>'}<div class="media-card-body"><div class="rank">#${i+1} · ${score}</div><div class="source-line">${m.platform} · ${m.metrics?.lighting||m.type}</div><div class="reason">${esc((m.reasons||[])[0]||'接近多来源参考色域')}</div></div></article>`}
 function metric(label,v,max=100,u='%'){return `<div class="metric-row"><label>${label}</label><div class="bar"><i style="width:${Math.min(100,Math.abs(v)/max*100)}%"></i></div><span>${Number(v).toFixed(1)}${u}</span></div>`}
 function evidenceScoreText(a){return `视觉 ${a.counts.images} 图 + ${a.counts.videos} 视频元数据 · 文字 ${fmt(a.counts.text)} 条 · ${a.counts.sources} 类来源`}
 
