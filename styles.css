@@ -17,3 +17,19 @@
 /* Critical: the HTML hidden attribute must win over modal display:grid. */
 [hidden]{display:none!important}
 .modal-backdrop[hidden]{display:none!important;pointer-events:none!important}
+
+/* Modal state safety: closed overlays must never intercept the page. */
+#modal-backdrop[hidden],
+#modal-backdrop[aria-hidden="true"],
+body:not(.modal-open) #modal-backdrop[aria-hidden="true"]{
+  display:none!important;
+  visibility:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+#modal-backdrop[aria-hidden="false"]{
+  display:grid!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
