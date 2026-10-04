@@ -10,7 +10,27 @@ const state={view:'home',product:null,profile:{lip:null,style:null,finish:null},
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const escapeHtml=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-async function loadProduct(key){if(DATA.has(key))return DATA.get(key);const r=await fetch(`./data/${key}.json`);if(!r.ok)throw new Error(`无法读取 ${key} 数据`);const d=await r.json();DATA.set(key,d);return d}
+const DATA_FILES={
+  ysl610:['./data/ysl610.json.gz.b64'],
+  ysl1936:['./data/ysl1936.json.gz.b64'],
+  lancome274:['./data/lancome274.1.b64','./data/lancome274.2.b64','./data/lancome274.3.b64','./data/lancome274.4.b64'],
+  lancome275:['./data/lancome275.1.b64','./data/lancome275.2.b64','./data/lancome275.3.b64','./data/lancome275.4.b64']
+};
+async function inflateBase64Gzip(b64){
+  const clean=b64.replace(/\s+/g,'');
+  const bin=Uint8Array.from(atob(clean),c=>c.charCodeAt(0));
+  if(typeof DecompressionStream==='undefined') throw new Error('当前浏览器不支持 gzip 数据解压，请使用最新版 Chrome / Edge / Safari。');
+  const stream=new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return new Response(stream).text();
+}
+async function loadProduct(key){
+  if(DATA.has(key)) return DATA.get(key);
+  const paths=DATA_FILES[key];
+  if(!paths) throw new Error('未知产品 '+key);
+  const pieces=await Promise.all(paths.map(async p=>{const r=await fetch(p,{cache:'no-store'});if(!r.ok)throw new Error('无法读取 '+p);return r.text()}));
+  const json=await inflateBase64Gzip(pieces.join(''));
+  const d=JSON.parse(json);DATA.set(key,d);return d;
+}
 function productByKey(key){return CATALOG.find(x=>x.key===key)}
 function showView(name){state.view=name;$$('.view').forEach(v=>v.classList.toggle('is-active',v.id===`view-${name}`));window.scrollTo({top:0,behavior:'instant'});history.replaceState(null,'',`#${name}`)}
 function hueHex(h,s=42,v=70){const f=(n,k=(n+h/60)%6)=>v/100-v/100*s/100*Math.max(Math.min(k,4-k,1),0);return '#'+[5,3,1].map(n=>Math.round(255*f(n)).toString(16).padStart(2,'0')).join('')}
