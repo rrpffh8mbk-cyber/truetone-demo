@@ -36,10 +36,20 @@ export function runFourAgents(analyses,product=null){
 }
 
 export function buildProductConsumerSummary(product,lipProfile='all'){
- const a=product.analysis;const top=product.media.filter(m=>a.topMediaIds.includes(m.id)).sort((x,y)=>y.referenceScore-x.referenceScore);
- const reviews=product.reviews.filter(r=>a.representativeReviewIds.includes(r.id));const filtered=lipProfile==='all'?reviews:reviews.filter(r=>r.text.includes(lipProfile));
+ const a=product.analysis||{};const media=product.media||[];const allReviews=product.reviews||[];
+ const top=media.filter(m=>(a.topMediaIds||[]).includes(m.id)).sort((x,y)=>(y.referenceScore||0)-(x.referenceScore||0));
+ const reviews=allReviews.filter(r=>(a.representativeReviewIds||[]).includes(r.id));
+ const filtered=lipProfile==='all'?reviews:reviews.filter(r=>(r.text||'').includes(lipProfile));
  const chosen=(filtered.length?filtered:reviews).slice(0,8);
- const diff=a.platformDiff;const normal=[];if(a.keywordCounts['深唇']||a.keywordCounts['浅唇'])normal.push('不同原生唇色会改变显色，深唇与浅唇反馈应分开看');if(a.keywordCounts['薄涂']||a.keywordCounts['厚涂'])normal.push('薄涂与厚涂会改变明度、饱和度和覆盖力');if(a.keywordCounts['氧化'])normal.push('部分用户提到氧化/成膜后的颜色变化');if(a.keywordCounts['自然光']||a.keywordCounts['暖光'])normal.push('光照条件会改变照片中的冷暖与明暗');
- let conclusion='当前多来源视觉样本整体较接近，可作为辅助参考。';if(diff.hue>35)conclusion='不同平台间存在明显色相差异，建议优先看高参考分的真实返图。';else if(Math.abs(diff.brightness)>15)conclusion='两类来源的亮度存在一定差异，颜色本身较接近，但不要把曝光差异当成色号差异。';if(product.key==='lancome-274'&&product.skuLines.length>1)conclusion+=' 同为 274 的不同产品线需要分开比较。';
+ const diff=a.platformDiff||{hue:0,saturation:0,brightness:0},kw=a.keywordCounts||{},normal=[];
+ if(kw['深唇']||kw['浅唇'])normal.push('不同原生唇色会改变显色，深唇与浅唇反馈应分开看');
+ if(kw['薄涂']||kw['厚涂'])normal.push('薄涂与厚涂会改变明度、饱和度和覆盖力');
+ if(kw['氧化'])normal.push('部分用户提到氧化/成膜后的颜色变化');
+ if(kw['自然光']||kw['暖光'])normal.push('光照条件会改变照片中的冷暖与明暗');
+ let conclusion='当前多来源视觉样本整体较接近，可作为辅助参考。';
+ if(diff.hue>35)conclusion='不同平台间存在明显色相差异，建议优先看高参考分的真实返图。';
+ else if(Math.abs(diff.brightness)>15)conclusion='两类来源的亮度存在一定差异，颜色本身较接近，但不要把曝光差异当成色号差异。';
+ if(product.key==='lancome-274'&&(product.skuLines||[]).length>1)conclusion+=' 同为 274 的不同产品线需要分开比较。';
+ if(product._summaryOnly)conclusion+=' 当前公开页已载入完整聚合统计；逐条评论与原始高分辨率媒体将在安全数据层接入后展开。';
  return {conclusion,top:top.slice(0,3),reviews:chosen,normal};
 }
