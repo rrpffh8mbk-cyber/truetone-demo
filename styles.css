@@ -91,3 +91,17 @@ body:not(.modal-open) #modal-backdrop[aria-hidden="true"]{
 .agent-narrative h3{font:500 22px Georgia,"Songti SC",serif;margin:0 0 10px}
 .agent-narrative p{font-size:14px;line-height:1.8;color:#eadbd2;margin:0}
 .agent-narrative small{display:block;margin-top:10px;color:var(--muted);font-size:11px;line-height:1.7}
+
+/* Brand + shade text entry for the final consumer flow */
+.target-entry{display:grid;gap:12px}
+.target-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.target-fields label{display:grid;gap:8px;color:var(--muted);font-size:11px}
+.target-input{width:100%;min-height:54px;border:1px solid var(--line);background:#0d0b0a;color:var(--cream);border-radius:15px;padding:0 15px;font:500 15px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;outline:none;transition:.18s}
+.target-input::placeholder{color:#6f635d}
+.target-input:focus{border-color:#9b6a57;box-shadow:0 0 0 3px rgba(215,170,121,.06)}
+.target-match{min-height:78px;border:1px solid var(--line);border-radius:16px;background:#0f0d0c;padding:14px;display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;line-height:1.6}
+.target-match.matched{border-color:#5b473e;background:linear-gradient(135deg,#1b1210,#100d0c);color:var(--cream)}
+.target-match.matched .shade-dot{flex:0 0 auto}.target-match.matched div{min-width:0;flex:1}.target-match.matched b{display:block;font-size:13px;font-weight:500}.target-match.matched small{display:block;color:var(--muted);font-size:10px;margin-top:4px}.target-match.matched em{font-style:normal;color:#9ac9aa;font-size:10px;border:1px solid #365745;border-radius:999px;padding:5px 8px}
+.target-match.no-match{border-color:#6a443a;color:#d3a99d;background:#17100e}
+.demo-support{color:var(--muted2);font-size:10px;line-height:1.6;margin:0}
+@media(max-width:620px){.target-fields{grid-template-columns:1fr}}
