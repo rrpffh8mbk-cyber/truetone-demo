@@ -86,3 +86,8 @@ body:not(.modal-open) #modal-backdrop[aria-hidden="true"]{
  .result-title{align-items:flex-start;flex-direction:column}.tryon-image{min-height:350px}.matched-media-grid,.trust-grid{grid-template-columns:1fr}
  .matched-media>img,.matched-media>.media-placeholder{height:320px}.matched-review{grid-template-columns:38px 1fr;gap:10px}.purchase-loop{align-items:flex-start;flex-direction:column}.purchase-actions{justify-content:flex-start}
 }
+
+.agent-narrative{margin:28px 0 8px;border:1px solid #624438;background:linear-gradient(135deg,rgba(169,70,61,.14),rgba(215,170,121,.05));border-radius:20px;padding:22px}
+.agent-narrative h3{font:500 22px Georgia,"Songti SC",serif;margin:0 0 10px}
+.agent-narrative p{font-size:14px;line-height:1.8;color:#eadbd2;margin:0}
+.agent-narrative small{display:block;margin-top:10px;color:var(--muted);font-size:11px;line-height:1.7}
