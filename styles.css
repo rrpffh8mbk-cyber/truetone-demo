@@ -180,3 +180,12 @@ body:not(.modal-open) #modal-backdrop[aria-hidden="true"]{
  .consumer-section{margin:50px 0}
 }
 
+
+
+/* TrueTone consumer stability + shade-alias polish */
+.preview-color-row{display:flex;gap:12px;align-items:flex-start}
+.preview-swatch{width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.18);box-shadow:inset 0 0 0 3px rgba(255,255,255,.04);flex:0 0 auto}
+.local-narrative{border-color:#3d342d;background:linear-gradient(135deg,#14110f,#0e0c0b)}
+.direction-swatch-wrap{display:flex;gap:18px;align-items:center;margin-top:8px}
+.direction-swatch{width:82px;height:82px;border-radius:50%;border:1px solid rgba(255,255,255,.14);box-shadow:0 12px 30px rgba(0,0,0,.2);flex:0 0 auto}
+.direction-swatch-wrap p{margin:6px 0 0;color:var(--muted);line-height:1.7}
