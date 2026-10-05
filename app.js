@@ -548,39 +548,89 @@ async function seeded(){
 }
 
 async function runSeededAnalysis(){
- const result=$('#seed-result'),run=$('#seed-run'),profile=getUserProfile();if(!purchaseTargetKey||!profile)return;
- const rawText=$('#seed-text').value.trim();run.disabled=true;run.textContent='正在和真实样本库交叉比较…';
- result.innerHTML=`<section class="consumer-progress"><div class="eyebrow">TrueTone 正在检查</div><h2>只分析你上传的内容，再和整个样本库交叉验证。</h2><div class="human-progress"><div class="hp active">读取上传内容</div><div class="hp">检查图片本身是否稳定</div><div class="hp">核对文字与真实消费者反馈</div><div class="hp">和该色号整个样本库比较</div><div class="hp">计算与你的参考相关性</div></div><div class="progress"><i id="seed-progress-bar"></i></div></section>`;
+ const result=$('#seed-result'),run=$('#seed-run'),profile=getUserProfile();
+ if(!purchaseTargetKey||!profile)return;
+ const rawText=($('#seed-text')?.value||'').trim();
+ run.disabled=true;run.textContent='正在和真实样本库交叉比较…';
+
+ result.innerHTML=`<section class="consumer-progress">
+   <div class="eyebrow">TrueTone 正在检查</div>
+   <h2>只分析你上传的内容，再和整个样本库交叉验证。</h2>
+   <div class="human-progress">
+     <div class="hp active">读取上传内容</div>
+     <div class="hp">检查图片本身是否稳定</div>
+     <div class="hp">核对文字与真实消费者反馈</div>
+     <div class="hp">和该色号整个样本库比较</div>
+     <div class="hp">计算与你的参考相关性</div>
+   </div>
+   <div class="progress"><i id="seed-progress-bar"></i></div>
+ </section>`;
  result.scrollIntoView({behavior:'smooth',block:'start'});
+
+ const steps=()=>$$('.hp');
+ const bar=()=>$('#seed-progress-bar');
+ const mark=(index,className)=>{
+   const list=steps();
+   if(list[index])list[index].classList.add(className);
+ };
+ const setBar=width=>{
+   const el=bar();
+   if(el)el.style.width=width;
+ };
+
  try{
-  const p=await getProduct(purchaseTargetKey),steps=$('.hp'),bar=$('#seed-progress-bar');
+  const p=await getProduct(purchaseTargetKey);
   const [evCatalog,distCatalog]=await Promise.all([getEvidenceCatalog(),getReferenceDistributions()]);
-  const evidenceEntry=evCatalog?.products?.[p.key]||null,distEntry=distCatalog?.products?.[p.key]||null;
-  steps[0].classList.add('done');steps[1].classList.add('active');bar.style.width='20%';
-  const analyses=seededFiles.length?await Promise.all(seededFiles.map(analyzeImageFile)):[];
+  const evidenceEntry=evCatalog?.products?.[p.key]||null;
+  const distEntry=distCatalog?.products?.[p.key]||null;
+
+  mark(0,'done');mark(1,'active');setBar('20%');
+
+  const analyses=seededFiles.length
+    ? await Promise.all(seededFiles.map(analyzeImageFile))
+    : [];
   const visual=analyses.length?runFourAgents(analyses,p):null;
-  steps[1].classList.add('done');steps[2].classList.add('active');bar.style.width='42%';
+
+  mark(1,'done');mark(2,'active');setBar('42%');
+
   const textReport=rawText?extractSeedTextSignals(rawText,p):null;
-  steps[2].classList.add('done');steps[3].classList.add('active');bar.style.width='64%';
+
+  mark(2,'done');mark(3,'active');setBar('64%');
+
   const visualAgreement=seededVisualAgreement(p,analyses,distEntry);
   const databaseAgreement=overallSeedReferenceValue([
    {score:visualAgreement,weight:analyses.length?1:0},
    {score:textReport?.agreement,weight:textReport?1:0},
    {score:p.analysis.score,weight:.7}
   ]);
-  steps[3].classList.add('done');steps[4].classList.add('active');bar.style.width='84%';
+
+  mark(3,'done');mark(4,'active');setBar('84%');
+
   const personal=seededPersonalRelevance(profile,textReport,p);
   const overall=overallSeedReferenceValue([
    {score:visual?.score,weight:analyses.length?1.1:0},
    {score:textReport?.score,weight:textReport?1:0},
    {score:databaseAgreement,weight:1.25}
   ]);
+
   const cloudMedia=await fetchCloudReferenceMedia(p.key);
-  steps[4].classList.add('done');bar.style.width='100%';
-  renderSeededResult({p,profile,rawText,analyses,visual,textReport,databaseAgreement,personal,overall,cloudMedia,evidenceEntry,distEntry,visualAgreement});
- }catch(e){result.innerHTML=`<section class="sku-warning"><b>这次没有稳定完成分析。</b><br>${esc(e.message)}</section>`}
- finally{run.disabled=false;run.textContent='重新分析这条种草'}
+
+  mark(4,'done');setBar('100%');
+
+  renderSeededResult({
+   p,profile,rawText,analyses,visual,textReport,
+   databaseAgreement,personal,overall,cloudMedia,
+   evidenceEntry,distEntry,visualAgreement
+  });
+ }catch(e){
+   console.error('runSeededAnalysis failed',e);
+   result.innerHTML=`<section class="sku-warning"><b>这次没有稳定完成分析。</b><br>${esc(e?.message||String(e))}</section>`;
+ }finally{
+   run.disabled=false;
+   run.textContent='重新分析这条种草';
+ }
 }
+
 function renderSeededResult({p,profile,rawText,analyses,visual,textReport,databaseAgreement,personal,overall,cloudMedia,evidenceEntry,distEntry,visualAgreement}){
  const hasImage=analyses.length>0,hasText=!!textReport;
  const verdict=overall>=82?'整体值得参考，但仍要结合与你更接近的真实样本。':overall>=68?'有参考价值，但其中有些信息需要谨慎看。':'不建议只靠这条内容做购买决定。';
@@ -818,24 +868,135 @@ async function shade(k){
  }
 }
 
+function shade274FamilyAnalysisHtml(evidenceEntry,distEntry){
+ const vm=evidenceEntry?.variant_model,claims=evidenceEntry?.claims||{},vars=distEntry?.variants||{};
+ if(!vm)return '';
+ const variantCards=vm.taobao_variants.map(v=>{
+   const d=vars[v.id];
+   if(!d)return '';
+   const med=`色彩中位：浓淡 ${d.saturation.median}% · 明暗 ${d.brightness.median}%`;
+   const light=Object.entries(d.lighting_counts||{}).sort((a,b)=>b[1]-a[1])[0];
+   return `<article class="variant-card">
+     <div class="variant-name">${esc(v.label)}</div>
+     <p>${esc(med)}</p>
+     <small>${d.n} 张可解析图片${light?' · 常见拍摄判断：'+esc(light[0]):''}</small>
+   </article>`;
+ }).join('');
+ const x=vm.xiaohongshu;
+ const claimKeys=['yellow_skin','deep_lip','bare_face'];
+ const claimBlocks=claimKeys.filter(k=>claims[k]).map(k=>{
+   const z=claims[k],total=(z.support_count||0)+(z.oppose_count||0);
+   const support=(z.support_examples||[])[0],oppose=(z.oppose_examples||[])[0];
+   return `<article class="family-claim">
+     <div class="claim-head"><b>${esc(z.label)}</b><span>${total} 条可明确判断：${z.support_count||0} 支持 · ${z.oppose_count||0} 相悖</span></div>
+     <div class="quote-grid">
+      ${support?`<blockquote class="evidence-quote support"><b>支持 · ${esc(support.platform)}</b><span>${esc(support.text)}</span></blockquote>`:''}
+      ${oppose?`<blockquote class="evidence-quote oppose"><b>相悖 · ${esc(oppose.platform)}</b><span>${esc(oppose.text)}</span></blockquote>`:''}
+     </div>
+   </article>`;
+ }).join('');
+ return `
+ <section class="variant-insight-card family-overview">
+   <div class="eyebrow">274 不应被当成一个完全统一的产品</div>
+   <h2>同一个“274”，至少包含 3 个明确版本；小红书还混有版本不明和旧款内容。</h2>
+   <p>淘宝数据可以明确拆成 3 个产品版本，因此 TrueTone 会在版本内做颜色与评价比较。小红书没有统一版本字段，所以不会被强行映射到其中某一个版本。</p>
+   <div class="variant-card-grid">${variantCards}</div>
+   <div class="family-policy">
+    <b>小红书怎么处理？</b>
+    <p>${x.main_posts} 篇 274 主帖中，${x.explicit_lipglaze_or_mirror_posts} 篇明确提到唇釉/镜面，${x.explicit_xiaomanyao_posts} 篇提到“小蛮腰”，另有 ${x.no_clear_variant_posts} 篇无法确定版本。版本不明内容只作为“274 家族级证据”，不会参与某一个淘宝版本的精确色彩结论。</p>
+   </div>
+ </section>
+
+ <section class="claim-evidence-panel">
+   <div class="section-head"><div><div class="eyebrow">为什么网上对 274 的评价容易互相打架？</div><h2>把支持意见和相悖意见拆开看</h2></div><p>这里不是把所有 274 混成一个平均结论，而是先承认版本、唇色和妆面都会改变评价。</p></div>
+   ${claimBlocks}
+   <div class="plain-note"><b>一个真实的版本混淆案例：</b>${esc(vm.cross_variant_example.text)}</div>
+ </section>`;
+}
 async function shadeReport(k){
  const p=await getProduct(k),a=p.analysis,c=buildProductConsumerSummary(p),top=c.top,sku=p.skuLines||[];
- const cloudTop=await fetchCloudReferenceMedia(k);
- page(`<div class="route-head"><a class="backlink" href="#/search">← 返回色号库</a><div class="eyebrow" style="margin-top:22px">${esc(p.brand)} · ${esc(p.product)}</div><h1>#${p.shade} ${esc(p.name)}</h1><p>先给你能直接使用的结论，再告诉你为什么。下面的结果来自当前已收录的真实试色与评价。</p>${sku.length>1?`<div class="sku-warning">版本提醒：当前样本同一色号包含 <b>${sku.length}</b> 个版本 / 产品线：${sku.map(esc).join('、')}。这些版本会分开比较，避免把产品本身的差异误判成修图。</div>`:''}</div>
- <section class="report-hero"><div class="panel"><div class="eyebrow">一句话结论</div><div class="conclusion">${esc(c.conclusion)}</div><div class="source-counts"><span><b>${a.counts.visual}</b> 份视觉素材</span><span><b>${fmt(a.counts.text)}</b> 条文字证据</span><span><b>${a.counts.sources}</b> 类来源</span></div><div class="filter-row" style="margin-top:18px"><span style="font-size:11px;color:var(--muted);align-self:center">更像你的情况：</span><button class="filter-btn active" data-prof="all">全部</button><button class="filter-btn" data-prof="深唇">深唇</button><button class="filter-btn" data-prof="浅唇">浅唇</button><button class="filter-btn" data-prof="素颜">素颜</button></div></div>
- <div class="panel score-panel"><div class="score-ring" style="--score:${a.score};--ring:${a.score>=80?'#82b996':a.score>=60?'#e2b16b':'#d46d60'}"><b>${a.score}</b></div><div class="score-label"><strong>内容参考价值</strong>它表示这些网络内容有多适合作为你的购买参考，不是简单的“真/假”判决。<span class="evidence-badge">可参考信息是否足够：${a.evidenceSufficiency}</span><div class="disclaimer">${evidenceScoreText(a)}。分数高低和资料多少是两回事。</div></div></div></section>
+ const [cloudTop,evCatalog,distCatalog]=await Promise.all([
+   fetchCloudReferenceMedia(k),
+   getEvidenceCatalog(),
+   getReferenceDistributions()
+ ]);
+ const evidenceEntry=evCatalog?.products?.[k]||null;
+ const distEntry=distCatalog?.products?.[k]||null;
+ const is274=k==='lancome-274';
+
+ const familyNotice=is274
+  ? `<div class="sku-warning"><b>274 家族提醒：</b>淘宝样本能明确拆分 Cream / Cream Gift / Intimatte 三个版本，但小红书存在版本不明与旧款 274。下面的分析会把“版本内证据”和“274 家族级证据”分开，不再把所有 274 混成一个统一平均值。</div>`
+  : (sku.length>1?`<div class="sku-warning">版本提醒：当前样本同一色号包含 <b>${sku.length}</b> 个版本 / 产品线：${sku.map(esc).join('、')}。这些版本会分开比较，避免把产品本身差异误判成修图。</div>`:'');
+
+ const colorSection=is274&&distEntry?.variants
+  ? `<section class="panel report-section">
+      <div class="section-head"><div><div class="eyebrow">综合色调不能只看一个平均值</div><h2 style="font-size:28px">三个版本分别是什么方向？</h2></div><p>以下是各版本真实图片的分布中位数，用来比较版本之间的细微差异。</p></div>
+      <div class="variant-card-grid">
+       ${[
+         ['cream','黑管哑光 #274 奶茶裸'],
+         ['cream_gift','「声色」限定 #274 原声裸茶'],
+         ['intimatte','粉金管唇膏 #274']
+       ].map(([id,label])=>{
+         const d=distEntry.variants[id];if(!d)return '';
+         return `<article class="variant-card"><div class="variant-name">${esc(label)}</div><p>浓淡中位 ${d.saturation.median}% · 明暗中位 ${d.brightness.median}%</p><small>${d.n} 张可解析图片 · 色彩中心约 ${d.hue.circular_center.toFixed(1)}°</small></article>`;
+       }).join('')}
+      </div>
+      <div class="plain-note">这三个版本的综合色调接近，但浓淡、明暗和质地来源并不完全相同，因此 TrueTone 不再用一个综合色块代表全部“274”。</div>
+     </section>`
+  : `<section class="details-grid"><div class="panel"><h3>这个颜色大概是什么方向</h3><div class="direction-swatch-wrap"><span class="direction-swatch" style="background:${color(p)}"></span><div><b>#${p.shade} · ${esc(p.name)}</b><p>这个色块只帮助你快速理解综合色调，不代表品牌官方色卡或实物绝对颜色。</p></div></div></div><div class="panel"><h3>小红书和淘宝看起来差多少？</h3>${metric('颜色方向差异',a.platformDiff.hue,90,'°')}${metric('浓淡差异',Math.abs(a.platformDiff.saturation),35,'%')}${metric('明暗差异',Math.abs(a.platformDiff.brightness),35,'%')}<div class="plain-note">详细数值已收进分析依据，主页面只保留消费者能直接理解的差异。</div></div></section>`;
+
+ page(`<div class="route-head"><a class="backlink" href="#/search">← 返回色号库</a><div class="eyebrow" style="margin-top:22px">${esc(p.brand)} · ${esc(p.product)}</div><h1>#${p.shade} ${esc(p.name)}</h1><p>${is274?'这页按“274 色号家族”来读：先区分版本，再看家族层面的消费者争议。':'先给你能直接使用的结论，再告诉你为什么。下面的结果来自当前已收录的真实试色与评价。'}</p>${familyNotice}</div>
+
+ <section class="report-hero">
+  <div class="panel">
+   <div class="eyebrow">${is274?'274 家族结论':'一句话结论'}</div>
+   <div class="conclusion">${is274?'网络上的“兰蔻 274”并不是完全同一个产品语境。版本混淆本身会放大色差与适配评价的矛盾，因此要先确认版本，再看“适不适合我”。':esc(c.conclusion)}</div>
+   <div class="source-counts"><span><b>${a.counts.visual}</b> 份视觉素材</span><span><b>${fmt(a.counts.text)}</b> 条文字证据</span><span><b>${a.counts.sources}</b> 类来源</span></div>
+   <div class="filter-row" style="margin-top:18px"><span style="font-size:11px;color:var(--muted);align-self:center">更像你的情况：</span><button class="filter-btn active" data-prof="all">全部</button><button class="filter-btn" data-prof="深唇">深唇</button><button class="filter-btn" data-prof="浅唇">浅唇</button><button class="filter-btn" data-prof="素颜">素颜</button></div>
+  </div>
+  <div class="panel score-panel"><div class="score-ring" style="--score:${a.score};--ring:${a.score>=80?'#82b996':a.score>=60?'#e2b16b':'#d46d60'}"><b>${a.score}</b></div><div class="score-label"><strong>${is274?'家族级内容参考价值':'内容参考价值'}</strong>${is274?'这个分数表示“274”相关网络内容整体有多少可用信息，不代表三个版本可以混为一谈。':'它表示这些网络内容有多适合作为你的购买参考，不是简单的“真/假”判决。'}<span class="evidence-badge">可参考信息是否足够：${a.evidenceSufficiency}</span><div class="disclaimer">${evidenceScoreText(a)}。分数高低和资料多少是两回事。</div></div></div>
+ </section>
+
+ ${is274?shade274FamilyAnalysisHtml(evidenceEntry,distEntry):''}
+
  <section class="panel report-section" id="top-ref"><div class="section-head"><div><div class="eyebrow">真实参考</div><h2 style="font-size:28px">你最值得先看的 3 张</h2></div><p>${cloudTop.length?'优先展示当前样本库里最值得先看的真实试色。':'图片暂时没有稳定加载，但排序和文字证据仍然可用。'}</p></div><div class="top-media" id="top-media">${cloudTop.length?cloudTop.map(cloudReferenceCard).join(''):top.map(mediaCard).join('')}</div></section>
- <section class="details-grid"><div class="panel"><h3>大家最常提到什么</h3><div class="keyword-cloud">${Object.entries(a.keywordCounts).sort((x,y)=>y[1]-x[1]).slice(0,18).map(([x,n])=>`<span class="kw">${x} <b>${n}</b></span>`).join('')}</div><div class="plain-note" style="margin-top:15px">${a.consumerDifferenceMentions} 条文本提到偏色、色差或“和图片不一样”等线索。我们还发现：复购或回头客 ${a.reviewQuality.repeatBuyer} 条；负向体验 ${a.reviewQuality.negativeEvidence} 条；信息量很低的泛评 ${a.reviewQuality.genericTemplate} 条会降低权重。</div></div><div class="panel"><h3>与你情况相关的真实反馈</h3><div class="review-list" id="reviews">${c.reviews.slice(0,7).map(reviewCard).join('')}</div></div></section>
- <section class="details-grid"><div class="panel"><h3>这个颜色大概是什么方向</h3><div class="direction-swatch-wrap"><span class="direction-swatch" style="background:${color(p)}"></span><div><b>#${p.shade} · ${esc(p.name)}</b><p>这个色块只帮助你快速理解综合色调，不代表品牌官方色卡或实物绝对颜色。</p></div></div></div><div class="panel"><h3>小红书和淘宝看起来差多少？</h3>${metric('颜色方向差异',a.platformDiff.hue,90,'°')}${metric('浓淡差异',Math.abs(a.platformDiff.saturation),35,'%')}${metric('明暗差异',Math.abs(a.platformDiff.brightness),35,'%')}<div class="plain-note">详细数值已收进分析依据，主页面只保留消费者能直接理解的差异。</div></div></section>
- <section class="details-grid"><div class="panel"><h3>为什么会得到这个参考分？</h3>${(a.findings||[]).length?(a.findings||[]).map(f=>`<div class="finding"><span class="severity ${f.severity}">${f.severity==='high'?'高风险':f.severity==='medium'?'中风险':'低风险'}</span><div><strong>${esc(f.type)}</strong><p>在 ${f.count||1} 个样本里出现，因此会降低一些参考价值。</p></div></div>`).join(''):'<div class="plain-note">目前没有看到特别强的异常信号，但这仍不代表每一张图都能完全还原实物。</div>'}<div class="plain-note" style="margin-top:12px">如果你想看评分依据，可以在下方展开详细说明。</div></div><div class="panel"><h3>哪些差异属于正常变化？</h3><div class="review-list">${c.normal.map(x=>`<div class="review"><p>${esc(x)}</p></div>`).join('')||'<div class="plain-note">当前文本证据不足以细分更多正常变化。</div>'}</div></div></section>
+
+ <section class="details-grid">
+  <div class="panel"><h3>${is274?'274 家族里大家最常提到什么':'大家最常提到什么'}</h3><div class="keyword-cloud">${Object.entries(a.keywordCounts).sort((x,y)=>y[1]-x[1]).slice(0,18).map(([x,n])=>`<span class="kw">${x} <b>${n}</b></span>`).join('')}</div><div class="plain-note" style="margin-top:15px">${a.consumerDifferenceMentions} 条文本提到偏色、色差或“和图片不一样”等线索。${is274?' 对 274 来说，其中一部分矛盾可能来自版本混用，因此不能直接解释成修图或产品不稳定。':' '}复购或回头客 ${a.reviewQuality.repeatBuyer} 条；负向体验 ${a.reviewQuality.negativeEvidence} 条；信息量很低的泛评 ${a.reviewQuality.genericTemplate} 条会降低权重。</div></div>
+  <div class="panel"><h3>与你情况相关的真实反馈</h3><div class="review-list" id="reviews">${c.reviews.slice(0,7).map(reviewCard).join('')}</div></div>
+ </section>
+
+ ${colorSection}
+
+ <section class="details-grid">
+  <div class="panel"><h3>${is274?'为什么 274 不能只看一个总分？':'为什么会得到这个参考分？'}</h3>
+   ${is274
+    ? `<div class="plain-note">因为这个色号的风险不是单一的“图片异常”，还包括版本归属不清、旧款与新款混杂、回答者引用另一个 274 产品等证据归属问题。TrueTone 会把这些不确定性单独说明，而不是全部折算成“内容造假”。</div>`
+    : ((a.findings||[]).length?(a.findings||[]).map(f=>`<div class="finding"><span class="severity ${f.severity}">${f.severity==='high'?'高风险':f.severity==='medium'?'中风险':'低风险'}</span><div><strong>${esc(f.type)}</strong><p>在 ${f.count||1} 个样本里出现，因此会降低一些参考价值。</p></div></div>`).join(''):'<div class="plain-note">目前没有看到特别强的异常信号，但这仍不代表每一张图都能完全还原实物。</div>')}
+  </div>
+  <div class="panel"><h3>哪些差异属于正常变化？</h3><div class="review-list">${c.normal.map(x=>`<div class="review"><p>${esc(x)}</p></div>`).join('')||'<div class="plain-note">当前文本证据不足以细分更多正常变化。</div>'}</div></div>
+ </section>
+
  <section class="panel report-section"><div class="section-head"><div><div class="eyebrow">怎样让试色更容易比较</div><h2 style="font-size:28px">如果你想知道“怎样的种草更值得信”</h2></div><p>这部分总结了什么样的试色内容更容易被消费者正确比较。</p></div><div class="review-list">${creatorAdviceForProduct(p).map(s=>`<article class="review"><p><b>${esc(s.title)}</b><br><span style="color:var(--muted)">我们发现：</span>${esc(s.issue)}<br><span style="color:var(--muted)">可以怎么做：</span>${esc(s.how)}<br><span style="color:var(--muted)">这样做的原因：</span>${esc(s.why)}<br><span style="color:var(--gold)">会带来的好处：</span>${esc(s.impact)}</p></article>`).join('')}</div></section>
- <section class="cta-band"><div><h3>想知道 #${p.shade} 在你脸上可能怎么呈现？</h3><p>上传自拍后，TrueTone 会优先从真实样本里找更接近你当前光照和使用情况的参考图与评论。</p></div><a class="primary-btn" href="#/tryon?p=${p.key}">上传自拍</a></section>
+
+ <section class="cta-band"><div><h3>想知道 #${p.shade} 在你脸上可能怎么呈现？</h3><p>${is274?'如果是 274，最好先确认具体版本；无法确认时，TrueTone 会按家族级参考而不是假装精确到某一版。':'上传自拍后，TrueTone 会优先从真实样本里找更接近你当前光照和使用情况的参考图与评论。'}</p></div><a class="primary-btn" href="#/tryon?p=${p.key}">上传自拍</a></section>
  <section class="cta-band"><div><h3>喜欢这个方向吗？</h3><p>不喜欢也没关系，可以换成更橘、更浅或不同质地，再看相似色号。</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="secondary-btn" id="like">喜欢，看看相似色</button><button class="ghost-btn" id="warmer">想更橘一点</button><a class="ghost-btn" href="#/compare">我在纠结两个色号</a></div></section>`);
- $$('.filter-btn[data-prof]').forEach(b=>b.onclick=()=>{ $$('.filter-btn[data-prof]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const prof=b.dataset.prof;const cc=buildProductConsumerSummary(p,prof);$('#reviews').innerHTML=cc.reviews.slice(0,7).map(reviewCard).join('')||'<div class="plain-note">当前数据中没有足够匹配评论。</div>'});
- $('.media-card[data-media]').forEach(x=>x.onclick=()=>openMedia(p,x.dataset.media));
- $('.cloud-media-card[data-cloud-url]').forEach(x=>x.onclick=()=>{modalContent.innerHTML=`<div class="eyebrow">真实试色参考</div><h2 id="modal-title">原始高清样本</h2><img src="${esc(x.dataset.cloudUrl)}" style="width:100%;max-height:640px;object-fit:contain;background:#090807;border-radius:14px"><p style="color:var(--muted);line-height:1.7">该图片来自阿里云 OSS 私有样本库，通过短时签名地址加载，仅用于当前 Demo 展示。</p>`;openModal()});
- $('#like').onclick=()=>recommend(p,false);$('#warmer').onclick=()=>recommend(p,true);
+
+ $$('.filter-btn[data-prof]').forEach(b=>b.onclick=()=>{
+   $$('.filter-btn[data-prof]').forEach(x=>x.classList.remove('active'));
+   b.classList.add('active');
+   const prof=b.dataset.prof,cc=buildProductConsumerSummary(p,prof);
+   $('#reviews').innerHTML=cc.reviews.slice(0,7).map(reviewCard).join('')||'<div class="plain-note">当前数据中没有足够匹配评论。</div>';
+ });
+ $$('.media-card[data-media]').forEach(x=>x.onclick=()=>openMedia(p,x.dataset.media));
+ $$('.cloud-media-card[data-cloud-url]').forEach(x=>x.onclick=()=>{
+   modalContent.innerHTML=`<div class="eyebrow">真实试色参考</div><h2 id="modal-title">原始高清样本</h2><img src="${esc(x.dataset.cloudUrl)}" style="width:100%;max-height:640px;object-fit:contain;background:#090807;border-radius:14px"><p style="color:var(--muted);line-height:1.7">该图片来自阿里云 OSS 私有样本库，通过短时签名地址加载，仅用于当前 Demo 展示。</p>`;
+   openModal();
+ });
+ $('#like').onclick=()=>recommend(p,false);
+ $('#warmer').onclick=()=>recommend(p,true);
 }
+
 function recommend(p,warm){const candidates=manifest.products.filter(x=>x.key!==p.key).map(x=>({p:x,d:circularHueDistance(p.analysis.center.hue,x.analysis.center.hue)+(warm?(x.analysis.center.hue<p.analysis.center.hue?18:0):0)})).sort((a,b)=>a.d-b.d).slice(0,3);modalContent.innerHTML=`<div class="eyebrow">相似色号</div><h2 id="modal-title">${warm?'更偏暖 / 橘一点的方向':'相似色号'}</h2><p>这里只比较当前 Demo 已收录的色号，帮你快速看看有没有更接近你想要的方向。</p><div class="shade-grid">${candidates.map(x=>shadeCard(x.p)).join('')}</div>`;openModal()}
 function openMedia(p,id){const m=p.media.find(x=>x.id===id);if(!m)return;modalContent.innerHTML=`<div class="eyebrow">${m.platform} · 这张图的参考价值</div><h2 id="modal-title">参考价值 ${Math.round(m.referenceScore||0)}/100</h2>${m.thumb?`<img src="${m.thumb}" style="width:100%;max-height:520px;object-fit:contain;background:#090807;border-radius:14px">`:''}<div class="details-grid" style="margin-top:15px"><div class="panel"><h3>图片观感</h3><p>颜色方向 ${m.metrics?.hue??'—'}°<br>浓淡 ${m.metrics?.saturation??'—'}%<br>明暗 ${m.metrics?.brightness??'—'}%<br>光照：${m.metrics?.lighting||'—'}</p></div><div class="panel"><h3>为什么值得看 / 为什么要谨慎</h3><p>${esc((m.reasons||[]).join('；')||'当前样本未记录额外说明')}</p></div></div>`;openModal()}
 
