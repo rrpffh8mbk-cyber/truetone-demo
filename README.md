@@ -27,7 +27,10 @@ https://rrpffh8mbk-cyber.github.io/truetone-demo/
 
 公开版不是随机 UI。
 
-- `agents.js`：真实像素 HSV/亮度/饱和度分析、环形 Hue 距离、固定评分规则、跨图一致性、消费者报告与 Agent 4 建议
+- `agents.js`：基于 MediaPipe 唇部遮罩的真实像素 HSV/亮度/饱和度分析（支持蓝色、紫色等非红色唇色）、环形 Hue 距离、固定评分规则、跨图一致性、消费者报告与 Agent 4 建议
+- `lips.js`：分析与试妆共用的 Face Mesh 识别、最大人脸选择和 outer lip − inner mouth 遮罩
+- `lip-selection.js`：没有完整人脸的嘴唇特写可涂选唇部；只分析选中的像素，支持任意唇色。未自动识别时会引导标记，也可在图片预览中提前选择“标记特写唇部”。跳过或未选区域时不生成唇色评分。
+- `tests/lips-regression.html`：唇部 ROI 浏览器回归检查，运行方法见 `tests/README.md`
 - `tryon.js`：MediaPipe Face Mesh 唇部 landmarks，outer lip − inner mouth polygon mask，局部 alpha blending；不做人脸身份识别
 - `prompts/TRUE_TONE_AGENT_SYSTEM.md`：后续在 Base44 backend 中使用的最终 runtime system instructions
 - `DATA_PROVENANCE.md`：当前数据来源、统计规模与公开版边界

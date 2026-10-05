@@ -1,5 +1,6 @@
-import {analyzeImageFile,runFourAgents,buildProductConsumerSummary,hsvToHex,ANALYSIS_KEYWORDS,circularHueDistance} from './agents.js';
-import {createVirtualTryOn} from './tryon.js';
+import {analyzeEvidenceFile,markLipRegion} from './lip-selection.js?v=20261006-closeup';
+import {analyzeImageFile,runFourAgents,buildProductConsumerSummary,hsvToHex,ANALYSIS_KEYWORDS,circularHueDistance} from './agents.js?v=20261006-closeup';
+import {createVirtualTryOn} from './tryon.js?v=20261006-closeup';
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const app=$('#app'),toast=$('#toast'),modal=$('#modal-backdrop'),modalContent=$('#modal-content');
@@ -436,6 +437,7 @@ function rangePenalty(v,range){
  return 0;
 }
 function seededVisualAgreement(p,analyses,distEntry=null){
+ analyses=analyses.filter(x=>x.metrics.roiDetected!==false);
  if(!analyses.length)return null;
  const d=distEntry?.all,centerHue=d?.hue?.circular_center??p.analysis?.center?.hue??0;
  let total=0;
@@ -469,10 +471,12 @@ function imageDetailEvidence(p,analyses,distEntry){
  const d=distEntry?.all;
  return analyses.map((x,i)=>{
   const m=x.metrics,notes=[lightingMeaning(m.lighting)];
-  if(d){
+  if(m.roiDetected===false)notes.push(m.roiReason);
+  if(m.roiDetected!==false)notes.push(m.roiSource==='selected-lips'?'按你标记的唇部像素分析。':'已自动定位唇部，排除口腔内部。');
+  if(d&&m.roiDetected!==false){
    const dh=circularHueDistance(m.hue,d.hue.circular_center);
    const ds=m.saturation-d.saturation.median,db=m.brightness-d.brightness.median;
-   notes.push(dh<10?'综合色调方向与样本库中心很接近。':dh<25?'综合色调与样本库有一定偏移，但仍可能由拍摄条件解释。':'综合色调与样本库常见方向偏差较大，不能单独作为准确色彩依据。');
+   notes.push(dh<10?'综合色调方向与样本库中心很接近。':dh<25?'综合色调与样本库有一定偏移，但仍可能由拍摄条件解释。':'唇部颜色与该色号样本库常见方向偏差较大，不能单独作为准确色彩依据。');
    if(Math.abs(ds)>=5)notes.push('候选唇色区域比样本库中位水平'+(ds>0?'更浓约 ':'更淡约 ')+Math.abs(ds).toFixed(0)+' 个百分点。');
    if(Math.abs(db)>=6)notes.push('候选唇色区域比样本库中位水平'+(db>0?'更亮约 ':'更暗约 ')+Math.abs(db).toFixed(0)+' 个百分点。');
    notes.push('在现有平台样本中，它与'+nearestPlatform(m,distEntry)+'的综合色调更接近。');
@@ -608,7 +612,8 @@ async function seeded(){
   run.textContent=!purchaseTargetKey?'请先确认品牌与色号':!hasEvidence?'至少上传一种内容后开始分析':'开始检查这条种草';
  }
  function renderPreviews(){
-  preview.innerHTML=seededFiles.map((f,i)=>{const u=URL.createObjectURL(f);return `<div class="seed-preview"><img src="${u}" onload="URL.revokeObjectURL(this.src)"><span>图片 ${i+1}</span></div>`}).join('');
+  preview.innerHTML=seededFiles.map((f,i)=>{const u=URL.createObjectURL(f);return `<div class="seed-preview"><img src="${u}" onload="window.URL.revokeObjectURL(this.src)"><span>图片 ${i+1}</span><button type="button" class="mark-lips" data-lip="${i}">标记特写唇部</button></div>`}).join('');
+  preview.querySelectorAll('[data-lip]').forEach(b=>b.onclick=async()=>{if(await markLipRegion(seededFiles[Number(b.dataset.lip)]))b.textContent='已标记 · 可重新选择'});
  }
  input.onchange=()=>{seededFiles=[...(input.files||[])].slice(0,6);renderPreviews();updateState()};
  brand.oninput=shade.oninput=textInput.oninput=updateState;updateState();
@@ -654,9 +659,8 @@ async function runSeededAnalysis(){
 
   mark(0,'done');mark(1,'active');setBar('20%');
 
-  const analyses=seededFiles.length
-    ? await Promise.all(seededFiles.map(analyzeImageFile))
-    : [];
+  const analyses=[];
+  for(const file of seededFiles)analyses.push(await analyzeEvidenceFile(file));
   const visual=analyses.length?runFourAgents(analyses,p):null;
 
   mark(1,'done');mark(2,'active');setBar('42%');
@@ -701,7 +705,7 @@ async function runSeededAnalysis(){
 
 function renderSeededResult({p,profile,rawText,analyses,visual,textReport,databaseAgreement,personal,overall,cloudMedia,evidenceEntry,distEntry,visualAgreement}){
  const hasImage=analyses.length>0,hasText=!!textReport;
- const verdict=overall>=82?'整体值得参考，但仍要结合与你更接近的真实样本。':overall>=68?'有参考价值，但其中有些信息需要谨慎看。':'不建议只靠这条内容做购买决定。';
+ const verdict=hasImage&&visual.score===null?'尚未确认唇部区域，无法判断图片颜色是否可信。':overall>=82?'整体值得参考，但仍要结合与你更接近的真实样本。':overall>=68?'有参考价值，但其中有些信息需要谨慎看。':'不建议只靠这条内容做购买决定。';
  const visualNotes=visual?(visual.findings||[]).slice(0,4).map(x=>'<li>'+esc(seedFindingText(x))+'</li>').join(''):'';
  const imageDetails=hasImage?imageDetailEvidence(p,analyses,distEntry):[];
  const imageDetailsHtml=imageDetails.map(d=>`<article class="image-evidence-detail">${d.view?`<img src="${d.view}" alt="上传图片 ${d.index}">`:''}<div><div class="image-detail-head"><b>图片 ${d.index}</b><span>${esc(d.lighting)}</span></div><ul>${d.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul></div></article>`).join('');
@@ -718,7 +722,7 @@ function renderSeededResult({p,profile,rawText,analyses,visual,textReport,databa
   <div class="seed-report-hero">
    <div><div class="eyebrow">这条种草值得信吗？</div><div class="big-score">${overall}<small>/100</small></div><h2>${verdict}</h2><p>本次使用了：${hasImage?analyses.length+' 张图片':''}${hasImage&&hasText?' + ':''}${hasText?'文字内容':''}。没有上传的部分不会被当成缺点扣分。</p></div>
    <div class="seed-score-grid">
-    <div><span>图片参考价值</span><b>${hasImage?visual.score:'未提供'}</b></div>
+    <div><span>图片参考价值</span><b>${hasImage?(visual.score??'无法判断'):'未提供'}</b></div>
     <div><span>文字参考价值</span><b>${hasText?textReport.score:'未提供'}</b></div>
     <div><span>与整个样本库一致性</span><b>${databaseAgreement}</b></div>
     <div><span>与你的相关性</span><b>${personal.score}</b></div>
@@ -726,7 +730,7 @@ function renderSeededResult({p,profile,rawText,analyses,visual,textReport,databa
   </div>
 
   <div class="seed-two-col">
-   <section class="seed-card"><div class="eyebrow">图片怎么看</div><h3>${hasImage?'图片本身 '+visual.score+'/100':'这次没有上传图片'}</h3>${hasImage?`<ul>${visualNotes||'<li>没有发现明显的高风险视觉异常。</li>'}</ul>`:'<p>所以本次不会对图片做任何推断。</p>'}</section>
+   <section class="seed-card"><div class="eyebrow">图片怎么看</div><h3>${hasImage?(visual.score===null?'未识别到唇部':'图片本身 '+visual.score+'/100'):'这次没有上传图片'}</h3>${hasImage?`<ul>${visualNotes||'<li>没有发现明显的高风险视觉异常。</li>'}</ul>`:'<p>所以本次不会对图片做任何推断。</p>'}</section>
    <section class="seed-card"><div class="eyebrow">文字怎么说</div><h3>${hasText?'文字内容 '+textReport.score+'/100':'这次没有上传文字'}</h3>${hasText?`<ul>${textFlags}${textStrength}</ul>`:'<p>所以本次不会因为缺少文案而降低总分。</p>'}</section>
   </div>
 
@@ -1073,10 +1077,10 @@ async function verify(){
  const input=$('#verify-input'),drop=$('#drop');drop.ondragover=e=>{e.preventDefault();drop.classList.add('drag')};drop.ondragleave=()=>drop.classList.remove('drag');drop.ondrop=e=>{e.preventDefault();drop.classList.remove('drag');addVerify([...e.dataTransfer.files])};input.onchange=()=>addVerify([...input.files]);$('#run-verify').onclick=runVerify
 }
 function addVerify(fs){verifyFiles.push(...fs.filter(f=>f.type.startsWith('image/')));renderVerifyPreviews()}
-function renderVerifyPreviews(){const el=$('#previews');el.innerHTML=verifyFiles.map((f,i)=>`<div class="preview-card"><button class="remove-file" data-i="${i}">×</button><img src="${URL.createObjectURL(f)}"><div class="meta">${esc(f.name)}</div></div>`).join('');$$('.remove-file').forEach(b=>b.onclick=e=>{e.preventDefault();verifyFiles.splice(+b.dataset.i,1);renderVerifyPreviews()});$('#run-verify').disabled=!verifyFiles.length}
-async function runVerify(){const btn=$('#run-verify');btn.disabled=true;verifyAnalyses=[];$('#agent-run').classList.remove('hidden');const steps=$$('.agent-step');steps.forEach(x=>x.className='agent-step');steps[0].classList.add('active');for(let i=0;i<verifyFiles.length;i++){verifyAnalyses.push(await analyzeImageFile(verifyFiles[i]));$('#vprogress').style.width=((i+1)/verifyFiles.length*55)+'%'}steps[0].className='agent-step done';steps[1].className='agent-step active';let p=null;if($('#match-product').value)p=await getProduct($('#match-product').value);await wait(220);const report=runFourAgents(verifyAnalyses,p);steps[1].className='agent-step done';steps[2].className='agent-step active';await wait(180);steps[2].className='agent-step done';steps[3].className='agent-step active';await wait(150);steps[3].className='agent-step done';$('#vprogress').style.width='100%';renderVerifyResults(report);btn.disabled=false;btn.textContent='重新分析'}
-function renderVerifyResults(r){const ranked=verifyAnalyses.map((x,i)=>({x,i,score:Math.max(25,95-(x.metrics.saturation>75?8:0)-(x.metrics.sceneBrightness>80?8:0)-(x.metrics.sceneBrightness<30?4:0)-((x.metrics.lighting==='暖光'||x.metrics.lighting==='冷光')?4:0))})).sort((a,b)=>b.score-a.score);$('#verify-results').innerHTML=`<section class="report-hero"><div class="panel"><div class="eyebrow">分析完成</div><div class="conclusion">${esc(r.summary)}</div><div class="plain-note">分析置信度：${r.confidence}% · 输入 ${verifyAnalyses.length} 张图片</div></div><div class="panel score-panel"><div class="score-ring" style="--score:${r.score}"><b>${r.score}</b></div><div class="score-label"><strong>参考可信度</strong>来自真实图片观感与项目原评分规则。</div></div></section><section class="panel report-section"><h3>最值得参考的上传图片</h3><div class="top-media">${ranked.slice(0,3).map((q,n)=>`<article class="media-card"><img src="${q.x.views.original}"><div class="media-card-body"><div class="rank">#${n+1} · ${q.score}/100</div><div class="source-line">${q.x.metrics.lighting}</div><div class="reason">${q.x.metrics.lighting} · 点击下方“查看图片分析依据”可看详细数值</div></div></article>`).join('')}</div></section><section class="panel report-section"><h3>查看图片分析依据</h3><div class="filter-row" id="diag-tabs">${verifyAnalyses.map((x,i)=>`<button class="filter-btn ${i?'':'active'}" data-img="${i}">图 ${i+1}</button>`).join('')}</div><div id="diag"></div></section><section class="details-grid"><div class="panel"><h3>为什么是这个分数？</h3>${r.findings.map(f=>`<div class="finding"><span class="severity ${f.severity}">${f.severity}</span><div><strong>${esc(f.type)}</strong><p>${esc(f.evidence)} · ${esc(f.impact)}</p></div></div>`).join('')||'<div class="plain-note">未触发明显视觉风险；仍不代表“绝对真实”。</div>'}</div><div class="panel"><h3>给内容创作者的改进建议</h3>${r.suggestions.map(s=>`<div class="review"><p><b>${esc(s.title)}</b><br>${esc(s.why)}<br><span style="color:var(--gold)">预期改善：</span>${esc(s.impact)}</p></div>`).join('')}</div></section>`;$$('#diag-tabs .filter-btn').forEach(b=>b.onclick=()=>showDiag(+b.dataset.img));showDiag(0)}
-function showDiag(i){const x=verifyAnalyses[i];$$('#diag-tabs .filter-btn').forEach((b,n)=>b.classList.toggle('active',n===i));$('#diag').innerHTML=`<div class="diagnostic-tabs"><button class="tab-btn active" data-v="original">原图</button><button class="tab-btn" data-v="roi">可能的唇色区域</button><button class="tab-btn" data-v="saturation">浓淡</button><button class="tab-btn" data-v="brightness">明暗</button><button class="tab-btn" data-v="composite">综合查看</button></div><div class="diag-view"><img id="diag-img" src="${x.views.original}"></div><div class="plain-note" style="margin-top:10px">拍摄环境：${x.metrics.lighting}。详细颜色数值仅作为内部比较依据。</div>`;$$('[data-v]').forEach(b=>b.onclick=()=>{$$('[data-v]').forEach(z=>z.classList.remove('active'));b.classList.add('active');$('#diag-img').src=x.views[b.dataset.v]})}
+function renderVerifyPreviews(){const el=$('#previews');el.innerHTML=verifyFiles.map((f,i)=>`<div class="preview-card"><button class="remove-file" data-i="${i}">×</button><img src="${URL.createObjectURL(f)}" onload="window.URL.revokeObjectURL(this.src)"><div class="meta">${esc(f.name)}</div><button type="button" class="mark-lips" data-lip="${i}">标记特写唇部</button></div>`).join('');$$('.remove-file').forEach(b=>b.onclick=e=>{e.preventDefault();verifyFiles.splice(+b.dataset.i,1);renderVerifyPreviews()});el.querySelectorAll('[data-lip]').forEach(b=>b.onclick=async()=>{if(await markLipRegion(verifyFiles[Number(b.dataset.lip)]))b.textContent='已标记 · 可重新选择'});$('#run-verify').disabled=!verifyFiles.length}
+async function runVerify(){const btn=$('#run-verify');btn.disabled=true;verifyAnalyses=[];$('#agent-run').classList.remove('hidden');const steps=$$('.agent-step');steps.forEach(x=>x.className='agent-step');steps[0].classList.add('active');for(let i=0;i<verifyFiles.length;i++){verifyAnalyses.push(await analyzeEvidenceFile(verifyFiles[i]));$('#vprogress').style.width=((i+1)/verifyFiles.length*55)+'%'}steps[0].className='agent-step done';steps[1].className='agent-step active';let p=null;if($('#match-product').value)p=await getProduct($('#match-product').value);await wait(220);const report=runFourAgents(verifyAnalyses,p);steps[1].className='agent-step done';steps[2].className='agent-step active';await wait(180);steps[2].className='agent-step done';steps[3].className='agent-step active';await wait(150);steps[3].className='agent-step done';$('#vprogress').style.width='100%';renderVerifyResults(report);btn.disabled=false;btn.textContent='重新分析'}
+function renderVerifyResults(r){const ranked=verifyAnalyses.map((x,i)=>({x,i,score:Math.max(25,95-(x.metrics.saturation>75?8:0)-(x.metrics.sceneBrightness>80?8:0)-(x.metrics.sceneBrightness<30?4:0)-((x.metrics.lighting==='暖光'||x.metrics.lighting==='冷光')?4:0))})).filter(q=>q.x.metrics.roiDetected!==false).sort((a,b)=>b.score-a.score);$('#verify-results').innerHTML=`<section class="report-hero"><div class="panel"><div class="eyebrow">分析完成</div><div class="conclusion">${esc(r.summary)}</div><div class="plain-note">分析置信度：${r.confidence}% · 输入 ${verifyAnalyses.length} 张图片</div></div><div class="panel score-panel"><div class="score-ring" style="--score:${r.score??0}"><b>${r.score??'—'}</b></div><div class="score-label"><strong>参考可信度</strong>来自真实图片观感与项目原评分规则。</div></div></section><section class="panel report-section"><h3>最值得参考的上传图片</h3><div class="top-media">${ranked.slice(0,3).map((q,n)=>`<article class="media-card"><img src="${q.x.views.original}"><div class="media-card-body"><div class="rank">#${n+1} · ${q.score}/100</div><div class="source-line">${q.x.metrics.lighting}</div><div class="reason">${q.x.metrics.lighting} · 点击下方“查看图片分析依据”可看详细数值</div></div></article>`).join('')}</div></section><section class="panel report-section"><h3>查看图片分析依据</h3><div class="filter-row" id="diag-tabs">${verifyAnalyses.map((x,i)=>`<button class="filter-btn ${i?'':'active'}" data-img="${i}">图 ${i+1}</button>`).join('')}</div><div id="diag"></div></section><section class="details-grid"><div class="panel"><h3>为什么是这个分数？</h3>${r.findings.map(f=>`<div class="finding"><span class="severity ${f.severity}">${f.severity}</span><div><strong>${esc(f.type)}</strong><p>${esc(f.evidence)} · ${esc(f.impact)}</p></div></div>`).join('')||'<div class="plain-note">未触发明显视觉风险；仍不代表“绝对真实”。</div>'}</div><div class="panel"><h3>给内容创作者的改进建议</h3>${r.suggestions.map(s=>`<div class="review"><p><b>${esc(s.title)}</b><br>${esc(s.why)}<br><span style="color:var(--gold)">预期改善：</span>${esc(s.impact)}</p></div>`).join('')}</div></section>`;$$('#diag-tabs .filter-btn').forEach(b=>b.onclick=()=>showDiag(+b.dataset.img));showDiag(0)}
+function showDiag(i){const x=verifyAnalyses[i];$$('#diag-tabs .filter-btn').forEach((b,n)=>b.classList.toggle('active',n===i));$('#diag').innerHTML=`<div class="diagnostic-tabs"><button class="tab-btn active" data-v="original">原图</button><button class="tab-btn" data-v="roi">识别的唇部区域</button><button class="tab-btn" data-v="saturation">浓淡</button><button class="tab-btn" data-v="brightness">明暗</button><button class="tab-btn" data-v="composite">综合查看</button></div><div class="diag-view"><img id="diag-img" src="${x.views.original}"></div><div class="plain-note" style="margin-top:10px">拍摄环境：${x.metrics.lighting}。${x.metrics.roiDetected===false?esc(x.metrics.roiReason):(x.metrics.roiSource==='selected-lips'?'正在分析你标记的唇部。':'已识别唇部，排除口腔内部。')}详细颜色数值仅作为内部比较依据。</div>`;$$('[data-v]').forEach(b=>b.onclick=()=>{$$('[data-v]').forEach(z=>z.classList.remove('active'));b.classList.add('active');$('#diag-img').src=x.views[b.dataset.v]})}
 
 async function tryon(){
  await getManifest();const param=new URLSearchParams((location.hash.split('?')[1]||''));const preset=param.get('p')||'ysl-610';page(`<div class="route-head"><a class="backlink" href="#/">← 首页</a><div class="eyebrow" style="margin-top:22px">自拍个性化试色</div><h1>别问“它适不适合所有人”。<br>先看它在这张自拍里可能怎么呈现。</h1><p>只分析当前照片中的颜色、光照与唇部位置；不推断种族、年龄、身份、健康或颜值。</p></div><section class="tryon-layout"><label class="photo-stage" id="selfie-stage"><input id="selfie-input" type="file" accept="image/png,image/jpeg,image/webp" hidden><div class="empty-stage" id="selfie-empty"><div class="upload-icon">＋</div><h3>上传自然光、无滤镜、嘴唇清晰的正脸自拍</h3><p>自拍仅用于本次浏览器内分析，不上传。</p></div><img id="selfie-img" class="hidden"><div class="toggle hidden" id="try-toggle" style="position:absolute;left:14px;bottom:14px"><button class="active" data-show="tryon">颜色预览</button><button data-show="original">原自拍</button></div></label><aside class="panel try-controls"><div><div class="eyebrow">Step 1</div><h3>选择色号</h3><div class="choice-grid" id="try-products">${manifest.products.map(p=>`<button class="choice ${p.key===preset?'active':''}" data-p="${p.key}"><b>#${p.shade}</b><br><small>${esc(p.brand)} · ${esc(p.name)}</small></button>`).join('')}</div></div><div><div class="eyebrow">Step 2 · 可选</div><h3>告诉我们你的使用情况</h3><div class="form-row"><select class="select" id="lip-prof"><option value="all">唇色：不确定</option><option>浅唇</option><option>深唇</option></select><select class="select" id="tone-prof"><option value="auto">冷暖：按照片</option><option value="warm">偏暖</option><option value="neutral">中性</option><option value="cool">偏冷</option></select></div><button class="primary-btn" id="run-try" disabled>分析这张自拍的拍摄情况</button><input id="debug" type="checkbox" hidden></div><div class="quality-list" id="quality"></div></aside></section><div id="try-results"></div>`);

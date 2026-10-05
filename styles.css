@@ -317,3 +317,16 @@ body:not(.modal-open) #modal-backdrop[aria-hidden="true"]{
 .family-claim{border-top:1px solid var(--line);padding:18px 0}
 .family-claim:first-of-type{border-top:0}
 @media(max-width:760px){.variant-card-grid{grid-template-columns:1fr}}
+
+/* Close-up lip selection uses native modal focus management and pointer input. */
+.lip-selector{background:#161210;color:#f4eee8;border:1px solid #665442;border-radius:20px;padding:24px;width:min(680px,92vw);max-height:92vh;overflow:auto}
+.lip-selector::backdrop{background:rgba(0,0,0,.8)}
+.lip-selector h2{margin:0 0 12px;font-size:25px}
+.lip-selector p{line-height:1.6}
+.lip-selection-canvas{display:block;width:auto;max-width:100%;height:auto;max-height:52vh;margin:12px auto;cursor:crosshair;touch-action:none}
+.lip-brush-label{display:flex;gap:16px;align-items:center;margin:12px 0}
+.lip-selection-actions{display:flex;gap:10px;flex-wrap:wrap}
+.lip-selection-actions button,.mark-lips{font:inherit;padding:9px 12px;border-radius:10px;border:1px solid #665442;cursor:pointer;background:#29211c;color:#f4eee8}
+.lip-selection-actions button:disabled{opacity:.45;cursor:default}
+.lip-selection-status{font-size:13px;color:#c8b79f}
+.seed-preview .mark-lips,.preview-card .mark-lips{position:relative;z-index:1;margin:6px;font-size:12px}
