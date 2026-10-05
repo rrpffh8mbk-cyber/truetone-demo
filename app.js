@@ -26,7 +26,7 @@ const FALLBACK_REVIEWS={
  ]};
 const fmt=n=>new Intl.NumberFormat('zh-CN').format(n||0);
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-const color=p=>{const c=p.analysis.center;return hsvToHex(c.hue,c.saturation,c.brightness)};
+const shadeTarget=p=>p.tryOnColor||p.analysis.center; const color=p=>{const c=shadeTarget(p);return hsvToHex(c.hue,c.saturation,c.brightness)};
 function toastMsg(s){toast.textContent=s;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1900)}
 async function ungzipB64(parts){const txt=(await Promise.all(parts.map(u=>fetch(u).then(r=>{if(!r.ok)throw Error('数据文件未部署完整');return r.text()})))).join('').trim();const bin=Uint8Array.from(atob(txt),c=>c.charCodeAt(0));if(!('DecompressionStream'in window))throw Error('当前浏览器不支持数据解压，请使用最新版 Chrome / Edge / Safari');const stream=new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip'));return JSON.parse(await new Response(stream).text())}
 async function getManifest(){if(manifest)return manifest;manifest=await fetch('./data/manifest.json').then(r=>r.json());return manifest}
@@ -111,7 +111,7 @@ function personalMatchScore(p,selfie,profile,reviews){
  return Math.round(Math.max(45,Math.min(94,s)));
 }
 function expectedAppearance(p,selfie){
- const c=p.analysis.center,light=selfie.light||{label:'中性光',brightness:60};
+ const c=shadeTarget(p),light=selfie.light||{label:'中性光',brightness:60};
  const b=Math.max(5,Math.min(95,c.brightness+(light.brightness-60)*.12));
  let tone='接近多来源参考色域';if(light.label==='暖光')tone='在当前暖光下可能更偏橘/棕';if(light.label==='冷光')tone='在当前冷光下可能更偏冷/紫';if(light.label==='偏暗')tone='当前照片偏暗，实际上嘴可能比预览更亮';
  return {h:c.hue,s:c.saturation,b:+b.toFixed(1),tone};
@@ -176,13 +176,13 @@ async function home(){
      <div class="step-copy"><div class="eyebrow">告诉我们你想买什么</div><h2>输入品牌和目标色号</h2><p>像真实购买场景一样直接输入你正在考虑的品牌与色号。当前 Demo 会在团队已爬取的小红书 + 淘宝真实样本库中匹配。</p></div>
      <div class="target-entry">
        <div class="target-fields">
-         <label><span>品牌名</span><input id="consumer-brand" class="target-input" list="brand-options" autocomplete="off" placeholder="例如 YSL / Lancôme / 圣罗兰 / 兰蔻"></label>
+         <label><span>品牌名</span><input id="consumer-brand" class="target-input" list="brand-options" autocomplete="off" placeholder="例如 圣罗兰 YSL / 兰蔻 Lancôme"></label>
          <label><span>色号 / 色号名</span><input id="consumer-shade" class="target-input" list="shade-options" autocomplete="off" placeholder="例如 610 / 274 / 冰乌龙 / 杏仁奶茶"></label>
        </div>
-       <datalist id="brand-options"><option value="YSL"><option value="圣罗兰"><option value="Lancôme"><option value="兰蔻"></datalist>
+       <datalist id="brand-options"><option value="圣罗兰 YSL"><option value="兰蔻 Lancôme"></datalist>
        <datalist id="shade-options"><option value="610"><option value="冰乌龙"><option value="1936"><option value="琥珀柑茶"><option value="274"><option value="杏仁奶茶"><option value="275"><option value="法式裸茶"></datalist>
        <div class="target-match empty-state" id="target-match">输入品牌和色号后，TrueTone 会确认是否已收录该产品。</div>
-       <p class="demo-support">当前比赛 Demo 已收录：YSL 610 / YSL 1936 / Lancôme 274 / Lancôme 275。</p>
+       <p class="demo-support">当前比赛 Demo 已收录：圣罗兰 YSL 610 / 1936；兰蔻 Lancôme 274 / 275。</p>
      </div>
    </div>
 
@@ -216,10 +216,10 @@ async function home(){
    purchaseTargetKey=p?.key||null;
    if(p){
      matchBox.className='target-match matched';
-     matchBox.innerHTML=`<span class="shade-dot" style="background:${color(p)}"></span><div><b>已找到：${esc(p.brand)} #${p.shade} · ${esc(p.name)}</b><small>${esc(p.product)} · ${esc(p.texture)} · ${fmt(p.analysis.counts.text)} 条文字证据</small></div><em>可分析</em>`;
+     matchBox.innerHTML=`<span class="shade-dot" style="background:${color(p)}"></span><div><b>已找到：${esc(p.brand)} #${p.shade} · ${esc(p.name)}</b><small>${esc(p.product)} · ${esc(p.texture)} · ${fmt(p.analysis.counts.text)} 条文字证据 · 试色参考色已载入</small></div><em>可分析</em>`;
    }else if(brandInput.value||shadeInput.value){
      matchBox.className='target-match no-match';
-     matchBox.textContent='暂未匹配到当前 Demo 数据。请尝试 YSL 610 / 1936 或 Lancôme 274 / 275。';
+     matchBox.textContent='暂未匹配到当前 Demo 数据。请尝试 圣罗兰 YSL 610 / 1936 或 兰蔻 Lancôme 274 / 275。';
    }else{
      matchBox.className='target-match empty-state';
      matchBox.textContent='输入品牌和色号后，TrueTone 会确认是否已收录该产品。';
@@ -277,7 +277,7 @@ function cloudMediaHtml(cloudNarrative,localMedia){
 }
 
 function renderConsumerResult(p,profile,reviews,media,match,expected,cloudNarrative=null){
- const a=p.analysis,cloudScore=Number(cloudNarrative?.truetone_score),trust=Number.isFinite(cloudScore)?Math.round(cloudScore):Math.round(a.score),evidenceLevel=cloudEvidenceLabel(cloudNarrative?.evidence_sufficiency||a.evidenceSufficiency),trustLabel=trust>=80?'整体较值得参考':trust>=65?'可以参考，但要注意内容差异':'建议谨慎参考，不依赖单一内容';
+ const a=p.analysis,cloudScore=Number(cloudNarrative?.truetone_score??cloudNarrative?.trust_score??cloudNarrative?.score),trust=Number.isFinite(cloudScore)?Math.round(cloudScore):Math.round(a.score),evidenceLevel=cloudEvidenceLabel(cloudNarrative?.evidence_sufficiency||a.evidenceSufficiency),trustLabel=trust>=80?'整体较值得参考':trust>=65?'可以参考，但要注意内容差异':'建议谨慎参考，不依赖单一内容';
  const fitLabel=match>=84?'与你当前条件的参考匹配度较高':match>=72?'有一定参考价值，但个体差异仍明显':'与你当前条件相近的证据还不够充分';
  const normal=[];if(a.keywordCounts['深唇']||a.keywordCounts['浅唇'])normal.push('原生唇色会改变最终显色');if(a.keywordCounts['薄涂']||a.keywordCounts['厚涂'])normal.push('薄涂 / 厚涂会改变饱和度和覆盖力');if(a.keywordCounts['氧化'])normal.push('有消费者提到成膜 / 氧化后的颜色变化'); const cloudNormal=cloudArray(cloudNarrative?.normal_variations).map(cloudText).filter(Boolean),normalItems=cloudNormal.length?cloudNormal:normal; const cloudRisks=cloudArray(cloudNarrative?.main_risks).map(cloudText).filter(Boolean),riskItems=cloudRisks.length?cloudRisks:['不同来源的光线与后期会造成视觉差异，不能只看单张图片。','当前证据不足以把正常色差直接判断为视觉造假。']; const platformSummary=cloudNarrative?.platform_difference_summary||('小红书与淘宝存在跨平台差异：色相差 '+a.platformDiff.hue+'°、饱和度差 '+Math.abs(a.platformDiff.saturation)+'%、亮度差 '+Math.abs(a.platformDiff.brightness)+'%。');
  const mediaHtml=cloudMediaHtml(cloudNarrative,media);
@@ -287,7 +287,7 @@ function renderConsumerResult(p,profile,reviews,media,match,expected,cloudNarrat
    <div class="result-title"><div><div class="eyebrow">你的 TrueTone 购买参考</div><h2>${esc(p.brand)} #${p.shade} · ${esc(p.name)}</h2><p>不是替你宣布“适合 / 不适合”，而是根据当前自拍和可信消费者证据告诉你：这个方向对你有多大参考价值。</p></div><button class="ghost-btn" id="back-to-form">重新选择</button></div>
    ${cloudNarrative?.runtime==="aliyun-model-studio"?`<div class="cloud-connected-badge"><span>TRUE AI ANALYSIS</span><b>✓ 阿里云百炼已参与本次分析</b></div>`:``}
    <div class="personal-hero-grid">
-    <div class="tryon-card"><div class="tryon-image"><img id="consumer-result-photo" src="${selfieResult.tryon}"><div class="toggle result-toggle"><button class="active" data-view="tryon">颜色预览</button><button data-view="original">原自拍</button></div></div><div class="tryon-caption"><b>#${p.shade} 在当前自拍里的预计呈现</b><p>${expected.tone}；参考色域约 H ${expected.h}° · S ${expected.s}% · B ${expected.b}%。</p><small>颜色预览仅用于帮助理解色调方向，不等同于精准 AR 试色或实物最终效果。</small></div></div>
+    <div class="tryon-card"><div class="tryon-image"><img id="consumer-result-photo" src="${selfieResult.tryon}"><div class="toggle result-toggle"><button class="active" data-view="tryon">颜色预览</button><button data-view="original">原自拍</button></div></div><div class="tryon-caption"><b>#${p.shade} 在当前自拍里的预计呈现</b><p>${expected.tone}；样本校准试色参考色约 H ${expected.h}° · S ${expected.s}% · B ${expected.b}%。</p><small>颜色预览仅用于帮助理解色调方向，不等同于精准 AR 试色或实物最终效果。</small></div></div>
     <div class="decision-card">
       <div class="decision-block"><span>网上关于这个色号，可信吗？</span><div class="big-score">${trust}<small>/100</small></div><b>${trustLabel}</b><p>${a.counts.visual} 份视觉素材 + ${fmt(a.counts.text)} 条文字证据；证据充分度：${evidenceLevel}。</p></div>
       <div class="decision-block accent"><span>和你当前情况，匹配吗？</span><div class="big-score">${match}<small>% MATCH</small></div><b>${fitLabel}</b><p>结合当前自拍光照、你主动选择的“${profile.lip} / ${profile.makeup} / ${profile.goal}”以及可信内容匹配。</p></div>
