@@ -1,3 +1,2 @@
-Flask==3.0.3
-flask-cors==4.0.1
-requests==2.32.3
+# Function Compute Python web runtime includes Flask.
+# This TrueTone demo deliberately uses only Flask + Python standard library.
