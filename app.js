@@ -116,6 +116,22 @@ function expectedAppearance(p,selfie){
  let tone='接近多来源参考色域';if(light.label==='暖光')tone='在当前暖光下可能更偏橘/棕';if(light.label==='冷光')tone='在当前冷光下可能更偏冷/紫';if(light.label==='偏暗')tone='当前照片偏暗，实际上嘴可能比预览更亮';
  return {h:c.hue,s:c.saturation,b:+b.toFixed(1),tone};
 }
+async function callCloudAgent(p,profile,selfie,reviews,match){
+ const api=(window.TRUETONE_CONFIG?.apiBase||'').replace(/\/$/,'');if(!api)return null;
+ const evidence={
+  product:{key:p.key,brand:p.brand,shade:p.shade,name:p.name,product:p.product,texture:p.texture,skuLines:p.skuLines||[]},
+  trust_score:p.analysis.score,evidence_sufficiency:p.analysis.evidenceSufficiency,
+  counts:p.analysis.counts,platform_diff:p.analysis.platformDiff,keyword_counts:p.analysis.keywordCounts,
+  representative_reviews:reviews.map(r=>({platform:r.platform,type:r.type,text:r.text,sku:r.sku||'',repeatBuyer:!!r.repeatBuyer,negativeEvidence:!!r.negativeEvidence})),
+  deterministic_match_score:match
+ };
+ const payload={product_key:p.key,profile,selfie_features:{light:selfie.light,faceRef:selfie.faceRef},evidence};
+ try{
+  const r=await fetch(api+'/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  if(!r.ok)throw Error('HTTP '+r.status);return await r.json();
+ }catch(e){console.warn('Cloud Agent unavailable',e);return null}
+}
+
 
 async function home(){
  await getManifest();selfieFile=null;selfieResult=null;
@@ -189,15 +205,16 @@ async function runConsumerJourney(){
    const reviews=personalizedReviews(p,profile),media=personalizedMedia(p,selfieResult);
    steps[2].classList.add('done');steps[3].classList.add('active');bar.style.width='72%';await wait(180);
    const match=personalMatchScore(p,selfieResult,profile,reviews),expected=expectedAppearance(p,selfieResult);
-   steps[3].classList.add('done');steps[4].classList.add('active');bar.style.width='90%';await wait(160);
+   steps[3].classList.add('done');steps[4].classList.add('active');bar.style.width='90%';
+   const cloudNarrative=await callCloudAgent(p,profile,selfieResult,reviews,match);await wait(120);
    steps[4].classList.add('done');bar.style.width='100%';
-   renderConsumerResult(p,profile,reviews,media,match,expected);
+   renderConsumerResult(p,profile,reviews,media,match,expected,cloudNarrative);
  }catch(e){
    result.innerHTML=`<section class="sku-warning"><b>这次没有稳定完成自拍分析。</b><br>${esc(e.message)}<br>建议换一张自然光、正脸、嘴唇无遮挡的照片再试。</section>`;
  }finally{run.disabled=false;run.textContent='重新分析'}
 }
 
-function renderConsumerResult(p,profile,reviews,media,match,expected){
+function renderConsumerResult(p,profile,reviews,media,match,expected,cloudNarrative=null){
  const a=p.analysis,trust=a.score,trustLabel=trust>=80?'网络内容整体较值得参考':trust>=65?'可参考，但需要挑内容':'需要谨慎，不建议依赖单一内容';
  const fitLabel=match>=84?'与你当前条件的参考匹配度较高':match>=72?'有一定参考价值，但个体差异仍明显':'与你当前条件相近的证据还不够充分';
  const normal=[];if(a.keywordCounts['深唇']||a.keywordCounts['浅唇'])normal.push('原生唇色会改变最终显色');if(a.keywordCounts['薄涂']||a.keywordCounts['厚涂'])normal.push('薄涂 / 厚涂会改变饱和度和覆盖力');if(a.keywordCounts['氧化'])normal.push('有消费者提到成膜 / 氧化后的颜色变化');
@@ -214,6 +231,7 @@ function renderConsumerResult(p,profile,reviews,media,match,expected){
     </div>
    </div>
 
+   ${cloudNarrative?.summary?`<section class="agent-narrative"><div class="eyebrow">阿里云百炼 · TrueTone Agent</div><h3>AI 把证据翻译成一句购买建议</h3><p>${esc(cloudNarrative.summary)}</p>${cloudNarrative.purchase_advice?`<small>${esc(cloudNarrative.purchase_advice)}</small>`:''}</section>`:''}
    <section class="consumer-section"><div class="section-head"><div><div class="eyebrow">先看这些</div><h2>最值得你参考的 3 张试色</h2></div><p>先通过内容可信度筛选，再按与你当前自拍光照和使用情况的接近程度重新排序。</p></div><div class="matched-media-grid">${mediaHtml}</div></section>
 
    <section class="consumer-section"><div class="section-head"><div><div class="eyebrow">她们怎么说</div><h2>和你更相关的 3 条消费者反馈</h2></div><p>负向体验、复购/已购和具体使用条件会获得更高信息权重；好评本身不会被当成“真实”。</p></div><div class="matched-review-list">${reviewsHtml}</div></section>
