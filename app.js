@@ -58,6 +58,27 @@ function shadeCard(p){return `<a class="shade-card" href="#/shade/${p.key}"><div
 function opts(sel){return manifest.products.map(p=>`<option value="${p.key}" ${p.key===sel?'selected':''}>${esc(p.brand)} #${p.shade} ${esc(p.name)}</option>`).join('')}
 function highlight(t){let s=esc(t);for(const k of ANALYSIS_KEYWORDS)s=s.replaceAll(k,`<mark class="highlight">${k}</mark>`);return s}
 function reviewCard(r){return `<article class="review"><p>${highlight(r.text)}</p><small><span>${r.platform}</span><span>${r.type||'评论'}</span>${r.sku?`<span>${esc(r.sku)}</span>`:''}${r.repeatBuyer?'<span>复购线索</span>':''}${r.negativeEvidence?'<span>含负向体验</span>':''}</small></article>`}
+async function fetchCloudReferenceMedia(productKey){
+ const api=(window.TRUETONE_CONFIG?.apiBase||'').replace(/\/$/,'');
+ if(!api)return [];
+ try{
+   const r=await fetch(api+'/api/media?product_key='+encodeURIComponent(productKey),{cache:'no-store'});
+   if(!r.ok)throw Error('HTTP '+r.status);
+   const out=await r.json();
+   return Array.isArray(out?.media)?out.media.filter(x=>x&&x.url).slice(0,3):[];
+ }catch(e){
+   console.warn('OSS reference media unavailable',e);
+   return [];
+ }
+}
+function cloudReferenceCard(m,i){
+ const platform=esc(m.platform||'真实来源'),label=esc(m.label||'真实试色参考'),reason=esc(m.reason||'来自已核验的真实样本，用于辅助购买判断。');
+ return `<article class="media-card cloud-media-card" data-cloud-url="${esc(m.url)}">
+   <div class="cloud-thumb-wrap"><img src="${esc(m.url)}" alt="${platform}真实试色参考 ${i+1}" loading="lazy" referrerpolicy="no-referrer"><span class="media-source-badge">${platform} · OSS真实样本</span></div>
+   <div class="media-card-body"><div class="rank">#${i+1} · 真实样本</div><div class="source-line">${label}</div><div class="reason">${reason}</div></div>
+ </article>`;
+}
+
 function mediaCard(m,i){const score=Number.isFinite(m.referenceScore)?Math.round(m.referenceScore)+'/100':'Top reference';return `<article class="media-card" data-media="${m.id}">${m.thumb?`<img src="${m.thumb}" alt="真实试色参考图 ${i+1}">`:'<div class="skeleton media-placeholder" style="height:210px"><span>真实媒体记录<br><small>原图未在公开静态页重发</small></span></div>'}<div class="media-card-body"><div class="rank">#${i+1} · ${score}</div><div class="source-line">${m.platform} · ${m.metrics?.lighting||m.type}</div><div class="reason">${esc((m.reasons||[])[0]||'接近多来源参考色域')}</div></div></article>`}
 function metric(label,v,max=100,u='%'){return `<div class="metric-row"><label>${label}</label><div class="bar"><i style="width:${Math.min(100,Math.abs(v)/max*100)}%"></i></div><span>${Number(v).toFixed(1)}${u}</span></div>`}
 function evidenceScoreText(a){return `视觉 ${a.counts.images} 图 + ${a.counts.videos} 视频元数据 · 文字 ${fmt(a.counts.text)} 条 · ${a.counts.sources} 类来源`}
@@ -421,10 +442,11 @@ async function shade(k){
 
 async function shadeReport(k){
  const p=await getProduct(k),a=p.analysis,c=buildProductConsumerSummary(p),top=c.top,sku=p.skuLines||[];
+ const cloudTop=await fetchCloudReferenceMedia(k);
  page(`<div class="route-head"><a class="backlink" href="#/search">← 返回色号库</a><div class="eyebrow" style="margin-top:22px">${esc(p.brand)} · ${esc(p.product)}</div><h1>#${p.shade} ${esc(p.name)}</h1><p>先给购买结论，再展开依据。下面的分数、排序和统计来自当前真实 sample data 与可复现分析逻辑，不是写死的展示数字。</p>${sku.length>1?`<div class="sku-warning">SKU 提醒：当前样本同一色号包含 <b>${sku.length}</b> 个产品线 / SKU：${sku.map(esc).join('、')}。系统保留 SKU 边界，不把不同产品本身的差异误判成“P 图”。</div>`:''}</div>
  <section class="report-hero"><div class="panel"><div class="eyebrow">一句话结论</div><div class="conclusion">${esc(c.conclusion)}</div><div class="source-counts"><span><b>${a.counts.visual}</b> 份视觉素材</span><span><b>${fmt(a.counts.text)}</b> 条文字证据</span><span><b>${a.counts.sources}</b> 类来源</span></div><div class="filter-row" style="margin-top:18px"><span style="font-size:11px;color:var(--muted);align-self:center">更像你的情况：</span><button class="filter-btn active" data-prof="all">全部</button><button class="filter-btn" data-prof="深唇">深唇</button><button class="filter-btn" data-prof="浅唇">浅唇</button><button class="filter-btn" data-prof="素颜">素颜</button></div></div>
  <div class="panel score-panel"><div class="score-ring" style="--score:${a.score};--ring:${a.score>=80?'#82b996':a.score>=60?'#e2b16b':'#d46d60'}"><b>${a.score}</b></div><div class="score-label"><strong>TrueTone 参考可信度</strong>它不是“真假裁决”，而是当前内容适不适合作为购买参考。<span class="evidence-badge">证据充分度：${a.evidenceSufficiency}</span><div class="disclaimer">${evidenceScoreText(a)}。真实性评分与证据充分度分开。</div></div></div></section>
- <section class="panel report-section" id="top-ref"><div class="section-head"><div><div class="eyebrow">Top 3 reference</div><h2 style="font-size:28px">你最值得先看的 3 张</h2></div><p>按 reference score 排序：曝光、饱和、色温、与多来源中心色的接近程度共同影响。</p></div><div class="top-media" id="top-media">${top.map(mediaCard).join('')}</div></section>
+ <section class="panel report-section" id="top-ref"><div class="section-head"><div><div class="eyebrow">Top 3 reference</div><h2 style="font-size:28px">你最值得先看的 3 张</h2></div><p>${cloudTop.length?'优先展示阿里云 OSS 中已核验的真实样本。':'当前仅显示离线排序记录；真实原图暂未稳定读取。'}</p></div><div class="top-media" id="top-media">${cloudTop.length?cloudTop.map(cloudReferenceCard).join(''):top.map(mediaCard).join('')}</div></section>
  <section class="details-grid"><div class="panel"><h3>消费者色差证据</h3><div class="keyword-cloud">${Object.entries(a.keywordCounts).sort((x,y)=>y[1]-x[1]).slice(0,18).map(([x,n])=>`<span class="kw">${x} <b>${n}</b></span>`).join('')}</div><div class="plain-note" style="margin-top:15px">${a.consumerDifferenceMentions} 条文本提到偏色、色差或“和图片不一样”等线索。评论质量层还识别到：复购/回头客 ${a.reviewQuality.repeatBuyer} 条；负向体验 ${a.reviewQuality.negativeEvidence} 条；模板化泛评 ${a.reviewQuality.genericTemplate} 条会降低权重。</div></div><div class="panel"><h3>与你情况相关的真实反馈</h3><div class="review-list" id="reviews">${c.reviews.slice(0,7).map(reviewCard).join('')}</div></div></section>
  <section class="details-grid"><div class="panel"><h3>综合色调方向</h3><div class="direction-swatch-wrap"><span class="direction-swatch" style="background:${color(p)}"></span><div><b>#${p.shade} · ${esc(p.name)}</b><p>这个色块只用于帮助理解当前 Demo 的综合色调方向。网络样本的 H/S/B 统计主要用于比较平台偏差，不再直接画成“实物颜色”。</p></div></div></div><div class="panel"><h3>小红书 vs 淘宝</h3>${metric('色相差异',a.platformDiff.hue,90,'°')}${metric('饱和度差异',Math.abs(a.platformDiff.saturation),35,'%')}${metric('亮度差异',Math.abs(a.platformDiff.brightness),35,'%')}<div class="plain-note">小红书 H${a.platform['小红书'].hue} / S${a.platform['小红书'].saturation} / B${a.platform['小红书'].brightness}<br>淘宝 H${a.platform['淘宝'].hue} / S${a.platform['淘宝'].saturation} / B${a.platform['淘宝'].brightness}</div></div></section>
  <section class="details-grid"><div class="panel"><h3>为什么是这个分数？</h3>${(a.findings||[]).length?(a.findings||[]).map(f=>`<div class="finding"><span class="severity ${f.severity}">${f.severity==='high'?'高风险':f.severity==='medium'?'中风险':'低风险'}</span><div><strong>${esc(f.type)}</strong><p>在 ${f.count||1} 个样本中触发；根据项目既定扣分规则影响总分。</p></div></div>`).join(''):'<div class="plain-note">当前产品级汇总没有触发 high / medium 异常扣分；总分仍不等于“绝对真实”。</div>'}<div class="plain-note" style="margin-top:12px">评分保留原方案：base 82；单图 high −4 / medium −2 / low −1；跨图 high −8 / medium −4；范围 25–95。</div></div><div class="panel"><h3>哪些差异属于正常变化？</h3><div class="review-list">${c.normal.map(x=>`<div class="review"><p>${esc(x)}</p></div>`).join('')||'<div class="plain-note">当前文本证据不足以细分更多正常变化。</div>'}</div></div></section>
@@ -432,7 +454,8 @@ async function shadeReport(k){
  <section class="cta-band"><div><h3>想知道 #${p.shade} 在你脸上可能怎么呈现？</h3><p>上传自拍后，TrueTone 会优先从真实样本里找更接近你当前光照和使用情况的参考图与评论。</p></div><a class="primary-btn" href="#/tryon?p=${p.key}">上传自拍</a></section>
  <section class="cta-band"><div><h3>喜欢这个方向吗？</h3><p>不喜欢也没关系，可以换成更橘、更浅或不同质地，再看相似色号。</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="secondary-btn" id="like">喜欢，看看相似色</button><button class="ghost-btn" id="warmer">想更橘一点</button><a class="ghost-btn" href="#/compare">我在纠结两个色号</a></div></section>`);
  $$('.filter-btn[data-prof]').forEach(b=>b.onclick=()=>{ $$('.filter-btn[data-prof]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const prof=b.dataset.prof;const cc=buildProductConsumerSummary(p,prof);$('#reviews').innerHTML=cc.reviews.slice(0,7).map(reviewCard).join('')||'<div class="plain-note">当前数据中没有足够匹配评论。</div>'});
- $$('.media-card[data-media]').forEach(x=>x.onclick=()=>openMedia(p,x.dataset.media));
+ $('.media-card[data-media]').forEach(x=>x.onclick=()=>openMedia(p,x.dataset.media));
+ $('.cloud-media-card[data-cloud-url]').forEach(x=>x.onclick=()=>{modalContent.innerHTML=`<div class="eyebrow">真实试色参考</div><h2 id="modal-title">原始高清样本</h2><img src="${esc(x.dataset.cloudUrl)}" style="width:100%;max-height:640px;object-fit:contain;background:#090807;border-radius:14px"><p style="color:var(--muted);line-height:1.7">该图片来自阿里云 OSS 私有样本库，通过短时签名地址加载，仅用于当前 Demo 展示。</p>`;openModal()});
  $('#like').onclick=()=>recommend(p,false);$('#warmer').onclick=()=>recommend(p,true);
 }
 function recommend(p,warm){const candidates=manifest.products.filter(x=>x.key!==p.key).map(x=>({p:x,d:circularHueDistance(p.analysis.center.hue,x.analysis.center.hue)+(warm?(x.analysis.center.hue<p.analysis.center.hue?18:0):0)})).sort((a,b)=>a.d-b.d).slice(0,3);modalContent.innerHTML=`<div class="eyebrow">Similar shades</div><h2 id="modal-title">${warm?'更偏暖 / 橘一点的方向':'相似色号'}</h2><p>只在当前欧莱雅集团 Demo 数据内推荐，依据参考色域距离与质地方向，不伪装成全市场推荐。</p><div class="shade-grid">${candidates.map(x=>shadeCard(x.p)).join('')}</div>`;openModal()}
