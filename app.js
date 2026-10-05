@@ -175,11 +175,11 @@ async function home(){
    <div class="builder-step">
      <div class="step-num">01</div>
      <div class="step-copy"><div class="eyebrow">先认识当前的你</div><h2>上传一张自拍</h2><p>优先使用自然光、无滤镜、正脸、嘴唇清晰的照片。自拍只在当前浏览器内用于本次分析。</p></div>
-     <label class="selfie-uploader" id="consumer-selfie-zone">
-       <input id="consumer-selfie-input" type="file" accept="image/png,image/jpeg,image/webp" hidden>
-       <div id="consumer-selfie-empty"><div class="upload-icon">＋</div><b>点击上传自拍</b><span>JPG / PNG / WEBP</span></div>
+     <label class="selfie-uploader" id="consumer-selfie-zone" for="consumer-selfie-input">
+       <input id="consumer-selfie-input" class="native-image-input" type="file" accept="image/*">
+       <div id="consumer-selfie-empty"><div class="upload-icon">＋</div><b>点击上传自拍</b><span>手机相册 / JPG / PNG / HEIC / WEBP</span></div>
        <img id="consumer-selfie-preview" class="hidden" alt="自拍预览">
-       <button type="button" class="replace-photo hidden" id="consumer-replace-photo">更换照片</button>
+       <span class="replace-photo hidden" id="consumer-replace-photo">更换照片</span>
      </label>
    </div>
 
@@ -238,9 +238,19 @@ async function home(){
    }
    updateRunState();
  }
- function chooseFile(file){if(!file||!file.type.startsWith('image/'))return;selfieFile=file;preview.src=URL.createObjectURL(file);preview.classList.remove('hidden');empty.classList.add('hidden');replace.classList.remove('hidden');updateRunState()}
- zone.onclick=e=>{if(e.target.closest('#consumer-replace-photo'))return;input.click()};replace.onclick=e=>{e.preventDefault();e.stopPropagation();input.click()};input.onchange=()=>chooseFile(input.files[0]);
- zone.ondragover=e=>{e.preventDefault();zone.classList.add('drag')};zone.ondragleave=()=>zone.classList.remove('drag');zone.ondrop=e=>{e.preventDefault();zone.classList.remove('drag');chooseFile(e.dataTransfer.files[0])};
+ function chooseFile(file){
+   if(!file)return;
+   const name=String(file.name||'').toLowerCase();
+   const looksLikeImage=(file.type||'').startsWith('image/')||/\.(jpe?g|png|webp|heic|heif)$/i.test(name);
+   if(!looksLikeImage){showToast('请选择照片文件');return}
+   selfieFile=file;
+   const objectUrl=URL.createObjectURL(file);
+   preview.onload=()=>URL.revokeObjectURL(objectUrl);
+   preview.onerror=()=>{URL.revokeObjectURL(objectUrl);showToast('这张照片当前浏览器无法预览，请尝试 JPG / PNG 或直接从手机相册重新选择。')};
+   preview.src=objectUrl;preview.classList.remove('hidden');empty.classList.add('hidden');replace.classList.remove('hidden');updateRunState();
+ }
+ input.onchange=()=>chooseFile(input.files&&input.files[0]);
+ zone.ondragover=e=>{e.preventDefault();zone.classList.add('drag')};zone.ondragleave=()=>zone.classList.remove('drag');zone.ondrop=e=>{e.preventDefault();zone.classList.remove('drag');chooseFile(e.dataTransfer.files&&e.dataTransfer.files[0])};
  brandInput.oninput=updateTargetMatch;shadeInput.oninput=updateTargetMatch;
  brandInput.onkeydown=shadeInput.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();updateTargetMatch();if(!run.disabled)run.click()}};
  updateRunState();run.onclick=runConsumerJourney;
