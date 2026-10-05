@@ -182,19 +182,81 @@ async function callCloudAgent(p,profile,selfie,reviews,match){
 }
 
 function normalizeTargetInput(s){
- return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[＃#\s·._-]/g,'');
+ return String(s||'')
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g,'')
+  .toLowerCase()
+  .replace(/[＃#\s·._\-\/\\()（）【】\[\],，:：'"“”‘’]/g,'');
+}
+function brandAliasesForProduct(p){
+ if(p.key.startsWith('ysl-'))return ['ysl','圣罗兰','saintlaurent','yvessaintlaurent','yslbeauty'];
+ if(p.key.startsWith('lancome-'))return ['lancome','兰蔻'];
+ return [p.brand||''];
+}
+function shadeAliasesForProduct(p){
+ return [p.shade,p.name,...(p.shadeAliases||[]),...(p.skuLines||[])]
+  .map(normalizeTargetInput)
+  .filter(Boolean);
+}
+function tokenMatches(input,tokens){
+ if(!input)return false;
+ return tokens.some(t=>t&&(input===t||input.includes(t)||t.includes(input)));
 }
 function resolveDemoProduct(brandRaw,shadeRaw){
- const b=normalizeTargetInput(brandRaw),s=normalizeTargetInput(shadeRaw);
- if(!b||!s)return null;
- return manifest.products.find(p=>{
-   const brandOk=p.key.startsWith('ysl-')
-     ? ['ysl','saintlaurent','圣罗兰'].some(x=>b.includes(x))
-     : ['lancome','兰蔻'].some(x=>b.includes(x));
-   const shadePool=[p.shade,p.name,...(p.shadeAliases||[]),...(p.skuLines||[])].map(normalizeTargetInput);
-   const shadeOk=shadePool.some(x=>x===s||x.includes(s)||s.includes(x)||s.includes(normalizeTargetInput(p.shade)));
-   return brandOk&&shadeOk;
- })||null;
+ const brandInput=normalizeTargetInput(brandRaw);
+ const shadeInput=normalizeTargetInput(shadeRaw);
+ const combined=normalizeTargetInput(String(brandRaw||'')+' '+String(shadeRaw||''));
+
+ const scored=manifest.products.map(p=>{
+   const brandAliases=brandAliasesForProduct(p).map(normalizeTargetInput);
+   const shadeAliases=shadeAliasesForProduct(p);
+
+   const brandHit=tokenMatches(brandInput,brandAliases);
+   const shadeHit=tokenMatches(shadeInput,shadeAliases);
+   const combinedBrandHit=tokenMatches(combined,brandAliases);
+   const combinedShadeHit=tokenMatches(combined,shadeAliases);
+
+   let score=0;
+   if(brandHit)score+=4;
+   if(shadeHit)score+=6;
+   if(combinedBrandHit)score+=2;
+   if(combinedShadeHit)score+=3;
+
+   // Exact shade number is the strongest signal in this 4-product Demo.
+   const exactShade=normalizeTargetInput(p.shade);
+   if(shadeInput===exactShade||combined.includes(exactShade))score+=8;
+
+   return {p,score,brandHit:brandHit||combinedBrandHit,shadeHit:shadeHit||combinedShadeHit};
+ }).filter(x=>x.shadeHit&&x.score>0).sort((a,b)=>b.score-a.score);
+
+ if(!scored.length)return null;
+
+ // If the user entered a brand, require that it resolves to the same product family.
+ if(brandInput){
+   const branded=scored.filter(x=>x.brandHit);
+   if(branded.length===1)return branded[0].p;
+   if(branded.length>1&&branded[0].score>branded[1].score)return branded[0].p;
+   return null;
+ }
+
+ // Shade-only input is allowed when it uniquely identifies one Demo product (e.g. 274).
+ const uniqueKeys=[...new Set(scored.map(x=>x.p.key))];
+ if(uniqueKeys.length===1)return scored[0].p;
+
+ // Combined free text such as "ysl610" / "圣罗兰610" is also accepted.
+ const combinedBranded=scored.filter(x=>x.brandHit);
+ if(combinedBranded.length===1)return combinedBranded[0].p;
+
+ return null;
+}
+function detectBrandOnly(brandRaw){
+ const b=normalizeTargetInput(brandRaw);
+ if(!b)return null;
+ const groups=[
+  {id:'ysl',label:'圣罗兰 YSL',aliases:['ysl','圣罗兰','saintlaurent','yvessaintlaurent','yslbeauty']},
+  {id:'lancome',label:'兰蔻 Lancôme',aliases:['lancome','兰蔻']}
+ ];
+ return groups.find(g=>tokenMatches(b,g.aliases.map(normalizeTargetInput)))||null;
 }
 
 function getUserProfile(){
@@ -286,13 +348,11 @@ async function selfieHome(){
      <div class="step-copy"><div class="eyebrow">告诉我们你想买什么</div><h2>输入品牌和目标色号</h2><p>当前 Demo 会在团队已收录的小红书 + 淘宝真实样本库中匹配。</p></div>
      <div class="target-entry">
        <div class="target-fields">
-         <label><span>品牌名</span><input id="consumer-brand" class="target-input" list="brand-options" autocomplete="off" placeholder="例如 圣罗兰 YSL / 兰蔻 Lancôme"></label>
-         <label><span>色号 / 色号名</span><input id="consumer-shade" class="target-input" list="shade-options" autocomplete="off" placeholder="例如 610 / 274 / 冰乌龙 / 杏仁奶茶"></label>
+         <label><span>品牌名</span><input id="consumer-brand" class="target-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="直接输入，如 ysl / 圣罗兰 / 兰蔻"></label>
+         <label><span>色号 / 色号名</span><input id="consumer-shade" class="target-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="直接输入，如 610 / 274 / 冰乌龙"></label>
        </div>
-       <datalist id="brand-options"><option value="圣罗兰 YSL"><option value="兰蔻 Lancôme"></datalist>
-       <datalist id="shade-options"><option value="610 · 冰乌龙 / 冷萃奶茶"><option value="1936 · 琥珀柑茶"><option value="274 · 杏仁奶茶 / 裸茶系"><option value="275 · 法式裸茶"></datalist>
        <div class="target-match empty-state" id="target-match">输入品牌和色号后，TrueTone 会确认是否已收录该产品。</div>
-       <p class="demo-support">当前比赛 Demo 已收录：圣罗兰 YSL 610 / 1936；兰蔻 Lancôme 274 / 275。</p>
+       <p class="demo-support">支持直接输入中英文品牌名和色号：YSL / 圣罗兰 610、1936；Lancôme / 兰蔻 274、275。</p>
      </div>
    </div>
 
@@ -315,8 +375,12 @@ async function selfieHome(){
      matchBox.className='target-match matched';
      matchBox.innerHTML=`<span class="shade-dot" style="background:${color(p)}"></span><div><b>已找到：${esc(p.brand)} #${p.shade} · ${esc(p.name)}</b><small>${fmt(p.analysis.counts.visual)} 份视觉素材 · ${fmt(p.analysis.counts.text)} 条文字证据</small></div><em>可分析</em>`;
    }else if(brandInput.value||shadeInput.value){
-     matchBox.className='target-match no-match';matchBox.textContent='暂未匹配到当前 Demo 数据。请尝试圣罗兰 610 / 1936 或兰蔻 274 / 275。';
-   }else{matchBox.className='target-match empty-state';matchBox.textContent='输入品牌和色号后，TrueTone 会确认是否已收录该产品。'}
+     const brandOnly=detectBrandOnly(brandInput.value);
+     matchBox.className='target-match no-match';
+     matchBox.textContent=brandOnly&&!shadeInput.value.trim()
+       ? '已识别品牌：'+brandOnly.label+'。请继续直接输入色号或色号名。'
+       : '还没有匹配到完整产品。可以直接输入 ysl / 圣罗兰 / 兰蔻，以及 610 / 1936 / 274 / 275 或已收录别称。';
+   }else{matchBox.className='target-match empty-state';matchBox.textContent='直接输入品牌和色号；不需要从下拉列表选择。'}
    updateRunState();
  }
  function chooseFile(file){
@@ -506,11 +570,9 @@ async function seeded(){
   <div class="seeded-product">
    <div><div class="eyebrow">01 · 先确认是哪支口红</div><h2>品牌与色号</h2><p>准确匹配产品后，才能与整个真实样本库进行交叉比较。</p></div>
    <div class="target-fields">
-    <label><span>品牌名</span><input id="seed-brand" class="target-input" list="seed-brand-options" placeholder="圣罗兰 YSL / 兰蔻 Lancôme"></label>
-    <label><span>色号 / 别称</span><input id="seed-shade" class="target-input" list="seed-shade-options" placeholder="610 / 冰乌龙 / 274 / 杏仁奶茶"></label>
+    <label><span>品牌名</span><input id="seed-brand" class="target-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="直接输入，如 ysl / 圣罗兰 / 兰蔻"></label>
+    <label><span>色号 / 别称</span><input id="seed-shade" class="target-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="直接输入，如 610 / 274 / 冰乌龙"></label>
    </div>
-   <datalist id="seed-brand-options"><option value="圣罗兰 YSL"><option value="兰蔻 Lancôme"></datalist>
-   <datalist id="seed-shade-options"><option value="610 · 冰乌龙 / 冷萃奶茶"><option value="1936 · 琥珀柑茶"><option value="274 · 杏仁奶茶 / 裸茶系"><option value="275 · 法式裸茶"></datalist>
    <div class="target-match empty-state" id="seed-target-match">输入品牌和色号后，我们会确认当前数据库是否已收录。</div>
   </div>
 
@@ -534,8 +596,14 @@ async function seeded(){
  function updateState(){
   const p=resolveDemoProduct(brand.value,shade.value);purchaseTargetKey=p?.key||null;
   if(p){match.className='target-match matched';match.innerHTML=`<span class="shade-dot" style="background:${color(p)}"></span><div><b>已找到：${esc(p.brand)} #${p.shade} · ${esc(p.name)}</b><small>${fmt(p.analysis.counts.visual)} 份视觉素材 · ${fmt(p.analysis.counts.text)} 条文字证据${p.key==='lancome-274'?' · 检测到同号多版本，分析时会先处理版本不确定性':''}</small></div><em>可分析</em>`}
-  else if(brand.value||shade.value){match.className='target-match no-match';match.textContent='当前 Demo 暂未匹配到这个产品。'}
-  else{match.className='target-match empty-state';match.textContent='输入品牌和色号后，我们会确认当前数据库是否已收录。'}
+  else if(brand.value||shade.value){
+   const brandOnly=detectBrandOnly(brand.value);
+   match.className='target-match no-match';
+   match.textContent=brandOnly&&!shade.value.trim()
+    ? '已识别品牌：'+brandOnly.label+'。请继续直接输入色号或别称。'
+    : '还没有匹配到完整产品。可以直接输入 ysl / 圣罗兰 / 兰蔻，以及 610 / 1936 / 274 / 275 或已收录别称。';
+  }
+  else{match.className='target-match empty-state';match.textContent='直接输入品牌和色号；不需要从下拉列表选择。'}
   const hasEvidence=seededFiles.length>0||textInput.value.trim().length>0;run.disabled=!(purchaseTargetKey&&hasEvidence);
   run.textContent=!purchaseTargetKey?'请先确认品牌与色号':!hasEvidence?'至少上传一种内容后开始分析':'开始检查这条种草';
  }
