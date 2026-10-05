@@ -5,7 +5,7 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const app=$('#app'),toast=$('#toast'),modal=$('#modal-backdrop'),modalContent=$('#modal-content');
 // Defensive initial state: never allow the modal overlay to block the app on first paint.
 modal.style.display='none';modal.style.pointerEvents='none';modal.hidden=true;modal.setAttribute('aria-hidden','true');
-let manifest, cache=new Map(), verifyFiles=[], verifyAnalyses=[], selfieFile=null, selfieResult=null;
+let manifest, cache=new Map(), verifyFiles=[], verifyAnalyses=[], selfieFile=null, selfieResult=null, purchaseTargetKey=null;
 const PARTS={'ysl-610':4,'ysl-1936':4,'lancome-274':0,'lancome-275':0};
 const FALLBACK_REVIEWS={
  'lancome-274':[
@@ -133,8 +133,24 @@ async function callCloudAgent(p,profile,selfie,reviews,match){
 }
 
 
+function normalizeTargetInput(s){
+ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[＃#\s·._-]/g,'');
+}
+function resolveDemoProduct(brandRaw,shadeRaw){
+ const b=normalizeTargetInput(brandRaw),s=normalizeTargetInput(shadeRaw);
+ if(!b||!s)return null;
+ return manifest.products.find(p=>{
+   const brandOk=p.key.startsWith('ysl-')
+     ? ['ysl','saintlaurent','圣罗兰'].some(x=>b.includes(x))
+     : ['lancome','兰蔻'].some(x=>b.includes(x));
+   const shadePool=[p.shade,p.name,p.product,...(p.skuLines||[])].map(normalizeTargetInput);
+   const shadeOk=shadePool.some(x=>x===s||x.includes(s)||s.includes(normalizeTargetInput(p.shade)));
+   return brandOk&&shadeOk;
+ })||null;
+}
+
 async function home(){
- await getManifest();selfieFile=null;selfieResult=null;
+ await getManifest();selfieFile=null;selfieResult=null;purchaseTargetKey=null;
  page(`
  <section class="consumer-hero">
    <div class="eyebrow">TRUE TONE · YOUR ONLINE BEAUTY ADVISOR</div>
@@ -157,8 +173,17 @@ async function home(){
 
    <div class="builder-step">
      <div class="step-num">02</div>
-     <div class="step-copy"><div class="eyebrow">告诉我们你想买什么</div><h2>选择你正在考虑的色号</h2><p>当前 Demo 使用团队已爬取并结构化的小红书 + 淘宝真实样本。</p></div>
-     <div class="purchase-shades" id="purchase-shades">${manifest.products.map((p,i)=>`<button class="purchase-shade ${i===0?'active':''}" data-p="${p.key}"><span class="shade-dot" style="background:${color(p)}"></span><span><b>${esc(p.brand)} #${p.shade}</b><small>${esc(p.name)} · ${esc(p.texture)}</small></span><em>${fmt(p.analysis.counts.text)} 条文字证据</em></button>`).join('')}</div>
+     <div class="step-copy"><div class="eyebrow">告诉我们你想买什么</div><h2>输入品牌和目标色号</h2><p>像真实购买场景一样直接输入你正在考虑的品牌与色号。当前 Demo 会在团队已爬取的小红书 + 淘宝真实样本库中匹配。</p></div>
+     <div class="target-entry">
+       <div class="target-fields">
+         <label><span>品牌名</span><input id="consumer-brand" class="target-input" list="brand-options" autocomplete="off" placeholder="例如 YSL / Lancôme / 圣罗兰 / 兰蔻"></label>
+         <label><span>色号 / 色号名</span><input id="consumer-shade" class="target-input" list="shade-options" autocomplete="off" placeholder="例如 610 / 274 / 冰乌龙 / 杏仁奶茶"></label>
+       </div>
+       <datalist id="brand-options"><option value="YSL"><option value="圣罗兰"><option value="Lancôme"><option value="兰蔻"></datalist>
+       <datalist id="shade-options"><option value="610"><option value="冰乌龙"><option value="1936"><option value="琥珀柑茶"><option value="274"><option value="杏仁奶茶"><option value="275"><option value="法式裸茶"></datalist>
+       <div class="target-match empty-state" id="target-match">输入品牌和色号后，TrueTone 会确认是否已收录该产品。</div>
+       <p class="demo-support">当前比赛 Demo 已收录：YSL 610 / YSL 1936 / Lancôme 274 / Lancôme 275。</p>
+     </div>
    </div>
 
    <div class="builder-step compact-step">
@@ -180,17 +205,38 @@ async function home(){
  <section class="privacy-strip"><strong>隐私说明：</strong>GitHub Demo 当前在浏览器本地处理自拍，不上传、不保存、不进入产品数据集。迁移阿里云后将使用 Private OSS 临时对象 + 生命周期清理。</section>
  `);
 
- const input=$('#consumer-selfie-input'),zone=$('#consumer-selfie-zone'),preview=$('#consumer-selfie-preview'),empty=$('#consumer-selfie-empty'),replace=$('#consumer-replace-photo'),run=$('#consumer-run');
- function chooseFile(file){if(!file||!file.type.startsWith('image/'))return;selfieFile=file;preview.src=URL.createObjectURL(file);preview.classList.remove('hidden');empty.classList.add('hidden');replace.classList.remove('hidden');run.disabled=false;run.textContent='开始 TrueTone 个性化分析'}
+ const input=$('#consumer-selfie-input'),zone=$('#consumer-selfie-zone'),preview=$('#consumer-selfie-preview'),empty=$('#consumer-selfie-empty'),replace=$('#consumer-replace-photo'),run=$('#consumer-run'),brandInput=$('#consumer-brand'),shadeInput=$('#consumer-shade'),matchBox=$('#target-match');
+ function updateRunState(){
+   const ok=!!selfieFile&&!!purchaseTargetKey;
+   run.disabled=!ok;
+   run.textContent=!selfieFile?'上传自拍后开始 TrueTone 分析':!purchaseTargetKey?'请输入已收录的品牌与色号':'开始 TrueTone 个性化分析';
+ }
+ function updateTargetMatch(){
+   const p=resolveDemoProduct(brandInput.value,shadeInput.value);
+   purchaseTargetKey=p?.key||null;
+   if(p){
+     matchBox.className='target-match matched';
+     matchBox.innerHTML=`<span class="shade-dot" style="background:${color(p)}"></span><div><b>已找到：${esc(p.brand)} #${p.shade} · ${esc(p.name)}</b><small>${esc(p.product)} · ${esc(p.texture)} · ${fmt(p.analysis.counts.text)} 条文字证据</small></div><em>可分析</em>`;
+   }else if(brandInput.value||shadeInput.value){
+     matchBox.className='target-match no-match';
+     matchBox.textContent='暂未匹配到当前 Demo 数据。请尝试 YSL 610 / 1936 或 Lancôme 274 / 275。';
+   }else{
+     matchBox.className='target-match empty-state';
+     matchBox.textContent='输入品牌和色号后，TrueTone 会确认是否已收录该产品。';
+   }
+   updateRunState();
+ }
+ function chooseFile(file){if(!file||!file.type.startsWith('image/'))return;selfieFile=file;preview.src=URL.createObjectURL(file);preview.classList.remove('hidden');empty.classList.add('hidden');replace.classList.remove('hidden');updateRunState()}
  zone.onclick=e=>{if(e.target.closest('#consumer-replace-photo'))return;input.click()};replace.onclick=e=>{e.preventDefault();e.stopPropagation();input.click()};input.onchange=()=>chooseFile(input.files[0]);
  zone.ondragover=e=>{e.preventDefault();zone.classList.add('drag')};zone.ondragleave=()=>zone.classList.remove('drag');zone.ondrop=e=>{e.preventDefault();zone.classList.remove('drag');chooseFile(e.dataTransfer.files[0])};
- $$('#purchase-shades .purchase-shade').forEach(b=>b.onclick=e=>{e.preventDefault();$$('#purchase-shades .purchase-shade').forEach(x=>x.classList.remove('active'));b.classList.add('active')});
- run.onclick=runConsumerJourney;
+ brandInput.oninput=updateTargetMatch;shadeInput.oninput=updateTargetMatch;
+ brandInput.onkeydown=shadeInput.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();updateTargetMatch();if(!run.disabled)run.click()}};
+ updateRunState();run.onclick=runConsumerJourney;
 }
 
 async function runConsumerJourney(){
- if(!selfieFile)return;
- const result=$('#consumer-analysis'),run=$('#consumer-run'),key=$('#purchase-shades .purchase-shade.active').dataset.p;
+ if(!selfieFile||!purchaseTargetKey)return;
+ const result=$('#consumer-analysis'),run=$('#consumer-run'),key=purchaseTargetKey;
  const profile={lip:$('#consumer-lip').value,makeup:$('#consumer-makeup').value,goal:$('#consumer-goal').value};
  run.disabled=true;run.textContent='正在分析…';
  result.innerHTML=`<section class="consumer-progress"><div class="eyebrow">TrueTone 正在替你筛选</div><h2>先判断网上什么值得信，再找什么最像你。</h2><div class="human-progress">
