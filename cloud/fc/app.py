@@ -1,16 +1,13 @@
 import json
 import os
+import urllib.error
+import urllib.request
 from pathlib import Path
 
-import requests
-from flask import Flask, jsonify, request
-from flask_cors import CORS
+from flask import Flask, jsonify, make_response, request
 
 app = Flask(__name__)
-CORS(app)
-
-ROOT = Path(__file__).resolve().parents[2]
-PROMPT_PATH = ROOT / "prompts" / "TRUE_TONE_AGENT_SYSTEM.md"
+PROMPT_PATH = Path(__file__).with_name("TRUE_TONE_AGENT_SYSTEM.md")
 
 
 def load_prompt() -> str:
@@ -19,9 +16,26 @@ def load_prompt() -> str:
     except Exception:
         return (
             "You are TrueTone, a beauty-content trust and purchase-decision assistant. "
-            "Never equate positive reviews with truth. Distinguish normal variation from suspicious distortion. "
-            "Use only the supplied evidence. Return JSON only."
+            "Use only the supplied evidence. Never equate positive reviews with truth. "
+            "Distinguish normal variation from suspicious distortion. Return JSON only."
         )
+
+
+def cors(response):
+    response.headers["Access-Control-Allow-Origin"] = os.getenv("CORS_ORIGIN", "*")
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return response
+
+
+@app.after_request
+def add_cors_headers(response):
+    return cors(response)
+
+
+@app.route("/api/analyze", methods=["OPTIONS"])
+def analyze_options():
+    return make_response("", 204)
 
 
 def model_call(payload: dict) -> dict:
@@ -29,40 +43,64 @@ def model_call(payload: dict) -> dict:
     if not api_key:
         raise RuntimeError("DASHSCOPE_API_KEY is not configured")
 
-    base_url = os.getenv(
-        "MODEL_STUDIO_BASE_URL",
-        "https://dashscope.aliyuncs.com/compatible-mode/v1",
-    ).rstrip("/")
-    model = os.getenv("QWEN_MODEL", "qwen-plus")
+    base_url = os.getenv("MODEL_STUDIO_BASE_URL", "").strip().rstrip("/")
+    if not base_url:
+        raise RuntimeError("MODEL_STUDIO_BASE_URL is not configured")
+
+    model = os.getenv("QWEN_MODEL", "qwen-plus").strip() or "qwen-plus"
 
     system_prompt = load_prompt()
     user_prompt = (
         "Use the following structured TrueTone evidence. "
-        "Do not recalculate the deterministic trust or match scores. "
-        "Explain what the evidence means for this consumer and return JSON only.\n\n"
+        "Do not invent source material. "
+        "Do not recalculate deterministic trust or match scores; explain what those scores mean. "
+        "Return one JSON object only.\n\n"
         + json.dumps(payload, ensure_ascii=False)
     )
 
-    response = requests.post(
+    body = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        "temperature": 0.2,
+        "response_format": {"type": "json_object"},
+    }
+
+    req = urllib.request.Request(
         f"{base_url}/chat/completions",
+        data=json.dumps(body, ensure_ascii=False).encode("utf-8"),
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         },
-        json={
-            "model": model,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            "temperature": 0.2,
-            "response_format": {"type": "json_object"},
-        },
-        timeout=45,
+        method="POST",
     )
-    response.raise_for_status()
-    content = response.json()["choices"][0]["message"]["content"]
+
+    try:
+        with urllib.request.urlopen(req, timeout=45) as response:
+            raw = response.read().decode("utf-8")
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Model Studio HTTP {exc.code}: {detail[:1200]}") from exc
+
+    data = json.loads(raw)
+    content = data["choices"][0]["message"]["content"]
+    if isinstance(content, dict):
+        return content
     return json.loads(content)
+
+
+@app.get("/")
+def root():
+    return jsonify(
+        {
+            "service": "TrueTone Agent API",
+            "ok": True,
+            "routes": ["/health", "/api/analyze"],
+        }
+    )
 
 
 @app.get("/health")
@@ -71,7 +109,10 @@ def health():
         {
             "ok": True,
             "service": "truetone-agent-api",
-            "model_configured": bool(os.getenv("DASHSCOPE_API_KEY")),
+            "model_configured": bool(
+                os.getenv("DASHSCOPE_API_KEY") and os.getenv("MODEL_STUDIO_BASE_URL")
+            ),
+            "model": os.getenv("QWEN_MODEL", "qwen-plus"),
         }
     )
 
@@ -87,7 +128,6 @@ def analyze():
         result["runtime"] = "aliyun-model-studio"
         return jsonify(result)
     except Exception as exc:
-        # Fail transparently. The frontend still has its deterministic local analysis.
         return (
             jsonify(
                 {
