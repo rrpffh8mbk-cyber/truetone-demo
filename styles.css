@@ -273,3 +273,33 @@ body:not(.modal-open) #modal-backdrop[aria-hidden="true"]{
  .seed-score-grid{grid-template-columns:1fr 1fr}
  .database-score{margin-top:18px}
 }
+
+
+/* Detailed trust explanation + 274 version ambiguity */
+.deep-explain-card,.variant-insight-card,.claim-evidence-panel{border:1px solid var(--line);border-radius:22px;padding:28px;background:#0f0c0b;margin-top:18px}
+.deep-explain-card h2,.variant-insight-card h2,.claim-evidence-panel h2{font-family:var(--serif);font-size:30px;margin:8px 0 10px}
+.image-evidence-list{display:grid;gap:12px;margin-top:18px}
+.image-evidence-detail{display:grid;grid-template-columns:160px 1fr;gap:18px;border:1px solid var(--line);border-radius:16px;padding:14px;background:rgba(25,18,16,.62)}
+.image-evidence-detail img{width:160px;height:130px;object-fit:cover;border-radius:12px;background:#090807}
+.image-detail-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.image-detail-head b{font-size:18px}.image-detail-head span{font-size:11px;border:1px solid var(--line);border-radius:999px;padding:5px 8px;color:var(--gold)}
+.image-evidence-detail ul,.database-detail-list{margin:10px 0 0;padding-left:18px;color:#d7c8c1;line-height:1.75}
+.variant-insight-card{background:linear-gradient(145deg,rgba(71,39,30,.42),rgba(15,12,11,.98))}
+.variant-insight-card p{color:var(--muted);line-height:1.75}
+.variant-detection{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:16px 0}
+.variant-detection span{color:var(--muted);font-size:12px}.variant-detection b{font-size:16px}.variant-detection em{font-style:normal;color:var(--gold);font-size:12px}
+.detailed-database{align-items:start}
+.claim-evidence-panel{background:linear-gradient(180deg,rgba(34,23,19,.4),rgba(13,11,10,.98))}
+.claim-evidence{border-top:1px solid var(--line);padding:18px 0}
+.claim-evidence:first-of-type{border-top:0}
+.claim-head{display:flex;justify-content:space-between;gap:16px;align-items:baseline;flex-wrap:wrap}
+.claim-head b{font-size:18px}.claim-head span{font-size:12px;color:var(--muted)}
+.quote-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.evidence-quote{margin:0;border:1px solid var(--line);border-radius:14px;padding:14px;background:rgba(10,8,7,.55)}
+.evidence-quote b{display:block;font-size:11px;letter-spacing:.03em;margin-bottom:7px}
+.evidence-quote.support b{color:#9fc8aa}.evidence-quote.oppose b{color:#d7a08c}
+.evidence-quote span{display:block;color:#ddd0ca;line-height:1.65;font-size:13px}
+@media(max-width:760px){
+ .image-evidence-detail{grid-template-columns:1fr}.image-evidence-detail img{width:100%;height:190px}
+ .quote-grid{grid-template-columns:1fr}
+}
