@@ -4,14 +4,24 @@ window.TRUETONE_CONFIG = {
 
 (() => {
   let cloudUsed = false;
+  let lastReferenceMedia = [];
+  let lastProductKey = "";
   const nativeFetch = window.fetch.bind(window);
   window.fetch = async (...args) => {
     const res = await nativeFetch(...args);
     try {
       const url = String(args[0] || "");
-      if (url.includes("/api/analyze") && res.ok) {
-        const body = await res.clone().json();
-        if (body && body.runtime === "aliyun-model-studio") cloudUsed = true;
+      if (url.includes("/api/analyze")) {
+        try {
+          const reqBody = JSON.parse(args?.[1]?.body || "{}");
+          lastProductKey = reqBody.product_key || lastProductKey;
+        } catch (_) {}
+        if (res.ok) {
+          const body = await res.clone().json();
+          if (body && body.runtime === "aliyun-model-studio") cloudUsed = true;
+          if (Array.isArray(body?.reference_media)) lastReferenceMedia = body.reference_media;
+          setTimeout(polish, 0);
+        }
       }
     } catch (_) {}
     return res;
@@ -51,6 +61,36 @@ window.TRUETONE_CONFIG = {
       if (el.textContent.trim() === "SKU 边界") el.textContent = "同色号的不同版本";
     });
     const result = document.querySelector(".personal-result");
+
+    if (result && lastReferenceMedia.length) {
+      const cards = [...result.querySelectorAll(".matched-media")];
+      cards.forEach((card, i) => {
+        const media = lastReferenceMedia[i];
+        if (!media?.url) return;
+        let img = card.querySelector("img");
+        const placeholder = card.querySelector(".media-placeholder");
+        if (!img) {
+          img = document.createElement("img");
+          img.alt = "真实消费者高清参考试色 " + (i + 1);
+          if (placeholder) placeholder.replaceWith(img);
+          else card.prepend(img);
+        }
+        if (img.dataset.ossUrl !== media.url) {
+          img.src = media.url;
+          img.dataset.ossUrl = media.url;
+          img.loading = "eager";
+          img.decoding = "async";
+        }
+        const info = card.querySelector("div:last-child");
+        if (info) {
+          const small = info.querySelector("small");
+          const p = info.querySelector("p");
+          if (small) small.textContent = (media.platform || "真实样本") + (media.sku ? " · " + media.sku : "");
+          if (p && media.reason) p.textContent = media.reason;
+        }
+      });
+    }
+
     if (result && cloudUsed && !result.querySelector(".cloud-connected-badge")) {
       const anchor = result.querySelector(".result-title");
       if (anchor) {
