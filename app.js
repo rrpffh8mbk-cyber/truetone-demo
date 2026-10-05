@@ -5,7 +5,7 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const app=$('#app'),toast=$('#toast'),modal=$('#modal-backdrop'),modalContent=$('#modal-content');
 // Defensive initial state: never allow the modal overlay to block the app on first paint.
 modal.style.display='none';modal.style.pointerEvents='none';modal.hidden=true;modal.setAttribute('aria-hidden','true');
-let manifest, cache=new Map(), verifyFiles=[], verifyAnalyses=[], selfieFile=null, selfieResult=null, purchaseTargetKey=null;
+let manifest, cache=new Map(), cloudCache=new Map(), verifyFiles=[], verifyAnalyses=[], selfieFile=null, selfieResult=null, purchaseTargetKey=null;
 const PARTS={'ysl-610':4,'ysl-1936':4,'lancome-274':0,'lancome-275':0};
 const FALLBACK_REVIEWS={
  'lancome-274':[
@@ -126,12 +126,24 @@ async function callCloudAgent(p,profile,selfie,reviews,match){
   deterministic_match_score:match
  };
  const payload={product_key:p.key,profile,selfie_features:{light:selfie.light,faceRef:selfie.faceRef},evidence};
- try{
-  const r=await fetch(api+'/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-  if(!r.ok)throw Error('HTTP '+r.status);return await r.json();
- }catch(e){console.warn('Cloud Agent unavailable',e);return null}
+ const cacheKey=JSON.stringify([p.key,profile,selfie.light?.label,Math.round(selfie.light?.brightness||0),match]);
+ if(cloudCache.has(cacheKey))return cloudCache.get(cacheKey);
+ for(let attempt=0;attempt<2;attempt++){
+  try{
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
+   const r=await fetch(api+'/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:controller.signal});
+   clearTimeout(timer);
+   if(!r.ok)throw Error('HTTP '+r.status);
+   const out=await r.json();
+   if(!out||(!out.summary&&!out.purchase_advice))throw Error('incomplete cloud narrative');
+   cloudCache.set(cacheKey,out);return out;
+  }catch(e){
+   console.warn('Cloud Agent attempt '+(attempt+1)+' unavailable',e);
+   if(attempt===0)await wait(700);
+  }
+ }
+ return null;
 }
-
 
 function normalizeTargetInput(s){
  return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[＃#\s·._-]/g,'');
@@ -143,8 +155,8 @@ function resolveDemoProduct(brandRaw,shadeRaw){
    const brandOk=p.key.startsWith('ysl-')
      ? ['ysl','saintlaurent','圣罗兰'].some(x=>b.includes(x))
      : ['lancome','兰蔻'].some(x=>b.includes(x));
-   const shadePool=[p.shade,p.name,p.product,...(p.skuLines||[])].map(normalizeTargetInput);
-   const shadeOk=shadePool.some(x=>x===s||x.includes(s)||s.includes(normalizeTargetInput(p.shade)));
+   const shadePool=[p.shade,p.name,...(p.shadeAliases||[]),...(p.skuLines||[])].map(normalizeTargetInput);
+   const shadeOk=shadePool.some(x=>x===s||x.includes(s)||s.includes(x)||s.includes(normalizeTargetInput(p.shade)));
    return brandOk&&shadeOk;
  })||null;
 }
@@ -180,7 +192,7 @@ async function home(){
          <label><span>色号 / 色号名</span><input id="consumer-shade" class="target-input" list="shade-options" autocomplete="off" placeholder="例如 610 / 274 / 冰乌龙 / 杏仁奶茶"></label>
        </div>
        <datalist id="brand-options"><option value="圣罗兰 YSL"><option value="兰蔻 Lancôme"></datalist>
-       <datalist id="shade-options"><option value="610"><option value="冰乌龙"><option value="1936"><option value="琥珀柑茶"><option value="274"><option value="杏仁奶茶"><option value="275"><option value="法式裸茶"></datalist>
+       <datalist id="shade-options"><option value="610 · 冰乌龙 / 冷萃奶茶"><option value="1936 · 琥珀柑茶"><option value="274 · 杏仁奶茶 / 裸茶系"><option value="275 · 法式裸茶"></datalist>
        <div class="target-match empty-state" id="target-match">输入品牌和色号后，TrueTone 会确认是否已收录该产品。</div>
        <p class="demo-support">当前比赛 Demo 已收录：圣罗兰 YSL 610 / 1936；兰蔻 Lancôme 274 / 275。</p>
      </div>
@@ -276,10 +288,41 @@ function cloudMediaHtml(cloudNarrative,localMedia){
  return '<div class="empty">当前没有可稳定展示的真实试色图片。</div>';
 }
 
+function consumerPlatformSummary(a){
+ const d=a.platformDiff||{},h=Math.abs(Number(d.hue)||0),s=Math.abs(Number(d.saturation)||0),b=Math.abs(Number(d.brightness)||0);
+ const xhs=a.platform?.['小红书'],tb=a.platform?.['淘宝'];
+ const tone=h<5?'综合色相基本一致':h<12?'色相有轻微差别':'色相差别比较明显';
+ let bright='亮度差异不大';
+ if(xhs&&tb&&b>=4)bright=xhs.brightness<tb.brightness?'小红书样本整体比淘宝偏暗一些':'小红书样本整体比淘宝偏亮一些';
+ return tone+'；'+bright+'。因此更建议把两边的自然光/无滤镜内容放在一起看，而不是只相信单个平台的一张图。';
+}
+function consumerRiskItems(p){
+ const a=p.analysis||{},kw=a.keywordCounts||{},out=[];
+ const dark=(a.findings||[]).find(f=>/偏暗/.test(f.type));
+ if(dark)out.push('有 '+(dark.count||'部分')+' 份样本明显偏暗，这类图片不适合单独作为颜色依据。');
+ if((a.consumerDifferenceMentions||0)>0)out.push('有 '+a.consumerDifferenceMentions+' 条反馈明确提到偏色、色差或“和图片不一样”，说明购买前需要交叉看多条内容。');
+ const texture=['拔干','沾杯'].filter(k=>kw[k]).sort((x,y)=>kw[y]-kw[x]);
+ if(texture.length)out.push('使用体验里较常被提到的是'+texture.map(k=>k+'（'+kw[k]+'）').join('、')+'，这是质地体验风险，不等于颜色造假。');
+ if(!out.length)out.push('目前没有强烈的视觉异常信号，但单张种草图仍不足以代表所有人的上唇效果。');
+ return out.slice(0,3);
+}
+function consumerNormalItems(p){
+ const kw=p.analysis?.keywordCounts||{},out=[];
+ if(kw['深唇']||kw['浅唇'])out.push('原生唇色不同，同一支口红上嘴会有明显深浅差异。');
+ if(kw['薄涂']||kw['厚涂'])out.push('薄涂和厚涂会改变饱和度、覆盖力和红/棕感。');
+ if(kw['氧化'])out.push('部分消费者提到成膜或氧化后会变深/变色，刚上嘴和过一会儿不一定一样。');
+ if(kw['自然光']||kw['滤镜']||kw['无滤镜'])out.push('自然光、室内灯和滤镜会改变照片观感，光线差异应先于“P图”判断。');
+ return out.length?out:['同一个色号在不同唇色、光线和涂法下出现差异，本身并不等于内容失真。'];
+}
+function cleanAgentCopy(s,max=150){
+ let x=String(s||'').replace(/TrueTone\s*Score\s*\d+/gi,'').replace(/Match\s*Score\s*\d+/gi,'').replace(/[（(]\s*[，,;；:\s]*[）)]/g,'').replace(/\s+/g,' ').trim();
+ return x.length>max?x.slice(0,max).replace(/[，,;；。]\s*$/,'')+'。':x;
+}
+
 function renderConsumerResult(p,profile,reviews,media,match,expected,cloudNarrative=null){
  const a=p.analysis,cloudScore=Number(cloudNarrative?.truetone_score??cloudNarrative?.trust_score??cloudNarrative?.score),trust=Number.isFinite(cloudScore)?Math.round(cloudScore):Math.round(a.score),evidenceLevel=cloudEvidenceLabel(cloudNarrative?.evidence_sufficiency||a.evidenceSufficiency),trustLabel=trust>=80?'整体较值得参考':trust>=65?'可以参考，但要注意内容差异':'建议谨慎参考，不依赖单一内容';
  const fitLabel=match>=84?'与你当前条件的参考匹配度较高':match>=72?'有一定参考价值，但个体差异仍明显':'与你当前条件相近的证据还不够充分';
- const normal=[];if(a.keywordCounts['深唇']||a.keywordCounts['浅唇'])normal.push('原生唇色会改变最终显色');if(a.keywordCounts['薄涂']||a.keywordCounts['厚涂'])normal.push('薄涂 / 厚涂会改变饱和度和覆盖力');if(a.keywordCounts['氧化'])normal.push('有消费者提到成膜 / 氧化后的颜色变化'); const cloudNormal=cloudArray(cloudNarrative?.normal_variations).map(cloudText).filter(Boolean),normalItems=cloudNormal.length?cloudNormal:normal; const cloudRisks=cloudArray(cloudNarrative?.main_risks).map(cloudText).filter(Boolean),riskItems=cloudRisks.length?cloudRisks:['不同来源的光线与后期会造成视觉差异，不能只看单张图片。','当前证据不足以把正常色差直接判断为视觉造假。']; const platformSummary=cloudNarrative?.platform_difference_summary||('小红书与淘宝存在跨平台差异：色相差 '+a.platformDiff.hue+'°、饱和度差 '+Math.abs(a.platformDiff.saturation)+'%、亮度差 '+Math.abs(a.platformDiff.brightness)+'%。');
+ const normalItems=consumerNormalItems(p),riskItems=consumerRiskItems(p),platformSummary=consumerPlatformSummary(a);
  const mediaHtml=cloudMediaHtml(cloudNarrative,media);
  const reviewsHtml=reviews.length?reviews.map((r,i)=>`<article class="matched-review"><div class="match-rank">0${i+1}</div><div><div class="review-source">${r.platform} · ${r.type||'评论'}${r.repeatBuyer?' · 复购/已购高信息量线索':''}</div><p>“${highlight(r.text)}”</p><small>匹配原因：${profile.lip!=='不确定'&&r.text.includes(profile.lip)?'与你主动填写的唇色情况一致；':''}${r.negativeEvidence?'包含具体负向/差异体验，信息量高；':''}与“${profile.goal}”购买目标相关。</small></div></article>`).join(''):'<div class="empty">当前没有足够的可匹配原文评论。</div>';
  $('#consumer-analysis').innerHTML=`
@@ -287,14 +330,14 @@ function renderConsumerResult(p,profile,reviews,media,match,expected,cloudNarrat
    <div class="result-title"><div><div class="eyebrow">你的 TrueTone 购买参考</div><h2>${esc(p.brand)} #${p.shade} · ${esc(p.name)}</h2><p>不是替你宣布“适合 / 不适合”，而是根据当前自拍和可信消费者证据告诉你：这个方向对你有多大参考价值。</p></div><button class="ghost-btn" id="back-to-form">重新选择</button></div>
    ${cloudNarrative?.runtime==="aliyun-model-studio"?`<div class="cloud-connected-badge"><span>TRUE AI ANALYSIS</span><b>✓ 阿里云百炼已参与本次分析</b></div>`:``}
    <div class="personal-hero-grid">
-    <div class="tryon-card"><div class="tryon-image"><img id="consumer-result-photo" src="${selfieResult.tryon}"><div class="toggle result-toggle"><button class="active" data-view="tryon">颜色预览</button><button data-view="original">原自拍</button></div></div><div class="tryon-caption"><b>#${p.shade} 在当前自拍里的预计呈现</b><p>${expected.tone}；样本校准试色参考色约 H ${expected.h}° · S ${expected.s}% · B ${expected.b}%。</p><small>颜色预览仅用于帮助理解色调方向，不等同于精准 AR 试色或实物最终效果。</small></div></div>
+    <div class="tryon-card"><div class="tryon-image"><img id="consumer-result-photo" src="${selfieResult.tryon}"><div class="toggle result-toggle"><button class="active" data-view="tryon">颜色预览</button><button data-view="original">原自拍</button></div></div><div class="tryon-caption"><div class="preview-color-row"><span class="preview-swatch" style="background:${color(p)}"></span><div><b>#${p.shade} · ${esc(p.name)}</b><p>${expected.tone}。当前仅模拟综合色调方向，并保留你原本的唇纹与明暗。</p></div></div><small>颜色预览是视觉模拟，不是品牌官方色卡或精准 AR 试色；实物仍会受原生唇色、光线与涂抹厚度影响。</small></div></div>
     <div class="decision-card">
       <div class="decision-block"><span>网上关于这个色号，可信吗？</span><div class="big-score">${trust}<small>/100</small></div><b>${trustLabel}</b><p>${a.counts.visual} 份视觉素材 + ${fmt(a.counts.text)} 条文字证据；证据充分度：${evidenceLevel}。</p></div>
       <div class="decision-block accent"><span>和你当前情况，匹配吗？</span><div class="big-score">${match}<small>% MATCH</small></div><b>${fitLabel}</b><p>结合当前自拍光照、你主动选择的“${profile.lip} / ${profile.makeup} / ${profile.goal}”以及可信内容匹配。</p></div>
     </div>
    </div>
 
-   ${cloudNarrative?.summary?`<section class="agent-narrative"><div class="eyebrow">阿里云百炼 · TrueTone Agent</div><h3>先看结论：这支口红值不值得你继续考虑？</h3><p>${esc(cloudNarrative.summary)}</p>${cloudNarrative.purchase_advice?`<small>${esc(cloudNarrative.purchase_advice)}</small>`:''}</section>`:''}
+   ${cloudNarrative?.summary?`<section class="agent-narrative"><div class="eyebrow">AI 个性化解读</div><h3>先看结论：这支口红值不值得你继续考虑？</h3><p>${esc(cleanAgentCopy(cloudNarrative.summary,170))}</p>${cloudNarrative.purchase_advice?`<small>${esc(cleanAgentCopy(cloudNarrative.purchase_advice,210))}</small>`:''}</section>`:`<section class="agent-narrative local-narrative"><div class="eyebrow">本次稳定结果</div><h3>先看结论：可以参考，但别只看一张种草图。</h3><p>${esc(trustLabel)}。当前结果仍使用已收录的真实样本、评论和你的使用条件完成；云端个性化文字这次没有稳定返回，不影响证据排序和颜色风险判断。</p></section>`}
    <section class="consumer-section"><div class="section-head"><div><div class="eyebrow">先看这些</div><h2>最值得你参考的 3 张试色</h2></div><p>先通过内容可信度筛选，再按与你当前自拍光照和使用情况的接近程度重新排序。</p></div><div class="matched-media-grid">${mediaHtml}</div></section>
 
    <section class="consumer-section"><div class="section-head"><div><div class="eyebrow">她们怎么说</div><h2>和你更相关的 3 条消费者反馈</h2></div><p>负向体验、复购/已购和具体使用条件会获得更高信息权重；好评本身不会被当成“真实”。</p></div><div class="matched-review-list">${reviewsHtml}</div></section>
@@ -304,9 +347,9 @@ function renderConsumerResult(p,profile,reviews,media,match,expected,cloudNarrat
       <div class="panel trust-story-card platform-card"><h3>跨平台观察</h3><p>${esc(platformSummary)}</p></div>
       <div class="panel trust-story-card risk-card"><h3>当前主要风险</h3><ul class="consumer-bullets">${riskItems.slice(0,4).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
       <div class="panel trust-story-card"><h3>这些可能是正常差异</h3><ul class="consumer-bullets">${(normalItems.length?normalItems:['当前证据不足以细分更多正常变化。']).slice(0,4).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
-      <div class="panel"><h3>SKU 边界</h3><p>${p.skuLines?.length>1?`当前同一色号包含 ${p.skuLines.length} 个产品线 / SKU，系统不把产品本身差异误判成 P 图。`:'当前 Demo 中该色号 SKU 边界相对清晰。'}</p></div>
+      <div class="panel"><h3>同色号不同版本提醒</h3><p>${p.skuLines?.length>1?`当前样本里同一色号出现 ${p.skuLines.length} 个产品线 / 包装或版本标签。TrueTone 会分开看，避免把版本差异误当成“修图”。`:'当前样本里没有明显的同色号版本混淆。'}</p></div>
     </div>
-    <details class="tech-details"><summary>查看技术分析依据（ROI / HSV / 评分规则）</summary><div class="details-grid"><div class="panel"><h3>当前自拍</h3><p>光照：${selfieResult.light.label}<br>画面亮度：${selfieResult.light.brightness}%<br>当前照片可见面部颜色：${selfieResult.faceRef.hex} · ${selfieResult.faceRef.tone}</p></div><div class="panel"><h3>TrueTone 参考色域</h3><p>H ${a.center.hue}° · S ${a.center.saturation}% · B ${a.center.brightness}%<br>评分与证据充分度分开；不使用“绝对真实色”。</p></div></div></details>
+    <details class="tech-details"><summary>查看分析依据与技术细节</summary><div class="details-grid"><div class="panel"><h3>当前自拍</h3><p>光照：${selfieResult.light.label}<br>画面亮度：${selfieResult.light.brightness}%<br>当前照片可见面部颜色：${selfieResult.faceRef.hex} · ${selfieResult.faceRef.tone}</p></div><div class="panel"><h3>样本综合色调</h3><p>这是网络样本的统计中心，用来比较平台偏差，不等同于实物色卡。<br>分析值：H ${a.center.hue}° · S ${a.center.saturation}% · B ${a.center.brightness}%</p></div></div></details>
    </section>
 
    <section class="purchase-loop"><div><div class="eyebrow">最后一步</div><h2>你喜欢这个方向吗？</h2><p>喜欢就继续看相似色号 / 不同质地；不喜欢就告诉我们想往哪个方向调整。</p></div><div class="purchase-actions"><button class="primary-btn" id="result-like">喜欢，看看相似色</button><button class="secondary-btn" id="result-warmer">想更橘一点</button><button class="secondary-btn" id="result-brighter">想更清透一点</button><a class="ghost-btn" href="#/compare">我在纠结两个色号</a></div></section>
@@ -336,12 +379,12 @@ async function shade(k){
    <div class="plain-note" style="margin-top:14px">真实性评分与证据充分度是两个不同概念；“正面评价”也不会直接被当成“真实”。</div>
   </div>
   <div class="panel">
-   <div class="eyebrow">TrueTone 4-Agent Flow</div>
+   <div class="eyebrow">TrueTone 分析流程</div>
    <div class="agent-steps" id="product-agent-steps">
-    <div class="agent-step" data-a="1">Agent 1 · 色彩 / ROI / 光照</div>
-    <div class="agent-step" data-a="2">Agent 2 · 风险 / 跨图一致性 / 评分</div>
-    <div class="agent-step" data-a="3">Agent 3 · 消费者报告 / Top 3 / 评论证据</div>
-    <div class="agent-step" data-a="4">Agent 4 · 内容改进 / 可解释建议</div>
+    <div class="agent-step" data-a="1">颜色与拍摄环境</div>
+    <div class="agent-step" data-a="2">内容可信度与跨图差异</div>
+    <div class="agent-step" data-a="3">消费者参考与 Top 3</div>
+    <div class="agent-step" data-a="4">内容透明度建议</div>
    </div>
    <button class="primary-btn" id="start-product-analysis" style="width:100%;margin-top:16px">开始 TrueTone 分析</button>
    <div class="progress" style="margin-top:12px"><i id="product-progress"></i></div>
@@ -373,9 +416,9 @@ async function shadeReport(k){
  <div class="panel score-panel"><div class="score-ring" style="--score:${a.score};--ring:${a.score>=80?'#82b996':a.score>=60?'#e2b16b':'#d46d60'}"><b>${a.score}</b></div><div class="score-label"><strong>TrueTone 参考可信度</strong>它不是“真假裁决”，而是当前内容适不适合作为购买参考。<span class="evidence-badge">证据充分度：${a.evidenceSufficiency}</span><div class="disclaimer">${evidenceScoreText(a)}。真实性评分与证据充分度分开。</div></div></div></section>
  <section class="panel report-section" id="top-ref"><div class="section-head"><div><div class="eyebrow">Top 3 reference</div><h2 style="font-size:28px">你最值得先看的 3 张</h2></div><p>按 reference score 排序：曝光、饱和、色温、与多来源中心色的接近程度共同影响。</p></div><div class="top-media" id="top-media">${top.map(mediaCard).join('')}</div></section>
  <section class="details-grid"><div class="panel"><h3>消费者色差证据</h3><div class="keyword-cloud">${Object.entries(a.keywordCounts).sort((x,y)=>y[1]-x[1]).slice(0,18).map(([x,n])=>`<span class="kw">${x} <b>${n}</b></span>`).join('')}</div><div class="plain-note" style="margin-top:15px">${a.consumerDifferenceMentions} 条文本提到偏色、色差或“和图片不一样”等线索。评论质量层还识别到：复购/回头客 ${a.reviewQuality.repeatBuyer} 条；负向体验 ${a.reviewQuality.negativeEvidence} 条；模板化泛评 ${a.reviewQuality.genericTemplate} 条会降低权重。</div></div><div class="panel"><h3>与你情况相关的真实反馈</h3><div class="review-list" id="reviews">${c.reviews.slice(0,7).map(reviewCard).join('')}</div></div></section>
- <section class="details-grid"><div class="panel"><h3>TrueTone 参考色域</h3><div class="swatches">${p.media.filter(m=>m.metrics?.dominant).sort((x,y)=>(y.referenceScore||0)-(x.referenceScore||0)).slice(0,14).map(m=>`<span class="swatch-dot" style="background:${m.metrics.dominant}" title="${m.platform} · score ${m.referenceScore}"></span>`).join('')}</div><div class="plain-note" style="margin-top:13px">中心：H ${a.center.hue}° · S ${a.center.saturation}% · B ${a.center.brightness}%。这是多来源样本形成的参考色域，不是“绝对真实色”。</div></div><div class="panel"><h3>小红书 vs 淘宝</h3>${metric('色相差异',a.platformDiff.hue,90,'°')}${metric('饱和度差异',Math.abs(a.platformDiff.saturation),35,'%')}${metric('亮度差异',Math.abs(a.platformDiff.brightness),35,'%')}<div class="plain-note">小红书 H${a.platform['小红书'].hue} / S${a.platform['小红书'].saturation} / B${a.platform['小红书'].brightness}<br>淘宝 H${a.platform['淘宝'].hue} / S${a.platform['淘宝'].saturation} / B${a.platform['淘宝'].brightness}</div></div></section>
+ <section class="details-grid"><div class="panel"><h3>综合色调方向</h3><div class="direction-swatch-wrap"><span class="direction-swatch" style="background:${color(p)}"></span><div><b>#${p.shade} · ${esc(p.name)}</b><p>这个色块只用于帮助理解当前 Demo 的综合色调方向。网络样本的 H/S/B 统计主要用于比较平台偏差，不再直接画成“实物颜色”。</p></div></div></div><div class="panel"><h3>小红书 vs 淘宝</h3>${metric('色相差异',a.platformDiff.hue,90,'°')}${metric('饱和度差异',Math.abs(a.platformDiff.saturation),35,'%')}${metric('亮度差异',Math.abs(a.platformDiff.brightness),35,'%')}<div class="plain-note">小红书 H${a.platform['小红书'].hue} / S${a.platform['小红书'].saturation} / B${a.platform['小红书'].brightness}<br>淘宝 H${a.platform['淘宝'].hue} / S${a.platform['淘宝'].saturation} / B${a.platform['淘宝'].brightness}</div></div></section>
  <section class="details-grid"><div class="panel"><h3>为什么是这个分数？</h3>${(a.findings||[]).length?(a.findings||[]).map(f=>`<div class="finding"><span class="severity ${f.severity}">${f.severity==='high'?'高风险':f.severity==='medium'?'中风险':'低风险'}</span><div><strong>${esc(f.type)}</strong><p>在 ${f.count||1} 个样本中触发；根据项目既定扣分规则影响总分。</p></div></div>`).join(''):'<div class="plain-note">当前产品级汇总没有触发 high / medium 异常扣分；总分仍不等于“绝对真实”。</div>'}<div class="plain-note" style="margin-top:12px">评分保留原方案：base 82；单图 high −4 / medium −2 / low −1；跨图 high −8 / medium −4；范围 25–95。</div></div><div class="panel"><h3>哪些差异属于正常变化？</h3><div class="review-list">${c.normal.map(x=>`<div class="review"><p>${esc(x)}</p></div>`).join('')||'<div class="plain-note">当前文本证据不足以细分更多正常变化。</div>'}</div></div></section>
- <section class="panel report-section"><div class="section-head"><div><div class="eyebrow">Agent 4 · Creator guidance</div><h2 style="font-size:28px">给内容创作者 / 品牌的透明度建议</h2></div><p>这些建议不是为了“修图更好看”，而是让同一色号在不同内容里更容易比较。</p></div><div class="review-list">${creatorAdviceForProduct(p).map(s=>`<article class="review"><p><b>${esc(s.title)}</b><br><span style="color:var(--muted)">发现：</span>${esc(s.issue)}<br><span style="color:var(--muted)">怎么改：</span>${esc(s.how)}<br><span style="color:var(--muted)">为什么：</span>${esc(s.why)}<br><span style="color:var(--gold)">预计改善：</span>${esc(s.impact)}</p></article>`).join('')}</div></section>
+ <section class="panel report-section"><div class="section-head"><div><div class="eyebrow">内容透明度建议</div><h2 style="font-size:28px">给内容创作者 / 品牌的透明度建议</h2></div><p>这些建议不是为了“修图更好看”，而是让同一色号在不同内容里更容易比较。</p></div><div class="review-list">${creatorAdviceForProduct(p).map(s=>`<article class="review"><p><b>${esc(s.title)}</b><br><span style="color:var(--muted)">发现：</span>${esc(s.issue)}<br><span style="color:var(--muted)">怎么改：</span>${esc(s.how)}<br><span style="color:var(--muted)">为什么：</span>${esc(s.why)}<br><span style="color:var(--gold)">预计改善：</span>${esc(s.impact)}</p></article>`).join('')}</div></section>
  <section class="cta-band"><div><h3>想知道 #${p.shade} 在你脸上可能怎么呈现？</h3><p>上传自拍后，TrueTone 会优先从真实样本里找更接近你当前光照和使用情况的参考图与评论。</p></div><a class="primary-btn" href="#/tryon?p=${p.key}">上传自拍</a></section>
  <section class="cta-band"><div><h3>喜欢这个方向吗？</h3><p>不喜欢也没关系，可以换成更橘、更浅或不同质地，再看相似色号。</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="secondary-btn" id="like">喜欢，看看相似色</button><button class="ghost-btn" id="warmer">想更橘一点</button><a class="ghost-btn" href="#/compare">我在纠结两个色号</a></div></section>`);
  $$('.filter-btn[data-prof]').forEach(b=>b.onclick=()=>{ $$('.filter-btn[data-prof]').forEach(x=>x.classList.remove('active'));b.classList.add('active');const prof=b.dataset.prof;const cc=buildProductConsumerSummary(p,prof);$('#reviews').innerHTML=cc.reviews.slice(0,7).map(reviewCard).join('')||'<div class="plain-note">当前数据中没有足够匹配评论。</div>'});
