@@ -47,6 +47,8 @@ def model_call(payload: dict) -> dict:
             {"role": "user", "content": user_prompt},
         ],
         "temperature": 0.2,
+        "reasoning_effort": "none",
+        "max_tokens": 1200,
         "response_format": {"type": "json_object"},
     }
 
@@ -60,7 +62,7 @@ def model_call(payload: dict) -> dict:
         method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=45) as response:
+        with urllib.request.urlopen(req, timeout=120) as response:
             raw = response.read().decode("utf-8")
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
