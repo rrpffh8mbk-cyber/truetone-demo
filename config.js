@@ -24,6 +24,9 @@ window.TRUETONE_CONFIG = {
     document.querySelectorAll(".tryon-card .toggle button").forEach(btn => {
       if (btn.textContent.trim() === "虚拟试色") btn.textContent = "颜色预览";
     });
+    document.querySelectorAll(".tryon-caption b").forEach(el => {
+      el.textContent = el.textContent.replace("在当前自拍里的预计呈现","在当前照片中的颜色预览");
+    });
     document.querySelectorAll(".tryon-caption small").forEach(el => {
       el.textContent = "这是基于多来源参考色域的视觉模拟，不等同于实物试色或最终上嘴效果。";
     });
@@ -37,6 +40,12 @@ window.TRUETONE_CONFIG = {
     });
     document.querySelectorAll(".tech-details summary").forEach(el => {
       el.textContent = "想知道为什么得出这个结论？查看分析依据";
+    });
+    document.querySelectorAll(".trust-explain .eyebrow").forEach(el => {
+      if (el.textContent.includes("为什么我们相信")) el.textContent = "为什么这些内容更值得参考";
+    });
+    document.querySelectorAll(".trust-explain h2").forEach(el => {
+      if (el.textContent.trim() === "网络内容可信度拆解") el.textContent = "网络内容参考依据";
     });
     document.querySelectorAll(".trust-grid h3").forEach(el => {
       if (el.textContent.trim() === "SKU 边界") el.textContent = "同色号的不同版本";
