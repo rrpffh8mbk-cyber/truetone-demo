@@ -1,2 +1,1 @@
-# Function Compute Python web runtime includes Flask.
-# This TrueTone demo deliberately uses only Flask + Python standard library.
+# No third-party dependencies required.
