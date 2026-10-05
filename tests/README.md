@@ -1,19 +1,24 @@
-# Lip ROI regression checks
+# Color and lip-region checks
 
-From the repository root, run `python3 -m http.server 8000`, then open
-`/tests/lips-regression.html` on that server in a modern browser. The page must
-report `PASS`. It uses a deterministic FaceMesh test double and synthetic images,
-so these regression checks require no model download or credentials.
+Serve the repository root with `python3 -m http.server 8000`.
 
-The checks cover blue, red and purple lip colors against a red background,
-exclusion of the mouth interior, concurrent analysis and try-on requests,
-missing faces, model errors, and recovery after errors. They exercise the actual
-canvas mask and pixel-analysis code. FaceMesh detection accuracy should also be
-checked on real portraits using the normal upload flow.
+- `node tests/color-similarity.test.mjs`: published CIEDE2000 test pairs, 100/0
+  endpoints, missing-data handling, and rejection of legacy reference statistics.
+- Open `/tests/lips-regression.html` on that server: pixel/geometry checks,
+  mouth exclusion, concurrency and detector failure/recovery. No model download.
+- `python3 tests/test_closeup.py`: desktop/mobile upload flow using a deterministic
+  segmentation test double. Checks automatic processing, blue mismatch=0,
+  isolation from text scores, ROI inspection and missing-region handling.
 
-Close-up upload end-to-end checks (desktop and mobile widths): with the same
-server running, execute `python3 tests/test_closeup.py`. This requires Python
-Playwright and `/usr/bin/chromium`. It checks brush selection, clearing an empty
-selection, blue lips differing from a warm reference, reusing the selected region,
-and skipping lip analysis without a fabricated score. It uses a no-face test
-double so no model assets or credentials are required.
+For the actual segmentation model on a blue-lip portrait crop, run:
+
+```sh
+TRUETONE_REAL_SAMPLE=/private/path/blue-lip-crop.png \
+TRUETONE_MODEL_FILE=/cache/resnet18.onnx python3 tests/test_closeup.py
+```
+
+This mode verifies the model checksum and exercises the real browser model rather
+than the test double. `TRUETONE_MODEL_FILE` is optional if model downloads work.
+`TRUETONE_TEST_URL` selects a different served checkout or the published site.
+Raw portraits are not added to Git. Synthetic/derived image checks establish
+regressions, not accuracy on every portrait or an authenticity benchmark.

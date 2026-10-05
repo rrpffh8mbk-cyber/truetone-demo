@@ -1,5 +1,7 @@
-import {detectLipLandmarks,createLipMask} from './lips.js?v=20261006-closeup';
-import {createSelectedLipMask} from './lip-selection.js?v=20261006-closeup';
+import {detectLipLandmarks,createLipMask} from './lips.js?v=20261006-auto-v2';
+import {createSelectedLipMask} from './lip-selection.js?v=20261006-auto-v2';
+import {automaticLipMask} from './semantic-lips.js?v=20261006-auto-v2';
+import {rgbToLab,compareUploadedColors,COLOR_PIPELINE_VERSION} from './color-similarity.js?v=20261006-auto-v2';
 export const ANALYSIS_KEYWORDS = ['偏暗','偏亮','偏粉','偏紫','偏红','偏橘','偏棕','色差','滤镜','原图','自然光','暖光','冷光','氧化','深唇','浅唇','薄涂','厚涂','显白','荧光','不一样','差距','假货','批次','素颜','无滤镜'];
 
 export function circularHueDistance(a,b){const d=Math.abs(a-b)%360;return Math.min(d,360-d)}
@@ -13,18 +15,24 @@ function canvasURL(c,q=.82){return c.toDataURL('image/jpeg',q)}
 export async function analyzeImageFile(file,{lipSelection=null}={}){
  const img=await loadImage(file);const scale=Math.min(1,720/Math.max(img.naturalWidth,img.naturalHeight));const w=Math.max(1,Math.round(img.naturalWidth*scale)),h=Math.max(1,Math.round(img.naturalHeight*scale));
  const base=document.createElement('canvas');base.width=w;base.height=h;const ctx=base.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0,w,h);const data=ctx.getImageData(0,0,w,h);const px=data.data;
- let detection,roiReason='';
- try{if(!lipSelection)detection=await detectLipLandmarks(base)}catch(e){roiReason='唇部识别暂不可用，请稍后重试。'}
- const mask=lipSelection?createSelectedLipMask(lipSelection,w,h):detection?.landmarks?createLipMask(detection.landmarks,w,h):null;
+ let detection,roiReason='',mask=null,roiSource='unavailable',segmentationConfidence=null,roiAugmentation='none';
+ if(lipSelection){mask=createSelectedLipMask(lipSelection,w,h);roiSource='selected-lips'}
+ else{
+  try{const result=await automaticLipMask(base);mask=result.mask;roiAugmentation=result.augmentation||'none';roiReason=result.reason||'';segmentationConfidence=result.confidence??null;if(mask)roiSource='semantic-lips'}catch(e){roiReason='自动唇部分割暂不可用'}
+  if(!mask)try{detection=await detectLipLandmarks(base);if(detection.landmarks){mask=createLipMask(detection.landmarks,w,h);roiSource='mediapipe-lips';roiAugmentation='geometry-fallback';roiReason=''}}catch{}
+ }
  const maskPixels=mask?.getContext('2d').getImageData(0,0,w,h).data;
- if(!mask&&!roiReason)roiReason='未识别到唇部，请上传正脸、嘴唇清晰的照片。';
+ if(!mask&&!roiReason)roiReason='未自动识别到可靠唇部，无法计算颜色相似度。';
  const isLip=i=>Boolean(maskPixels&&maskPixels[i+3]>=128&&px[i+3]>0);
  let sr=0,sg=0,sb=0,sv=0,ss=0,highSat=0,bright=0,dark=0;const hues=[];const cand=[];
  for(let i=0;i<px.length;i+=4){const r=px[i],g=px[i+1],b=px[i+2];sr+=r;sg+=g;sb+=b;const [H,S,V]=rgbToHsv(r,g,b);sv+=V;ss+=S;if(S>75)highSat++;if(V>80)bright++;if(V<30)dark++;if(isLip(i)){hues.push(H);cand.push([i,H,S,V])}}
  const n=px.length/4,sceneBrightness=sv/n,sceneSaturation=ss/n;let hue=0,sat=0,val=0;if(cand.length){let sx=0,sy=0;cand.forEach(x=>{sx+=Math.cos(x[1]*Math.PI/180);sy+=Math.sin(x[1]*Math.PI/180)});hue=(Math.atan2(sy,sx)*180/Math.PI+360)%360;const ss2=cand.map(x=>x[2]).sort((a,b)=>a-b),vv=cand.map(x=>x[3]).sort((a,b)=>a-b);sat=ss2[Math.floor(ss2.length/2)];val=vv[Math.floor(vv.length/2)]}else{hue=null;sat=null;val=null;roiReason=roiReason||'唇部区域过小，无法稳定分析。'}
  const warm=(sr/n)-(sb/n);let lighting='中性光';if(sceneBrightness>82)lighting='过曝';else if(sceneBrightness<28)lighting='偏暗';else if(warm>18)lighting='暖光';else if(warm<-12)lighting='冷光';
  let R=0;if(hues.length){let x=0,y=0;hues.forEach(v=>{x+=Math.cos(v*Math.PI/180);y+=Math.sin(v*Math.PI/180)});R=Math.sqrt(x*x+y*y)/hues.length}const hueStd=R>0?Math.sqrt(Math.max(0,-2*Math.log(R)))*180/Math.PI:180;
- const metrics={width:w,height:h,roiDetected:cand.length>0,roiSource:cand.length?(lipSelection?'selected-lips':'mediapipe-lips'):'unavailable',roiReason,faces:detection?.faces||0,hue:hue===null?null:+hue.toFixed(1),saturation:sat===null?null:+sat.toFixed(1),brightness:val===null?null:+val.toFixed(1),sceneBrightness:+sceneBrightness.toFixed(1),sceneSaturation:+sceneSaturation.toFixed(1),highSaturationRatio:+(highSat/n*100).toFixed(1),brightRatio:+(bright/n*100).toFixed(1),darkRatio:+(dark/n*100).toFixed(1),hueStd:+hueStd.toFixed(1),candidateRatio:+(cand.length/n*100).toFixed(1),lighting};
+ const median=a=>a.sort((x,y)=>x-y)[Math.floor(a.length/2)];
+ const rgb=cand.length?[0,1,2].map(channel=>median(cand.map(x=>px[x[0]+channel]))):null;
+ const lab=rgb?rgbToLab(rgb):null;
+ const metrics={width:w,height:h,rgb,lab,roiDetected:cand.length>0,roiSource:cand.length?roiSource:'unavailable',colorPipeline:COLOR_PIPELINE_VERSION,segmentationConfidence,roiAugmentation,roiReason,faces:detection?.faces||0,hue:hue===null?null:+hue.toFixed(1),saturation:sat===null?null:+sat.toFixed(1),brightness:val===null?null:+val.toFixed(1),sceneBrightness:+sceneBrightness.toFixed(1),sceneSaturation:+sceneSaturation.toFixed(1),highSaturationRatio:+(highSat/n*100).toFixed(1),brightRatio:+(bright/n*100).toFixed(1),darkRatio:+(dark/n*100).toFixed(1),hueStd:+hueStd.toFixed(1),candidateRatio:+(cand.length/n*100).toFixed(1),lighting};
  const roi=document.createElement('canvas'),satC=document.createElement('canvas'),briC=document.createElement('canvas'),combo=document.createElement('canvas');[roi,satC,briC,combo].forEach(c=>{c.width=w;c.height=h});
  const roiD=roi.getContext('2d').createImageData(w,h),satD=satC.getContext('2d').createImageData(w,h),briD=briC.getContext('2d').createImageData(w,h),comD=combo.getContext('2d').createImageData(w,h);
  for(let i=0;i<px.length;i+=4){const r=px[i],g=px[i+1],b=px[i+2];const [H,S,V]=rgbToHsv(r,g,b);const isCand=isLip(i);for(const d of [roiD,satD,briD,comD])d.data[i+3]=255;roiD.data[i]=isCand?r:Math.round(r*.18);roiD.data[i+1]=isCand?g:Math.round(g*.18);roiD.data[i+2]=isCand?b:Math.round(b*.18);const heatS=Math.round(S/100*255);satD.data[i]=heatS;satD.data[i+1]=Math.round(55*(1-S/100));satD.data[i+2]=255-heatS;const heatB=Math.round(V/100*255);briD.data[i]=heatB;briD.data[i+1]=heatB;briD.data[i+2]=heatB;comD.data[i]=isCand?Math.min(255,r+35):Math.round(r*.35);comD.data[i+1]=isCand?Math.round(g*.85):Math.round(g*.35);comD.data[i+2]=isCand?Math.round(b*.85):Math.round(b*.35)}
@@ -33,17 +41,18 @@ export async function analyzeImageFile(file,{lipSelection=null}={}){
 }
 
 export function runFourAgents(analyses,product=null){
- const findings=[];let penalty=0;
- analyses.forEach((a,idx)=>{const m=a.metrics;const add=(type,severity,points,evidence,impact)=>{findings.push({type,severity,imageIndex:idx,evidence,impact});penalty+=points};if(m.saturation>75)add('试色区域高饱和','medium',2,`候选色区饱和度 ${m.saturation}%`,'可能让颜色看起来更鲜艳');if(m.sceneBrightness>80)add('画面过曝/提亮','medium',2,`整体亮度 ${m.sceneBrightness}%`,'可能削弱深色与灰调');if(m.sceneBrightness<30)add('画面偏暗','low',1,`整体亮度 ${m.sceneBrightness}%`,'可能让颜色看起来更深');if(m.roiDetected!==false&&m.hueStd>120)add('色相异常分散','high',4,`色相离散度 ${m.hueStd}°`,'当前图不适合作为稳定色彩参考');if(m.highSaturationRatio>70)add('大面积高饱和','medium',2,`${m.highSaturationRatio}% 像素为高饱和`,'存在增强视觉冲击的可能');if(m.lighting==='暖光'||m.lighting==='冷光')add('明显色温影响','low',1,m.lighting,`可能使口红整体${m.lighting==='暖光'?'更橘/更棕':'更冷/更紫'}`)});
- const lipAnalyses=analyses.filter(a=>a.metrics.roiDetected!==false);
- analyses.forEach((a,idx)=>{if(a.metrics.roiDetected===false)findings.push({type:'唇部区域未识别',severity:'low',imageIndex:idx,evidence:a.metrics.roiReason,impact:'无法判断唇色差异，请标记特写中的唇部或上传嘴唇清晰的正脸照片'})});
- if(lipAnalyses.length>1){const s=lipAnalyses.map(x=>x.metrics.saturation),v=lipAnalyses.map(x=>x.metrics.brightness),h=lipAnalyses.map(x=>x.metrics.hue);const sd=Math.max(...s)-Math.min(...s),vd=Math.max(...v)-Math.min(...v);let hd=0;for(let i=0;i<h.length;i++)for(let j=i+1;j<h.length;j++)hd=Math.max(hd,circularHueDistance(h[i],h[j]));if(sd>30){findings.push({type:'跨图饱和度差异',severity:'medium',evidence:`最大差异 ${sd.toFixed(1)}%`,impact:'不同图片的鲜艳程度不一致'});penalty+=4}if(vd>35){findings.push({type:'跨图亮度差异',severity:'medium',evidence:`最大差异 ${vd.toFixed(1)}%`,impact:'不同拍摄条件可能影响颜色判断'});penalty+=4}if(hd>60){findings.push({type:'跨图色相差异',severity:'high',evidence:`最大环形色相差异 ${hd.toFixed(1)}°`,impact:'建议不要仅参考其中一张图片'});penalty+=8}}
- if(product&&analyses.length){const c=product.analysis.center;analyses.forEach((a,idx)=>{if(a.metrics.roiDetected===false)return;const d=circularHueDistance(a.metrics.hue,c.hue);if(d>60){findings.push({type:'与多来源参考色域偏离',severity:'medium',imageIndex:idx,evidence:`与当前 TrueTone 色域中心相差 ${d.toFixed(1)}°`,impact:'该图片不宜单独作为购买依据'});penalty+=2}})}
- const score=Math.max(25,Math.min(95,82-penalty));const high=findings.filter(x=>x.severity==='high').length,med=findings.filter(x=>x.severity==='medium').length;
- let summary='当前图片可作为辅助参考，但建议结合多来源证据。';if(!findings.length)summary='当前未发现明显的高风险视觉异常；仍建议结合不同光照与相似唇色用户的真实返图。';else if(high)summary='当前证据中存在较明显的跨图或色彩异常，不建议只依赖这些图片做购买判断。';else if(med>=2)summary='当前存在若干可能影响色彩判断的因素，建议优先参考自然光、低偏差样本。';
- if(!lipAnalyses.length)summary='未能识别唇部，当前仅分析整图光照；无法判断唇色是否可信。';
- const suggestions=[];if(findings.some(x=>x.type.includes('饱和')))suggestions.push({title:'降低后期饱和度',why:'当前检测到较高饱和或跨图饱和差异',impact:'减少试色图对真实颜色的视觉夸张'});if(findings.some(x=>x.type.includes('过曝')||x.type.includes('色温')||x.type.includes('亮度')))suggestions.push({title:'使用标准中性光源',why:'当前图片存在亮度或色温差异',impact:'减少不同内容间的色相与明暗偏移'});if(analyses.length>1)suggestions.push({title:'统一拍摄条件',why:'多图比较需要可比的光照与曝光',impact:'提高跨图一致性与可解释性'});suggestions.push({title:'标注拍摄条件与素唇参考',why:'消费者需要理解色差来自哪里',impact:'帮助区分个体差异与内容失真'});
- return {score:lipAnalyses.length?score:null,findings,summary,suggestions,confidence:lipAnalyses.length?Math.max(45,Math.min(96,55+lipAnalyses.length*8-findings.filter(x=>x.severity==='high').length*4)):0};
+ const comparison=compareUploadedColors(analyses,product?.colorReference),findings=[];
+ analyses.forEach((a,imageIndex)=>{
+  const m=a.metrics;
+  if(!m.roiDetected)findings.push({type:'唇部区域未识别',severity:'low',imageIndex,evidence:m.roiReason,impact:'未计算这张图片的颜色相似度'});
+  if(m.sceneBrightness>80)findings.push({type:'画面过曝/提亮',severity:'medium',imageIndex,evidence:`整体亮度 ${m.sceneBrightness}%`,impact:'曝光可能改变照片中的颜色观感'});
+  if(m.sceneBrightness<30)findings.push({type:'画面偏暗',severity:'low',imageIndex,evidence:`整体亮度 ${m.sceneBrightness}%`,impact:'曝光可能改变照片中的颜色观感'});
+  const match=comparison.perImage[imageIndex];
+  if(match&&match.score<50)findings.push({type:'与多来源参考色域偏离',severity:match.score===0?'high':'medium',imageIndex,evidence:`感知色差 ΔE00 ${match.deltaE}；颜色相似度 ${match.score}/100`,impact:'唇部颜色与该色号可用参考样本不同'});
+ });
+ let summary=comparison.score===null?'没有可用的唇部选区或自动重算的参考样本，无法计算颜色相似度。':comparison.score===0?'唇部颜色与参考样本明显不同，颜色相似度为 0；不能用它代表该色号的颜色。':comparison.score<50?'唇部颜色与参考样本差异较大，作为该色号颜色参考需要谨慎。':'唇部颜色与当前可用参考样本较接近；这不等于图片或文案真实。';
+ if(comparison.compared<comparison.total&&comparison.compared)summary+=' 部分图片未成功选区，未纳入相似度计算。';
+ return {score:comparison.score,comparison,findings,summary,suggestions:[{title:'在相同光照下核对实物',why:'这里比较的是照片中的颜色，不是实物色度或真实性概率',impact:'减少光照、曝光和个体唇色的影响'}],confidence:null};
 }
 
 export function buildProductConsumerSummary(product,lipProfile='all'){

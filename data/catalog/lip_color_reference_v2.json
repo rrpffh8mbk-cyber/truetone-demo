@@ -1,0 +1,1474 @@
+{
+  "version": "2026-10-06-auto-lips-v2",
+  "pipeline": "auto-lips-v2",
+  "method": "BiSeNet semantic lip segmentation (upper/lower lips only), with MediaPipe geometric fallback. Median RGB converted to CIELAB; product center is coordinate-wise median Lab. Exclude failed or low-confidence selections.",
+  "model": {
+    "source": "https://huggingface.co/jbrownkramer/face-parsing",
+    "revision": "4be031c61a22e801ab389ab9ccf954781772fd42",
+    "sha256": "0d9bd318e46987c3bdbfacae9e2c0f461cae1c6ac6ea6d43bbe541a91727e33f"
+  },
+  "coverage_note": "Only retrievable API originals and embedded thumbnails were reprocessed. This is not the full historical corpus; no missing image inherits its old red-heuristic metrics.",
+  "duplicate_ids_excluded": [
+    "xhs-media-ysl-610-4",
+    "xhs-media-ysl-1936-2",
+    "xhs-media-ysl-1936-8"
+  ],
+  "products": {
+    "lancome-274": {
+      "pipeline": "auto-lips-v2",
+      "center": {
+        "lab": [
+          47.9804,
+          37.2803,
+          19.3525
+        ],
+        "rgb": [
+          178,
+          86,
+          85
+        ],
+        "hue": 3.03,
+        "saturation": 53.0,
+        "brightness": 69.8
+      },
+      "samples": [
+        {
+          "product_key": "lancome-274",
+          "id": "oss-xhs-lancome274-p12",
+          "platform": "小红书",
+          "original": true,
+          "source_object_key": "Data-XHS/lancome-274/lancome-274-P12/lancome-274-P12-1.jpg",
+          "image_sha256": "1cfa99d905c1a0c7e84c8d79fabb5c5b162620dc8902698c58ed6e2298591219",
+          "metrics": {
+            "width": 540,
+            "height": 720,
+            "rgb": [
+              144,
+              72,
+              63
+            ],
+            "lab": [
+              39.453020632407544,
+              29.471381404713696,
+              19.35247490511629
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.7732794074727215,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 5.7,
+            "saturation": 56,
+            "brightness": 56.5,
+            "sceneBrightness": 70.4,
+            "sceneSaturation": 36.2,
+            "highSaturationRatio": 0.8,
+            "brightRatio": 26.9,
+            "darkRatio": 2.2,
+            "hueStd": 6.9,
+            "candidateRatio": 9.4,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "lancome-274",
+          "id": "oss-xhs-lancome274-p7",
+          "platform": "小红书",
+          "original": true,
+          "source_object_key": "Data-XHS/lancome-274/lancome-274-P7/lancome-274-P7-1.jpg",
+          "image_sha256": "fcd55258723f701cc57ff470559aaf3611f0df89e89bcb9dadc1bf585787dc1f",
+          "metrics": {
+            "width": 540,
+            "height": 720,
+            "rgb": [
+              209,
+              108,
+              106
+            ],
+            "lab": [
+              57.39034409088404,
+              39.50401244281737,
+              19.442280636335596
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.7944930546657459,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 2.1,
+            "saturation": 50.8,
+            "brightness": 82,
+            "sceneBrightness": 45.4,
+            "sceneSaturation": 44.1,
+            "highSaturationRatio": 0.7,
+            "brightRatio": 9.1,
+            "darkRatio": 27.5,
+            "hueStd": 4.5,
+            "candidateRatio": 3,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "lancome-274",
+          "id": "oss-tb-lancome274-intimatte-p11",
+          "platform": "淘宝",
+          "original": true,
+          "source_object_key": "Data_clean_taobao/lancome_274/lancome_274_Intimatte/lancome_274_Intimatte_P11/274_P11_2.jpg",
+          "image_sha256": "721fdb51c0ebd2c94067617a66d8f9bcd1e56d854ced1c398fce89083e4ba22b",
+          "metrics": {
+            "width": 540,
+            "height": 720,
+            "rgb": [
+              178,
+              86,
+              85
+            ],
+            "lab": [
+              47.98036673468319,
+              37.280287434472314,
+              18.29817402951015
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.8407999789535565,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 1.3,
+            "saturation": 53,
+            "brightness": 69.8,
+            "sceneBrightness": 53,
+            "sceneSaturation": 36.3,
+            "highSaturationRatio": 0.9,
+            "brightRatio": 19.5,
+            "darkRatio": 24.3,
+            "hueStd": 4.7,
+            "candidateRatio": 2.4,
+            "lighting": "暖光"
+          }
+        }
+      ],
+      "excluded": [],
+      "all": {
+        "n": 3,
+        "saturation": {
+          "p10": 51.24,
+          "p25": 51.9,
+          "median": 53.0,
+          "p75": 54.5,
+          "p90": 55.4
+        },
+        "brightness": {
+          "p10": 59.16,
+          "p25": 63.15,
+          "median": 69.8,
+          "p75": 75.9,
+          "p90": 79.56
+        },
+        "sceneBrightness": {
+          "p10": 46.92,
+          "p25": 49.2,
+          "median": 53.0,
+          "p75": 61.7,
+          "p90": 66.92
+        },
+        "hue": {
+          "circular_center": 3.03,
+          "observed_median": 2.1
+        }
+      },
+      "platforms": {
+        "小红书": {
+          "n": 2,
+          "saturation": {
+            "p10": 51.32,
+            "p25": 52.1,
+            "median": 53.4,
+            "p75": 54.7,
+            "p90": 55.48
+          },
+          "brightness": {
+            "p10": 59.05,
+            "p25": 62.88,
+            "median": 69.25,
+            "p75": 75.62,
+            "p90": 79.45
+          },
+          "sceneBrightness": {
+            "p10": 47.9,
+            "p25": 51.65,
+            "median": 57.9,
+            "p75": 64.15,
+            "p90": 67.9
+          },
+          "hue": {
+            "circular_center": 3.9,
+            "observed_median": 3.9
+          }
+        },
+        "淘宝": {
+          "n": 1,
+          "saturation": {
+            "p10": 53.0,
+            "p25": 53.0,
+            "median": 53.0,
+            "p75": 53.0,
+            "p90": 53.0
+          },
+          "brightness": {
+            "p10": 69.8,
+            "p25": 69.8,
+            "median": 69.8,
+            "p75": 69.8,
+            "p90": 69.8
+          },
+          "sceneBrightness": {
+            "p10": 53.0,
+            "p25": 53.0,
+            "median": 53.0,
+            "p75": 53.0,
+            "p90": 53.0
+          },
+          "hue": {
+            "circular_center": 1.3,
+            "observed_median": 1.3
+          }
+        }
+      },
+      "coverage": {
+        "available_inputs": 3,
+        "accepted": 3,
+        "originals": 3,
+        "thumbnails": 0,
+        "complete_corpus": false
+      }
+    },
+    "lancome-275": {
+      "pipeline": "auto-lips-v2",
+      "center": {
+        "lab": [
+          47.6677,
+          37.632,
+          19.2146
+        ],
+        "rgb": [
+          183,
+          81,
+          80
+        ],
+        "hue": 2.03,
+        "saturation": 56.1,
+        "brightness": 71.8
+      },
+      "samples": [
+        {
+          "product_key": "lancome-275",
+          "id": "oss-xhs-lancome275-p3",
+          "platform": "小红书",
+          "original": true,
+          "source_object_key": "Data-XHS/lancome-275/lancome-275-P3/lancome-275-P3-1.jpg",
+          "image_sha256": "8e3558a30941cce49bc11ee54c4f86db949589b5584155de18e01ef517d6d6bc",
+          "metrics": {
+            "width": 540,
+            "height": 720,
+            "rgb": [
+              194,
+              125,
+              117
+            ],
+            "lab": [
+              59.36422421756424,
+              25.843359957425815,
+              15.510560416887609
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.8462395100514697,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 5.6,
+            "saturation": 39.8,
+            "brightness": 76.1,
+            "sceneBrightness": 51.5,
+            "sceneSaturation": 25.4,
+            "highSaturationRatio": 5.3,
+            "brightRatio": 28.3,
+            "darkRatio": 37.3,
+            "hueStd": 4.8,
+            "candidateRatio": 1.2,
+            "lighting": "中性光"
+          }
+        },
+        {
+          "product_key": "lancome-275",
+          "id": "oss-xhs-lancome275-p6",
+          "platform": "小红书",
+          "original": true,
+          "source_object_key": "Data-XHS/lancome-275/lancome-275-P6/lancome-275-P6.jpg",
+          "image_sha256": "267b3bfe2c9b009ffdc1a42af22c685b7a924844ef429ed57104d41f71c482a7",
+          "metrics": {
+            "width": 540,
+            "height": 720,
+            "rgb": [
+              162,
+              71,
+              70
+            ],
+            "lab": [
+              42.20380606540591,
+              37.63202569554242,
+              19.214617414115754
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.7388391991472991,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 0.1,
+            "saturation": 56.1,
+            "brightness": 63.5,
+            "sceneBrightness": 74,
+            "sceneSaturation": 38,
+            "highSaturationRatio": 0.5,
+            "brightRatio": 43.2,
+            "darkRatio": 0.9,
+            "hueStd": 2.3,
+            "candidateRatio": 3.9,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "lancome-275",
+          "id": "oss-tb-lancome275-p7",
+          "platform": "淘宝",
+          "original": true,
+          "source_object_key": "Data_clean_taobao/lancome_275/lancome_275_P7/275_P7_1.jpg",
+          "image_sha256": "bb52a6008c3fb02e73b285aac1dda269b8befb95470949d4ff416da597429701",
+          "metrics": {
+            "width": 540,
+            "height": 720,
+            "rgb": [
+              183,
+              81,
+              80
+            ],
+            "lab": [
+              47.667663505692474,
+              41.25193223876267,
+              21.005282486192
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.8241793262840957,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 0.4,
+            "saturation": 56.5,
+            "brightness": 71.8,
+            "sceneBrightness": 51.1,
+            "sceneSaturation": 30.9,
+            "highSaturationRatio": 0.2,
+            "brightRatio": 25.5,
+            "darkRatio": 33.6,
+            "hueStd": 3,
+            "candidateRatio": 4,
+            "lighting": "暖光"
+          }
+        }
+      ],
+      "excluded": [],
+      "all": {
+        "n": 3,
+        "saturation": {
+          "p10": 43.06,
+          "p25": 47.95,
+          "median": 56.1,
+          "p75": 56.3,
+          "p90": 56.42
+        },
+        "brightness": {
+          "p10": 65.16,
+          "p25": 67.65,
+          "median": 71.8,
+          "p75": 73.95,
+          "p90": 75.24
+        },
+        "sceneBrightness": {
+          "p10": 51.18,
+          "p25": 51.3,
+          "median": 51.5,
+          "p75": 62.75,
+          "p90": 69.5
+        },
+        "hue": {
+          "circular_center": 2.03,
+          "observed_median": 0.4
+        }
+      },
+      "platforms": {
+        "小红书": {
+          "n": 2,
+          "saturation": {
+            "p10": 41.43,
+            "p25": 43.88,
+            "median": 47.95,
+            "p75": 52.02,
+            "p90": 54.47
+          },
+          "brightness": {
+            "p10": 64.76,
+            "p25": 66.65,
+            "median": 69.8,
+            "p75": 72.95,
+            "p90": 74.84
+          },
+          "sceneBrightness": {
+            "p10": 53.75,
+            "p25": 57.12,
+            "median": 62.75,
+            "p75": 68.38,
+            "p90": 71.75
+          },
+          "hue": {
+            "circular_center": 2.85,
+            "observed_median": 2.85
+          }
+        },
+        "淘宝": {
+          "n": 1,
+          "saturation": {
+            "p10": 56.5,
+            "p25": 56.5,
+            "median": 56.5,
+            "p75": 56.5,
+            "p90": 56.5
+          },
+          "brightness": {
+            "p10": 71.8,
+            "p25": 71.8,
+            "median": 71.8,
+            "p75": 71.8,
+            "p90": 71.8
+          },
+          "sceneBrightness": {
+            "p10": 51.1,
+            "p25": 51.1,
+            "median": 51.1,
+            "p75": 51.1,
+            "p90": 51.1
+          },
+          "hue": {
+            "circular_center": 0.4,
+            "observed_median": 0.4
+          }
+        }
+      },
+      "coverage": {
+        "available_inputs": 3,
+        "accepted": 3,
+        "originals": 3,
+        "thumbnails": 0,
+        "complete_corpus": false
+      }
+    },
+    "ysl-1936": {
+      "pipeline": "auto-lips-v2",
+      "center": {
+        "lab": [
+          40.7631,
+          34.7306,
+          21.4084
+        ],
+        "rgb": [
+          161,
+          71,
+          67
+        ],
+        "hue": 4.05,
+        "saturation": 58.5,
+        "brightness": 63.1
+      },
+      "samples": [
+        {
+          "product_key": "ysl-1936",
+          "id": "oss-xhs-ysl1936-p3",
+          "platform": "小红书",
+          "original": true,
+          "source_object_key": "Data-XHS/YSL-1936/YSL-1936-P3/YSL-1936-P3-1.jpg",
+          "image_sha256": "fff5715e248e34ee00cce930c2a1754014d4f37e64e77a5ac53fc369a8388d30",
+          "metrics": {
+            "width": 540,
+            "height": 720,
+            "rgb": [
+              150,
+              66,
+              59
+            ],
+            "lab": [
+              39.06723520292394,
+              34.730590114075675,
+              21.484470046183656
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.8336140077541424,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 4.6,
+            "saturation": 61.6,
+            "brightness": 58.8,
+            "sceneBrightness": 46.1,
+            "sceneSaturation": 42.9,
+            "highSaturationRatio": 6.4,
+            "brightRatio": 2.1,
+            "darkRatio": 33.5,
+            "hueStd": 4,
+            "candidateRatio": 3.6,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "ysl-1936",
+          "id": "oss-xhs-ysl1936-p6",
+          "platform": "小红书",
+          "original": true,
+          "source_object_key": "Data-XHS/YSL-1936/YSL-1936-P6/YSL-1936-P6-1.jpg",
+          "image_sha256": "3d3293fd1e179d57db84bd5c8c05792a115e973cb5a68e8ca21b496660b0a546",
+          "metrics": {
+            "width": 540,
+            "height": 720,
+            "rgb": [
+              161,
+              79,
+              74
+            ],
+            "lab": [
+              43.74934295390057,
+              33.428845224852125,
+              18.802919068558598
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.8320416690544229,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 4.8,
+            "saturation": 55.6,
+            "brightness": 63.1,
+            "sceneBrightness": 54.8,
+            "sceneSaturation": 28.5,
+            "highSaturationRatio": 1.8,
+            "brightRatio": 11.1,
+            "darkRatio": 19.4,
+            "hueStd": 3.4,
+            "candidateRatio": 2.3,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "ysl-1936",
+          "id": "oss-tb-ysl1936-p6",
+          "platform": "淘宝",
+          "original": true,
+          "source_object_key": "Data_clean_taobao/YSL_1936/YSL_1936_P6/1936_P6_1.jpg",
+          "image_sha256": "05bccbd902bdae47482e7554086b03d682c3c8e0ad698374a448a3bf731a5130",
+          "metrics": {
+            "width": 540,
+            "height": 720,
+            "rgb": [
+              167,
+              54,
+              55
+            ],
+            "lab": [
+              39.802249758950374,
+              46.32259545028805,
+              25.473684175121214
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.7920760987230634,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 359.8,
+            "saturation": 68.6,
+            "brightness": 65.5,
+            "sceneBrightness": 66.1,
+            "sceneSaturation": 43.2,
+            "highSaturationRatio": 1.8,
+            "brightRatio": 20.2,
+            "darkRatio": 7.7,
+            "hueStd": 2.7,
+            "candidateRatio": 7.4,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "ysl-1936",
+          "id": "xhs-media-ysl-1936-1",
+          "platform": "小红书",
+          "original": false,
+          "source_filename": "YSL-1936-P6-2.jpg",
+          "image_sha256": "1658c7672e6ef1be889f430bc778bb8d5d0181727b77f96188773dbab56c96f1",
+          "metrics": {
+            "width": 112,
+            "height": 150,
+            "rgb": [
+              172,
+              80,
+              71
+            ],
+            "lab": [
+              45.58673816679636,
+              36.91193354578709,
+              23.328641138595497
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.7930711163379701,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 6,
+            "saturation": 58.5,
+            "brightness": 67.5,
+            "sceneBrightness": 48.5,
+            "sceneSaturation": 32.4,
+            "highSaturationRatio": 3.7,
+            "brightRatio": 14.9,
+            "darkRatio": 36.2,
+            "hueStd": 4.1,
+            "candidateRatio": 1.5,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "ysl-1936",
+          "id": "xhs-media-ysl-1936-3",
+          "platform": "小红书",
+          "original": false,
+          "source_filename": "YSL-1936-P8.jpg",
+          "image_sha256": "567f547e66f9582ebed39bc52221f861ebb9e012a5a16e283a81b9cdfa1ce37d",
+          "metrics": {
+            "width": 112,
+            "height": 150,
+            "rgb": [
+              190,
+              105,
+              99
+            ],
+            "lab": [
+              53.97807799655675,
+              33.19087011594751,
+              18.433497099358288
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.7693502284294659,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 5.8,
+            "saturation": 47.1,
+            "brightness": 74.5,
+            "sceneBrightness": 55.1,
+            "sceneSaturation": 20.8,
+            "highSaturationRatio": 3.4,
+            "brightRatio": 27.4,
+            "darkRatio": 25.2,
+            "hueStd": 5.6,
+            "candidateRatio": 1.1,
+            "lighting": "中性光"
+          }
+        },
+        {
+          "product_key": "ysl-1936",
+          "id": "xhs-media-ysl-1936-4",
+          "platform": "小红书",
+          "original": false,
+          "source_filename": "YSL-1936-P9.jpg",
+          "image_sha256": "55c4c09da900ab2d787fb79deeb8a9e6f4ff182e46fabb26beeaad2ef9be7ba2",
+          "metrics": {
+            "width": 84,
+            "height": 150,
+            "rgb": [
+              137,
+              47,
+              41
+            ],
+            "lab": [
+              32.94761033835567,
+              37.987890222419054,
+              24.461756659927726
+            ],
+            "roiDetected": true,
+            "roiSource": "mediapipe-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": null,
+            "roiAugmentation": "geometry-fallback",
+            "roiReason": "",
+            "faces": 1,
+            "hue": 5.8,
+            "saturation": 71.2,
+            "brightness": 53.7,
+            "sceneBrightness": 68.4,
+            "sceneSaturation": 24.1,
+            "highSaturationRatio": 1.2,
+            "brightRatio": 31.4,
+            "darkRatio": 8.4,
+            "hueStd": 3.7,
+            "candidateRatio": 0.5,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "ysl-1936",
+          "id": "xhs-media-ysl-1936-5",
+          "platform": "小红书",
+          "original": false,
+          "source_filename": "YSL-1936-P4-2.jpg",
+          "image_sha256": "92e10e0bf01fe489bb8029d4e31b8f47f3538556406e991bacda04b2d21d41b5",
+          "metrics": {
+            "width": 112,
+            "height": 150,
+            "rgb": [
+              171,
+              71,
+              70
+            ],
+            "lab": [
+              43.66705604101533,
+              40.976237846370886,
+              21.408412517198762
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.7898259095812724,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 0.5,
+            "saturation": 58.4,
+            "brightness": 67.1,
+            "sceneBrightness": 55.6,
+            "sceneSaturation": 30.6,
+            "highSaturationRatio": 2.2,
+            "brightRatio": 19.3,
+            "darkRatio": 21.3,
+            "hueStd": 4,
+            "candidateRatio": 2.5,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "ysl-1936",
+          "id": "xhs-media-ysl-1936-6",
+          "platform": "小红书",
+          "original": false,
+          "source_filename": "YSL-1936-P4-1.jpg",
+          "image_sha256": "21c47f0372e59174ae67f986388a95ee6f097a5c63b4e87059c067f2035ca6cb",
+          "metrics": {
+            "width": 112,
+            "height": 150,
+            "rgb": [
+              139,
+              61,
+              56
+            ],
+            "lab": [
+              36.20198285621653,
+              32.81209491895373,
+              19.285495070903636
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.7072394273376761,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 5.3,
+            "saturation": 60.4,
+            "brightness": 54.5,
+            "sceneBrightness": 40.3,
+            "sceneSaturation": 37.4,
+            "highSaturationRatio": 8.7,
+            "brightRatio": 1.2,
+            "darkRatio": 39.7,
+            "hueStd": 2.8,
+            "candidateRatio": 4.5,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "ysl-1936",
+          "id": "xhs-media-ysl-1936-7",
+          "platform": "小红书",
+          "original": false,
+          "source_filename": "YSL-1936-P3-2.jpg",
+          "image_sha256": "7bee3047483935134115d5e9ae06e960d5552497f53cc5e2202117fc9cf8389b",
+          "metrics": {
+            "width": 112,
+            "height": 150,
+            "rgb": [
+              152,
+              72,
+              67
+            ],
+            "lab": [
+              40.76310423665524,
+              33.013444772528686,
+              18.85591113426751
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.7639092677560205,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 3.8,
+            "saturation": 57.2,
+            "brightness": 59.6,
+            "sceneBrightness": 45.3,
+            "sceneSaturation": 40.9,
+            "highSaturationRatio": 5.4,
+            "brightRatio": 5.1,
+            "darkRatio": 42.2,
+            "hueStd": 2.8,
+            "candidateRatio": 1.3,
+            "lighting": "暖光"
+          }
+        }
+      ],
+      "excluded": [],
+      "all": {
+        "n": 9,
+        "saturation": {
+          "p10": 53.9,
+          "p25": 57.2,
+          "median": 58.5,
+          "p75": 61.6,
+          "p90": 69.12
+        },
+        "brightness": {
+          "p10": 54.34,
+          "p25": 58.8,
+          "median": 63.1,
+          "p75": 67.1,
+          "p90": 68.9
+        },
+        "sceneBrightness": {
+          "p10": 44.3,
+          "p25": 46.1,
+          "median": 54.8,
+          "p75": 55.6,
+          "p90": 66.56
+        },
+        "hue": {
+          "circular_center": 4.05,
+          "observed_median": 5.3
+        }
+      },
+      "platforms": {
+        "小红书": {
+          "n": 8,
+          "saturation": {
+            "p10": 53.05,
+            "p25": 56.8,
+            "median": 58.45,
+            "p75": 60.7,
+            "p90": 64.48
+          },
+          "brightness": {
+            "p10": 54.26,
+            "p25": 57.72,
+            "median": 61.35,
+            "p75": 67.2,
+            "p90": 69.6
+          },
+          "sceneBrightness": {
+            "p10": 43.8,
+            "p25": 45.9,
+            "median": 51.65,
+            "p75": 55.23,
+            "p90": 59.44
+          },
+          "hue": {
+            "circular_center": 4.58,
+            "observed_median": 5.05
+          }
+        },
+        "淘宝": {
+          "n": 1,
+          "saturation": {
+            "p10": 68.6,
+            "p25": 68.6,
+            "median": 68.6,
+            "p75": 68.6,
+            "p90": 68.6
+          },
+          "brightness": {
+            "p10": 65.5,
+            "p25": 65.5,
+            "median": 65.5,
+            "p75": 65.5,
+            "p90": 65.5
+          },
+          "sceneBrightness": {
+            "p10": 66.1,
+            "p25": 66.1,
+            "median": 66.1,
+            "p75": 66.1,
+            "p90": 66.1
+          },
+          "hue": {
+            "circular_center": 359.8,
+            "observed_median": 359.8
+          }
+        }
+      },
+      "coverage": {
+        "available_inputs": 9,
+        "accepted": 9,
+        "originals": 3,
+        "thumbnails": 6,
+        "complete_corpus": false
+      }
+    },
+    "ysl-610": {
+      "pipeline": "auto-lips-v2",
+      "center": {
+        "lab": [
+          47.5098,
+          32.0869,
+          18.4028
+        ],
+        "rgb": [
+          170,
+          94,
+          84
+        ],
+        "hue": 6.01,
+        "saturation": 52.8,
+        "brightness": 66.45
+      },
+      "samples": [
+        {
+          "product_key": "ysl-610",
+          "id": "oss-xhs-ysl610-p11",
+          "platform": "小红书",
+          "original": true,
+          "source_object_key": "Data-XHS/YSL-610/YSL-610-P11/YSL-610-P11-1.jpg",
+          "image_sha256": "99f27521b410ba0ff0885a6e07c7d0d2622264c6ee28d013c0b7870bfd8dea50",
+          "metrics": {
+            "width": 540,
+            "height": 720,
+            "rgb": [
+              158,
+              80,
+              74
+            ],
+            "lab": [
+              43.51123636237291,
+              31.71201139729385,
+              18.405453225966262
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.8312404190814477,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 4.6,
+            "saturation": 52.9,
+            "brightness": 62,
+            "sceneBrightness": 55.7,
+            "sceneSaturation": 38.8,
+            "highSaturationRatio": 3.4,
+            "brightRatio": 27.7,
+            "darkRatio": 31.1,
+            "hueStd": 4,
+            "candidateRatio": 2.4,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "ysl-610",
+          "id": "oss-xhs-ysl610-p15",
+          "platform": "小红书",
+          "original": true,
+          "source_object_key": "Data-XHS/YSL-610/YSL-610-P15/YSL-610-P15.jpg",
+          "image_sha256": "8817370fc8cae3462ebe860e77590abb9f210028a3297f65dcc38b20b32be4d0",
+          "metrics": {
+            "width": 552,
+            "height": 720,
+            "rgb": [
+              162,
+              77,
+              73
+            ],
+            "lab": [
+              43.466418115975515,
+              34.78736498855134,
+              19.060367838263346
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.8321054625358806,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 3.1,
+            "saturation": 55.8,
+            "brightness": 63.5,
+            "sceneBrightness": 41.5,
+            "sceneSaturation": 39.5,
+            "highSaturationRatio": 4.9,
+            "brightRatio": 8.8,
+            "darkRatio": 47.2,
+            "hueStd": 3.8,
+            "candidateRatio": 3,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "ysl-610",
+          "id": "oss-tb-ysl610-p12",
+          "platform": "淘宝",
+          "original": true,
+          "source_object_key": "Data_clean_taobao/YSL_610/YSL_610_P12/610_P12_1.jpg",
+          "image_sha256": "9e2e68447474a10e81191c5b675733f8d29f69eb8da056308e1f28633ca98431",
+          "metrics": {
+            "width": 540,
+            "height": 720,
+            "rgb": [
+              178,
+              103,
+              95
+            ],
+            "lab": [
+              51.83043575790779,
+              29.16707461796214,
+              17.58529589579029
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.7999125598443693,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 5.3,
+            "saturation": 44.8,
+            "brightness": 69.8,
+            "sceneBrightness": 39.9,
+            "sceneSaturation": 42.6,
+            "highSaturationRatio": 4.7,
+            "brightRatio": 19.1,
+            "darkRatio": 50.7,
+            "hueStd": 5.5,
+            "candidateRatio": 5.6,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "ysl-610",
+          "id": "xhs-media-ysl-610-1",
+          "platform": "小红书",
+          "original": false,
+          "source_filename": "YSL-610-P10-1.jpg",
+          "image_sha256": "bbe00bbd9184e37d5eea9846879ac793bc37f534710e3a6b3d38bafd527151a1",
+          "metrics": {
+            "width": 112,
+            "height": 150,
+            "rgb": [
+              187,
+              105,
+              104
+            ],
+            "lab": [
+              53.67512945090269,
+              32.548465444634076,
+              15.031852158538882
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.7622465251371676,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 1.4,
+            "saturation": 41.5,
+            "brightness": 73.3,
+            "sceneBrightness": 44.7,
+            "sceneSaturation": 27.5,
+            "highSaturationRatio": 0,
+            "brightRatio": 12.5,
+            "darkRatio": 40.8,
+            "hueStd": 3.5,
+            "candidateRatio": 0.7,
+            "lighting": "中性光"
+          }
+        },
+        {
+          "product_key": "ysl-610",
+          "id": "xhs-media-ysl-610-2",
+          "platform": "小红书",
+          "original": false,
+          "source_filename": "YSL-610-P6.jpg",
+          "image_sha256": "2f554a7e1de83f017c88ff626ba393d45987849895f5455b01250f0871511992",
+          "metrics": {
+            "width": 112,
+            "height": 150,
+            "rgb": [
+              150,
+              87,
+              66
+            ],
+            "lab": [
+              43.79289174764819,
+              23.821347504034527,
+              23.34294463769706
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.6536616043834099,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 12.8,
+            "saturation": 56.5,
+            "brightness": 58.8,
+            "sceneBrightness": 63.8,
+            "sceneSaturation": 27.8,
+            "highSaturationRatio": 1.7,
+            "brightRatio": 28.7,
+            "darkRatio": 12.1,
+            "hueStd": 3.2,
+            "candidateRatio": 0.3,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "ysl-610",
+          "id": "xhs-media-ysl-610-3",
+          "platform": "小红书",
+          "original": false,
+          "source_filename": "YSL-610-P3.jpg",
+          "image_sha256": "e373cf3e1eb784ac48adb00d8c964a61008fb9778a4fbe4e0c24372b6aea9c3c",
+          "metrics": {
+            "width": 112,
+            "height": 150,
+            "rgb": [
+              154,
+              75,
+              70
+            ],
+            "lab": [
+              41.76120498315967,
+              32.46173369816105,
+              18.400123290087965
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.7508842391471595,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 3.2,
+            "saturation": 55.9,
+            "brightness": 60.4,
+            "sceneBrightness": 60.5,
+            "sceneSaturation": 30.2,
+            "highSaturationRatio": 2.8,
+            "brightRatio": 14.5,
+            "darkRatio": 7.7,
+            "hueStd": 4.4,
+            "candidateRatio": 0.7,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "ysl-610",
+          "id": "xhs-media-ysl-610-7",
+          "platform": "小红书",
+          "original": false,
+          "source_filename": "YSL-610-P8-1.jpg",
+          "image_sha256": "1c3c51a61c41b4c8b9e6be5d1865c0e5244501994cc2ebfc542a52b27f8006fe",
+          "metrics": {
+            "width": 112,
+            "height": 150,
+            "rgb": [
+              189,
+              101,
+              98
+            ],
+            "lab": [
+              52.96131470083755,
+              34.835926546085524,
+              17.61367430273364
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.791284018882229,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 3.2,
+            "saturation": 48,
+            "brightness": 74.1,
+            "sceneBrightness": 44,
+            "sceneSaturation": 28.3,
+            "highSaturationRatio": 1.1,
+            "brightRatio": 17.6,
+            "darkRatio": 44.7,
+            "hueStd": 5.1,
+            "candidateRatio": 4.3,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "ysl-610",
+          "id": "xhs-media-ysl-610-8",
+          "platform": "小红书",
+          "original": false,
+          "source_filename": "YSL-610-P1-1.jpg",
+          "image_sha256": "db2e207fa9758692900185b11a36a18c8e2e7dd9b25e6033ef71e7f5af66258e",
+          "metrics": {
+            "width": 112,
+            "height": 150,
+            "rgb": [
+              138,
+              78,
+              65
+            ],
+            "lab": [
+              39.97358857977236,
+              23.799219882468662,
+              18.651447086866224
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.7513210850140973,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 10.4,
+            "saturation": 52.7,
+            "brightness": 54.1,
+            "sceneBrightness": 50.8,
+            "sceneSaturation": 28.2,
+            "highSaturationRatio": 0.2,
+            "brightRatio": 12.8,
+            "darkRatio": 30.4,
+            "hueStd": 6.6,
+            "candidateRatio": 0.7,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "ysl-610",
+          "id": "tb-media-ysl-610-1",
+          "platform": "淘宝",
+          "original": false,
+          "source_filename": "610_P8_3.jpg",
+          "image_sha256": "1a79085904b1808313cd9c53c0bfea07cd97a86753d5a617dbb96d669a082d29",
+          "metrics": {
+            "width": 150,
+            "height": 112,
+            "rgb": [
+              207,
+              109,
+              93
+            ],
+            "lab": [
+              57.07204358117728,
+              37.090265570285716,
+              26.426776087010428
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.7790282151106925,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 9.3,
+            "saturation": 55.1,
+            "brightness": 81.2,
+            "sceneBrightness": 52,
+            "sceneSaturation": 52.2,
+            "highSaturationRatio": 14.3,
+            "brightRatio": 30.7,
+            "darkRatio": 36.6,
+            "hueStd": 3.2,
+            "candidateRatio": 1.8,
+            "lighting": "暖光"
+          }
+        },
+        {
+          "product_key": "ysl-610",
+          "id": "tb-media-ysl-610-2",
+          "platform": "淘宝",
+          "original": false,
+          "source_filename": "610_P8_5.jpg",
+          "image_sha256": "064f04e7ffcf0cec17d96f6a3f16299b88750061743508e671d9a912c5950d3f",
+          "metrics": {
+            "width": 150,
+            "height": 112,
+            "rgb": [
+              177,
+              101,
+              94
+            ],
+            "lab": [
+              51.22677131880833,
+              29.762078116986114,
+              17.32981731592763
+            ],
+            "roiDetected": true,
+            "roiSource": "semantic-lips",
+            "colorPipeline": "auto-lips-v2",
+            "segmentationConfidence": 0.7366855471185427,
+            "roiAugmentation": "none",
+            "roiReason": "",
+            "faces": 0,
+            "hue": 6.8,
+            "saturation": 48.1,
+            "brightness": 69.4,
+            "sceneBrightness": 46.9,
+            "sceneSaturation": 43.9,
+            "highSaturationRatio": 7.6,
+            "brightRatio": 21.5,
+            "darkRatio": 37.5,
+            "hueStd": 3.3,
+            "candidateRatio": 2.1,
+            "lighting": "暖光"
+          }
+        }
+      ],
+      "excluded": [],
+      "all": {
+        "n": 10,
+        "saturation": {
+          "p10": 44.47,
+          "p25": 48.02,
+          "median": 52.8,
+          "p75": 55.62,
+          "p90": 55.96
+        },
+        "brightness": {
+          "p10": 58.33,
+          "p25": 60.8,
+          "median": 66.45,
+          "p75": 72.42,
+          "p90": 74.81
+        },
+        "sceneBrightness": {
+          "p10": 41.34,
+          "p25": 44.17,
+          "median": 48.85,
+          "p75": 54.78,
+          "p90": 60.83
+        },
+        "hue": {
+          "circular_center": 6.01,
+          "observed_median": 4.95
+        }
+      },
+      "platforms": {
+        "小红书": {
+          "n": 7,
+          "saturation": {
+            "p10": 45.4,
+            "p25": 50.35,
+            "median": 52.9,
+            "p75": 55.85,
+            "p90": 56.14
+          },
+          "brightness": {
+            "p10": 56.92,
+            "p25": 59.6,
+            "median": 62.0,
+            "p75": 68.4,
+            "p90": 73.62
+          },
+          "sceneBrightness": {
+            "p10": 43.0,
+            "p25": 44.35,
+            "median": 50.8,
+            "p75": 58.1,
+            "p90": 61.82
+          },
+          "hue": {
+            "circular_center": 5.53,
+            "observed_median": 3.2
+          }
+        },
+        "淘宝": {
+          "n": 3,
+          "saturation": {
+            "p10": 45.46,
+            "p25": 46.45,
+            "median": 48.1,
+            "p75": 51.6,
+            "p90": 53.7
+          },
+          "brightness": {
+            "p10": 69.48,
+            "p25": 69.6,
+            "median": 69.8,
+            "p75": 75.5,
+            "p90": 78.92
+          },
+          "sceneBrightness": {
+            "p10": 41.3,
+            "p25": 43.4,
+            "median": 46.9,
+            "p75": 49.45,
+            "p90": 50.98
+          },
+          "hue": {
+            "circular_center": 7.13,
+            "observed_median": 6.8
+          }
+        }
+      },
+      "coverage": {
+        "available_inputs": 10,
+        "accepted": 10,
+        "originals": 3,
+        "thumbnails": 7,
+        "complete_corpus": false
+      }
+    }
+  }
+}

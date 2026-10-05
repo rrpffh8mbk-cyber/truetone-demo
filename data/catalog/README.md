@@ -17,3 +17,8 @@ Final Top Reference ranking should combine:
 6. match to the current user's profile.
 
 Unknown semantic attributes must stay `不确定` rather than being guessed.
+
+Current color reference: `lip_color_reference_v2.json` (automatic lip masks, 25
+retrievable unique images). `reference_distributions_v1.json` is a legacy
+red-candidate heuristic archive and must not be used as the new color baseline.
+See `scripts/README.md` for full-corpus reprocessing and coverage limits.
