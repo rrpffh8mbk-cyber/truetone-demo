@@ -33,3 +33,56 @@ body:not(.modal-open) #modal-backdrop[aria-hidden="true"]{
   opacity:1!important;
   pointer-events:auto!important;
 }
+
+/* === Final consumer journey === */
+.consumer-hero{padding:76px 0 34px;max-width:980px}
+.consumer-hero h1{font:500 clamp(48px,7vw,86px)/1.02 Georgia,"Songti SC",serif;letter-spacing:-.04em;margin:0 0 22px}
+.consumer-hero>p{max-width:780px;color:var(--muted);font-size:17px;line-height:1.85;margin:0}
+.journey-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:30px;color:#dbc4b7;font-size:11px}
+.journey-line span{border:1px solid #49362f;background:#120f0e;padding:8px 10px;border-radius:999px}.journey-line i{font-style:normal;color:#5d4840}
+
+.consumer-builder{border-top:1px solid var(--line);padding-top:12px}
+.builder-step{display:grid;grid-template-columns:74px minmax(220px,.75fr) minmax(320px,1.25fr);gap:26px;align-items:start;padding:42px 0;border-bottom:1px solid var(--line)}
+.compact-step{padding-bottom:34px}
+.step-num{font:500 42px Georgia,serif;color:#4e3932}.step-copy h2{font:500 32px Georgia,"Songti SC",serif;margin:0 0 10px}.step-copy p{color:var(--muted);font-size:13px;line-height:1.8;margin:0}
+
+.selfie-uploader{min-height:340px;border:1px dashed #65483d;border-radius:24px;background:radial-gradient(circle at 50% 35%,#211512,#0d0b0a 70%);display:grid;place-items:center;position:relative;overflow:hidden;cursor:pointer;transition:.2s}
+.selfie-uploader:hover,.selfie-uploader.drag{border-color:var(--gold);box-shadow:0 18px 60px rgba(0,0,0,.24)}
+#consumer-selfie-empty{text-align:center;display:grid;gap:8px;color:var(--muted)}#consumer-selfie-empty b{color:var(--cream);font:500 21px Georgia,"Songti SC",serif}#consumer-selfie-empty span{font-size:10px}
+#consumer-selfie-preview{width:100%;height:100%;min-height:340px;max-height:560px;object-fit:contain;background:#090807}
+.replace-photo{position:absolute;right:14px;bottom:14px;border:1px solid #5b443b;background:rgba(15,12,11,.84);color:#fff;border-radius:999px;padding:8px 12px;cursor:pointer}
+
+.purchase-shades{display:grid;gap:9px}.purchase-shade{width:100%;min-height:84px;border:1px solid var(--line);background:#100d0c;color:var(--ink);border-radius:17px;padding:14px;display:grid;grid-template-columns:46px 1fr auto;gap:13px;align-items:center;text-align:left;cursor:pointer;transition:.18s}
+.purchase-shade:hover{border-color:#66483c}.purchase-shade.active{border-color:#a06d59;background:linear-gradient(135deg,#211512,#130f0e);box-shadow:0 0 0 2px rgba(215,170,121,.06) inset}
+.shade-dot{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 0 0 4px rgba(0,0,0,.12)}
+.purchase-shade b{display:block;font-size:14px;font-weight:500}.purchase-shade small{display:block;color:var(--muted);font-size:11px;margin-top:5px}.purchase-shade em{font-style:normal;color:var(--muted2);font-size:10px}
+
+.profile-fields{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.profile-fields label{display:grid;gap:8px;color:var(--muted);font-size:11px}.profile-fields .select{width:100%}
+.consumer-start{text-align:center;padding:34px 0 58px}.big-action{min-width:min(520px,100%);min-height:58px;font-size:15px}.big-action:disabled{opacity:.38;cursor:not-allowed;transform:none}.consumer-start p{color:var(--muted2);font-size:11px;margin:10px 0 0}
+
+.consumer-progress{margin:8px 0 54px;padding:30px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(145deg,#171210,#0d0b0b)}
+.consumer-progress h2{font:500 30px Georgia,"Songti SC",serif;margin:0 0 22px}.human-progress{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.hp{border:1px solid var(--line);border-radius:13px;padding:12px;color:var(--muted2);font-size:10px;line-height:1.6;transition:.2s}.hp.active{color:#f1d7c6;border-color:#795445;background:#1c1311}.hp.done{color:#9ac9aa;border-color:#365745}
+
+.personal-result{padding-top:12px}.result-title{display:flex;justify-content:space-between;gap:22px;align-items:end;margin-bottom:18px}.result-title h2{font:500 clamp(34px,5vw,58px) Georgia,"Songti SC",serif;margin:0 0 10px}.result-title p{color:var(--muted);font-size:13px;line-height:1.7;max-width:720px;margin:0}
+.personal-hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}.tryon-card,.decision-card{border:1px solid var(--line);border-radius:22px;background:#100d0c;overflow:hidden}
+.tryon-image{position:relative;min-height:420px;background:#080706;display:grid;place-items:center}.tryon-image img{display:block;width:100%;max-height:650px;object-fit:contain}.result-toggle{position:absolute;left:14px;bottom:14px}.tryon-caption{padding:18px 20px}.tryon-caption b{font:500 18px Georgia,"Songti SC",serif}.tryon-caption p{color:var(--muted);font-size:12px;line-height:1.7}.tryon-caption small{color:var(--muted2);font-size:10px}
+.decision-card{display:grid}.decision-block{padding:26px;border-bottom:1px solid var(--line)}.decision-block:last-child{border-bottom:0}.decision-block.accent{background:linear-gradient(135deg,rgba(169,70,61,.13),transparent)}
+.decision-block>span{color:var(--muted);font-size:11px}.decision-block>b{display:block;font:500 20px Georgia,"Songti SC",serif;margin:4px 0 8px}.decision-block>p{color:var(--muted);font-size:11px;line-height:1.7;margin:0}.big-score{font:500 58px Georgia,serif;color:var(--cream);margin:12px 0 6px}.big-score small{font-size:12px;color:var(--gold);margin-left:5px}
+
+.consumer-section{margin:56px 0}.matched-media-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.matched-media{border:1px solid var(--line);background:#0e0c0b;border-radius:18px;overflow:hidden}.matched-media>img,.matched-media>.media-placeholder{width:100%;height:240px;object-fit:cover;border-radius:0}.matched-media>div:last-child{padding:14px}.matched-media b{font:500 16px Georgia,serif;color:var(--gold)}.matched-media small{display:block;color:var(--muted2);font-size:10px;margin:5px 0}.matched-media p{font-size:11px;line-height:1.65;color:#d4c6be;margin:0}
+.matched-review-list{display:grid;gap:9px}.matched-review{display:grid;grid-template-columns:52px 1fr;gap:18px;border:1px solid var(--line);background:#0f0d0c;border-radius:17px;padding:18px}.match-rank{font:500 27px Georgia,serif;color:#533b32}.review-source{color:var(--gold);font-size:10px;letter-spacing:.04em}.matched-review p{font-size:14px;line-height:1.8;margin:8px 0}.matched-review small{color:var(--muted);font-size:10px;line-height:1.7}
+
+.trust-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.trust-grid .panel p{color:var(--muted);font-size:12px;line-height:1.75}.tech-details{margin-top:12px;border:1px solid var(--line);border-radius:15px;background:#0f0d0c}.tech-details summary{cursor:pointer;padding:15px;color:#cdbbb0;font-size:11px}.tech-details[open] summary{border-bottom:1px solid var(--line)}.tech-details .details-grid{padding:12px;margin-top:0}
+.purchase-loop{display:flex;justify-content:space-between;gap:24px;align-items:center;border:1px solid #51392f;background:linear-gradient(135deg,#1d1311,#0f0c0b);border-radius:24px;padding:26px;margin:58px 0 20px}.purchase-loop h2{font:500 30px Georgia,"Songti SC",serif;margin:0 0 7px}.purchase-loop p{color:var(--muted);font-size:12px;margin:0}.purchase-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+
+@media(max-width:920px){
+ .builder-step{grid-template-columns:55px 1fr;gap:16px}.builder-step>*:nth-child(3){grid-column:2}
+ .personal-hero-grid{grid-template-columns:1fr}.human-progress{grid-template-columns:1fr}.profile-fields{grid-template-columns:1fr}
+}
+@media(max-width:620px){
+ .consumer-hero{padding-top:46px}.consumer-hero h1{font-size:48px}.journey-line i{display:none}
+ .builder-step{grid-template-columns:1fr;padding:32px 0}.builder-step>*:nth-child(3){grid-column:auto}.step-num{font-size:28px}
+ .selfie-uploader,#consumer-selfie-preview{min-height:320px}.purchase-shade{grid-template-columns:38px 1fr}.purchase-shade em{display:none}.shade-dot{width:36px;height:36px}
+ .result-title{align-items:flex-start;flex-direction:column}.tryon-image{min-height:350px}.matched-media-grid,.trust-grid{grid-template-columns:1fr}
+ .matched-media>img,.matched-media>.media-placeholder{height:320px}.matched-review{grid-template-columns:38px 1fr;gap:10px}.purchase-loop{align-items:flex-start;flex-direction:column}.purchase-actions{justify-content:flex-start}
+}
