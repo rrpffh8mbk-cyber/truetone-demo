@@ -285,6 +285,7 @@ function renderConsumerResult(p,profile,reviews,media,match,expected,cloudNarrat
  $('#consumer-analysis').innerHTML=`
  <section class="personal-result">
    <div class="result-title"><div><div class="eyebrow">你的 TrueTone 购买参考</div><h2>${esc(p.brand)} #${p.shade} · ${esc(p.name)}</h2><p>不是替你宣布“适合 / 不适合”，而是根据当前自拍和可信消费者证据告诉你：这个方向对你有多大参考价值。</p></div><button class="ghost-btn" id="back-to-form">重新选择</button></div>
+   ${cloudNarrative?.runtime==="aliyun-model-studio"?`<div class="cloud-connected-badge"><span>TRUE AI ANALYSIS</span><b>✓ 阿里云百炼已参与本次分析</b></div>`:``}
    <div class="personal-hero-grid">
     <div class="tryon-card"><div class="tryon-image"><img id="consumer-result-photo" src="${selfieResult.tryon}"><div class="toggle result-toggle"><button class="active" data-view="tryon">颜色预览</button><button data-view="original">原自拍</button></div></div><div class="tryon-caption"><b>#${p.shade} 在当前自拍里的预计呈现</b><p>${expected.tone}；参考色域约 H ${expected.h}° · S ${expected.s}% · B ${expected.b}%。</p><small>颜色预览仅用于帮助理解色调方向，不等同于精准 AR 试色或实物最终效果。</small></div></div>
     <div class="decision-card">
