@@ -342,3 +342,15 @@ body:not(.modal-open) #modal-backdrop[aria-hidden="true"]{
 .personal-color-samples img{width:100%;height:145px;object-fit:contain;background:#17120f;border-radius:12px;display:block}
 .personal-color-samples figcaption{font-size:12px;line-height:1.6;color:var(--muted);margin-top:7px;overflow-wrap:anywhere}
 @media(max-width:760px){.personal-color-samples{grid-template-columns:repeat(2,minmax(0,1fr))}.personal-color-samples img{height:125px}.preview-variant-picker select{font-size:14px}}
+
+
+/* Multimodal Trust scoring */
+.trust-score-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+.trust-mini-metrics{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.trust-mini-metrics span{display:flex;flex-direction:column;gap:4px;min-width:122px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:rgba(18,13,12,.55);font-size:11px;color:var(--muted);line-height:1.45}
+.trust-mini-metrics b{font-family:var(--serif);font-size:20px;color:var(--text);font-weight:600}
+.seed-score-grid.trust-score-grid>div{min-height:92px}
+.seed-score-grid.trust-score-grid>div span{line-height:1.4}
+.seed-score-grid.trust-score-grid>div b{word-break:break-word}
+@media(max-width:980px){.trust-score-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:620px){.trust-score-grid{grid-template-columns:1fr 1fr}.trust-mini-metrics span{min-width:calc(50% - 4px);flex:1}}
