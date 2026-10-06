@@ -1,0 +1,265 @@
+{
+  "review-b6763da4fc46a6ee": {
+    "text_sha256": "b6763da4fc46a6ee09415e57d2f276af7a6608a6e9ccfb034b1cd4ab74062cf8",
+    "note": "610的很适合是肯定体验；442的不适合不归到610。",
+    "corrections": {
+      "claims": {
+        "deep_lip": {
+          "stance": "support",
+          "evidence_quote": "我有610，我也是深唇，很适合"
+        }
+      },
+      "negativeEvidence": false
+    }
+  },
+  "review-7466fe19ec471c08": {
+    "text_sha256": "7466fe19ec471c0853a74e04065b2614ba57f147c57f5e33a3eb036c298331e6",
+    "note": "浅唇作者明确说不太适合素颜，而非当前化妆状态。",
+    "corrections": {
+      "claims": {
+        "bare_face": {
+          "stance": "oppose",
+          "evidence_quote": "感觉不太适合素颜涂"
+        }
+      }
+    }
+  },
+  "review-1281758269a1178b": {
+    "text_sha256": "1281758269a1178b317845e4fe5e78623d9ade13747800c16a83e273576c012f",
+    "note": "黄皮显老的描述对应610；440只是后续询问。",
+    "corrections": {
+      "claims": {
+        "yellow_skin": {
+          "stance": "oppose",
+          "evidence_quote": "黄皮涂上老10岁"
+        }
+      },
+      "product_scope": "target_context"
+    }
+  },
+  "review-741f63221074c325": {
+    "text_sha256": "741f63221074c325d8b8f3f27ef65e53241f1dfedf080fe49d7d7fc4ac532e2b",
+    "note": "610的适用建议与440分开归属。",
+    "corrections": {
+      "claims": {
+        "yellow_skin": {
+          "stance": "support",
+          "evidence_quote": "610更适合黄皮"
+        }
+      },
+      "product_scope": "target_context"
+    }
+  },
+  "review-d72d74b2eadfc6d2": {
+    "text_sha256": "d72d74b2eadfc6d29ced0e8cccc669592c9353fd8cae236f313f39715d346842",
+    "note": "需要遮原唇色才好看，是有条件的体验，不计直接支持。",
+    "corrections": {
+      "claims": {}
+    }
+  },
+  "review-71d891ca22beb2ec": {
+    "text_sha256": "71d891ca22beb2ecea408833d3e2f36618d092ac4e6126832b8de043a6a22dd3",
+    "note": "回答主旨是唇纹遮盖，不能确定在肯定素颜适配。",
+    "corrections": {
+      "claims": {}
+    }
+  },
+  "review-cfdf67e603305c4a": {
+    "text_sha256": "cfdf67e603305c4a9a86f3f56a6c8b125cde07e14dc9cb00702a259ce7e766f0",
+    "note": "本人明确是浅唇冷白皮；196比较不抹掉本人条件。",
+    "corrections": {
+      "authorTags": {
+        "lip": {
+          "value": "浅唇",
+          "confidence": "high",
+          "basis": "comment_self_report",
+          "evidence_quote": "我就是浅唇色冷白皮"
+        },
+        "skin": {
+          "value": "白皙",
+          "confidence": "high",
+          "basis": "comment_self_report",
+          "evidence_quote": "我就是浅唇色冷白皮"
+        }
+      },
+      "product_scope": "target_context"
+    }
+  },
+  "review-3487f43edf71d4b3": {
+    "text_sha256": "3487f43edf71d4b30f70ea2661aa2dd38a00e8bf3a20b881751a6ccdfaff6e60",
+    "note": "作者描述自己白皮深唇并选择1936，比较1988不改变本人标签。",
+    "corrections": {
+      "authorTags": {
+        "lip": {
+          "value": "深唇",
+          "confidence": "high",
+          "basis": "comment_self_report",
+          "evidence_quote": "白皮深唇"
+        },
+        "skin": {
+          "value": "白皙",
+          "confidence": "high",
+          "basis": "comment_self_report",
+          "evidence_quote": "白皮深唇"
+        }
+      },
+      "product_scope": "target_context",
+      "claims": {
+        "deep_lip": {
+          "stance": "support",
+          "evidence_quote": "在1936和1988里选了1936，果然很适合"
+        }
+      }
+    }
+  },
+  "review-68ae5a0c9439608e": {
+    "text_sha256": "68ae5a0c9439608efc1aa690d54ac6456bf484e4bfc373791c754e2708268fc6",
+    "note": "深唇显白与不适合裸妆是两个适用条件，不相互归错。",
+    "corrections": {
+      "claims": {
+        "deep_lip": {
+          "stance": "support",
+          "evidence_quote": "深唇带一丢丢玫红，很显白"
+        }
+      }
+    }
+  },
+  "review-74e30ce7521b5116": {
+    "text_sha256": "74e30ce7521b5116e55a0b692610a7979119f4fde6325e0048afd80a55236031",
+    "note": "对于深唇的我为明确本人自述。",
+    "corrections": {
+      "authorTags": {
+        "lip": {
+          "value": "深唇",
+          "confidence": "high",
+          "basis": "comment_self_report",
+          "evidence_quote": "对于深唇的我"
+        }
+      }
+    }
+  },
+  "review-12b1faf17c112602": {
+    "text_sha256": "12b1faf17c112602396ff357bee6d274c0473ac2742a462cd1a2d7aac59499db",
+    "note": "带妆可驾驭、素颜荧光，是条件性意见；不笼统归黄皮不适合。",
+    "corrections": {
+      "claims": {
+        "bare_face": {
+          "stance": "oppose",
+          "evidence_quote": "素颜有点荧光"
+        }
+      }
+    }
+  },
+  "review-2eacf427ddd94dca": {
+    "text_sha256": "2eacf427ddd94dcafb0154ecbd4fb473de4c602b0a6360b36b2423f195a20077",
+    "note": "本人的黄皮深唇体验为发紫显老，保留相悖意见。",
+    "corrections": {
+      "claims": {
+        "yellow_skin": {
+          "stance": "oppose",
+          "evidence_quote": "黄皮肤深唇有点发紫，显老"
+        },
+        "deep_lip": {
+          "stance": "oppose",
+          "evidence_quote": "黄皮肤深唇有点发紫，显老"
+        }
+      }
+    }
+  },
+  "review-52e62150cede2284": {
+    "text_sha256": "52e62150cede22841078ccf029b008701d30da4e5bded4e62b1cf06722f600ea",
+    "note": "黄皮深唇合适本人，原文同时说明当前带妆。",
+    "corrections": {
+      "claims": {
+        "yellow_skin": {
+          "stance": "support",
+          "evidence_quote": "黄皮深唇终于找到了合适自己的裸色"
+        },
+        "deep_lip": {
+          "stance": "support",
+          "evidence_quote": "黄皮深唇终于找到了合适自己的裸色"
+        }
+      }
+    }
+  },
+  "review-face28791143f538": {
+    "text_sha256": "face28791143f538e29128bdb2ac3f8f3228cbbf4ee226f5bdc29106ce54936b",
+    "note": "第一天感觉不好，第二天改变体验；按最终意见支持，不把初次体验变成反对素颜。",
+    "corrections": {
+      "claims": {
+        "bare_face": {
+          "stance": "support",
+          "evidence_quote": "素颜完全没压力"
+        }
+      },
+      "negativeEvidence": false
+    }
+  },
+  "review-dac86489d7686e53": {
+    "text_sha256": "dac86489d7686e53cfc000bf69c8c9a4d6e5502fdae4485fc22f197573d12725",
+    "note": "本人明确连续自述黄皮、深唇；文字带妆建议不等于当时化妆。",
+    "corrections": {
+      "authorTags": {
+        "skin": {
+          "value": "黄皮",
+          "confidence": "high",
+          "basis": "comment_self_report",
+          "evidence_quote": "我是黄皮"
+        },
+        "lip": {
+          "value": "深唇",
+          "confidence": "high",
+          "basis": "comment_self_report",
+          "evidence_quote": "我是黄皮，深唇"
+        }
+      }
+    }
+  },
+  "review-e6fc0cdcebd3abc9": {
+    "text_sha256": "e6fc0cdcebd3abc9d6dc320876bdcb1b3c48806b5d65140e57357ea5fce20241",
+    "note": "本人是浅唇白皮，不使用问题里深唇黄皮作为回答者标签。",
+    "corrections": {
+      "authorTags": {
+        "lip": {
+          "value": "浅唇",
+          "confidence": "high",
+          "basis": "comment_self_report",
+          "evidence_quote": "我是浅唇白皮"
+        },
+        "skin": {
+          "value": "白皙",
+          "confidence": "high",
+          "basis": "comment_self_report",
+          "evidence_quote": "我是浅唇白皮"
+        }
+      }
+    }
+  },
+  "review-47ec6562afd1c39c": {
+    "text_sha256": "47ec6562afd1c39cd43055b96be7098b946924217d087ff8c1842cbd1f14de6f",
+    "note": "本人唇色发白，问题里的唇色深不能覆盖回答者。",
+    "corrections": {
+      "authorTags": {
+        "skin": {
+          "value": "黄皮",
+          "confidence": "high",
+          "basis": "comment_self_report",
+          "evidence_quote": "我也是黄皮"
+        },
+        "lip": {
+          "value": "浅唇",
+          "confidence": "high",
+          "basis": "comment_self_report",
+          "evidence_quote": "唇色发白"
+        }
+      }
+    }
+  },
+  "review-36b12feb6fdbe056": {
+    "text_sha256": "36b12feb6fdbe05679adc1921abd22f52e416b73b858cf5249d15b4931e6d3f0",
+    "note": "作者用275且黄皮；279只是对白皮的建议。",
+    "corrections": {
+      "product_scope": "target_context"
+    }
+  }
+}

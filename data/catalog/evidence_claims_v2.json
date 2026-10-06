@@ -1,0 +1,564 @@
+{
+  "version": "2026-10-06-text-evidence-v2",
+  "method": {
+    "counting": "Deduplicate by product, variant, exact author text and question. Count only explicit suitability stances; ambiguous statements excluded. Recommendations count as opinions, never author identity.",
+    "display_note": "支持/相悖计数为文本证据摘要，不是消费者总体比例；版本不明或跨版本记录只作家族意见。"
+  },
+  "products": {
+    "ysl-610": {
+      "dedup_text_records": 255,
+      "claims": {
+        "yellow_skin": {
+          "label": "黄皮是否适合",
+          "support_count": 4,
+          "oppose_count": 3,
+          "support_examples": [
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "黄黑皮适合610冰乌龙吗 — 适合的～这个颜色涂上真的很温柔",
+              "review_id": "review-a83f321b6cdbecdc"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "评价",
+              "text": "颜色挺好看的 适合黄皮",
+              "review_id": "review-aa10d5bb45a00cf7"
+            },
+            {
+              "platform": "小红书",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "评论",
+              "text": "610更适合黄皮 440更适合橄榄或者白皮",
+              "review_id": "review-741f63221074c325"
+            }
+          ],
+          "oppose_examples": [
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "平时素颜黄皮深唇适合610嘛 — 不太适合，肤色白一些的素颜涂会好些，最好带妆",
+              "review_id": "review-2d3e6d7c5aa35aa0"
+            },
+            {
+              "platform": "小红书",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "评论",
+              "text": "610应该适合白皮，黄皮涂上老10岁。440元气吗？是可以显嫩的吧？",
+              "review_id": "review-1281758269a1178b"
+            },
+            {
+              "platform": "小红书",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "评论",
+              "text": "黄皮涂真的就是没气色，也可能千人千色？反正我觉得这个色不适合黄皮，难看",
+              "review_id": "review-d89a9a37fae0bd76"
+            }
+          ]
+        },
+        "deep_lip": {
+          "label": "深唇是否适合",
+          "support_count": 3,
+          "oppose_count": 1,
+          "support_examples": [
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "姐妹们深唇适合610码干吗 — 适合，不干。",
+              "review_id": "review-6ddb29df62e9810a"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "黄皮深唇 很纠结442和610，有买过的姐妹帮忙给点建议吗 — 我有610，我也是深唇，很适合，不知道442是不适合",
+              "review_id": "review-b6763da4fc46a6ee"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "配图评价",
+              "text": "真的适合深唇姐妹，缺点就是个人觉得太香了，送的香水很好闻",
+              "review_id": "review-4e58448274ea7cbb"
+            }
+          ],
+          "oppose_examples": [
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "平时素颜黄皮深唇适合610嘛 — 不太适合，肤色白一些的素颜涂会好些，最好带妆",
+              "review_id": "review-2d3e6d7c5aa35aa0"
+            }
+          ]
+        },
+        "bare_face": {
+          "label": "素颜是否适合",
+          "support_count": 1,
+          "oppose_count": 1,
+          "support_examples": [
+            {
+              "platform": "小红书",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "评论",
+              "text": "好看耶！素颜涂也好看！",
+              "review_id": "review-20d1828c0a8cd618"
+            }
+          ],
+          "oppose_examples": [
+            {
+              "platform": "小红书",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "正文",
+              "text": "新买的圣罗兰610，涂出来为啥有点显老\n本人浅唇色，610刚上嘴，一种大妈的感觉，可能涂太多了，感觉红调太重了，我以为是那种裸色系列的，感觉不太适合素颜涂，更适合带妆涂\n涂出来更红棕色系，红调更重一些，只能薄涂了还没那么灾难……",
+              "review_id": "review-7466fe19ec471c08"
+            }
+          ]
+        }
+      }
+    },
+    "ysl-1936": {
+      "dedup_text_records": 152,
+      "claims": {
+        "yellow_skin": {
+          "label": "黄皮是否适合",
+          "support_count": 3,
+          "oppose_count": 0,
+          "support_examples": [
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "1936 黄皮深唇好看吗 — 好看",
+              "review_id": "review-08571422d2070db8"
+            },
+            {
+              "platform": "小红书",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "正文",
+              "text": "素颜薄涂：偏豆沙粉，能盖住原本唇色，气色+30%\n🔸带妆厚涂：灰调复古红，瞬间冷白皮，牙都显白了\n🔸室外自然光：偏红棕调，很柔和\n🔸室内白光：灰调更明显，高级感拉满\n\t\n📌结论：黄皮友好度⭐⭐⭐⭐（满分5）\n深唇覆盖力⭐⭐⭐⭐⭐\n日常使用率⭐⭐⭐⭐",
+              "review_id": "review-893db3a7c6433763"
+            },
+            {
+              "platform": "小红书",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "评论",
+              "text": "我也是黄皮 这色很显白",
+              "review_id": "review-9e7f746affca8f8e"
+            }
+          ],
+          "oppose_examples": []
+        },
+        "deep_lip": {
+          "label": "深唇是否适合",
+          "support_count": 4,
+          "oppose_count": 0,
+          "support_examples": [
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "1936 黄皮深唇好看吗 — 好看",
+              "review_id": "review-08571422d2070db8"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "评价",
+              "text": "白皮深唇果断在1936和1988里选了1936，果然很适合！说实话类似颜色也是有的，无奈这次粉星辰颜值太高了，我宣布以后只带这个出门！",
+              "review_id": "review-3487f43edf71d4b3"
+            },
+            {
+              "platform": "小红书",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "评论",
+              "text": "1936刚买，超好看，黄一白深唇好看",
+              "review_id": "review-8d2574e1abf43360"
+            }
+          ],
+          "oppose_examples": []
+        },
+        "bare_face": {
+          "label": "素颜是否适合",
+          "support_count": 0,
+          "oppose_count": 0,
+          "support_examples": [],
+          "oppose_examples": []
+        }
+      }
+    },
+    "lancome-274": {
+      "dedup_text_records": 770,
+      "claims": {
+        "yellow_skin": {
+          "label": "黄皮是否适合",
+          "support_count": 19,
+          "oppose_count": 6,
+          "support_examples": [
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "姐妹们，274黄皮涂着好看不？ — 可以",
+              "review_id": "review-43b4f9de6e182928"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "316适合送给母亲吗 — 不知道，买的274送的小姨，黄皮适合274",
+              "review_id": "review-7af96e2512b7c606"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "请问200日常吗，素颜可以吗 — 不知道，买的274。说的适合黄皮的姐妹，然后就买了个送给长辈。",
+              "review_id": "review-8575f5cb84db0727"
+            }
+          ],
+          "oppose_examples": [
+            {
+              "platform": "淘宝",
+              "variant": "cream_gift",
+              "variant_scope": "known_product_line",
+              "type": "评价",
+              "text": "黄黑皮深唇很不适合，涂上感觉很荧光，而且是比较干的质地，只能化妆后涂，而且因为自然妆也不是很适合，涂过不能退了所以用自己以前很深的口红中和一下用。包装很好看很有质感。",
+              "review_id": "review-e4a98f322079d3db"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "cream_gift",
+              "variant_scope": "known_product_line",
+              "type": "评价",
+              "text": "我觉得颜色挺土的 不适合黄黑皮 带妆也不行",
+              "review_id": "review-2a25fe78104ee8b5"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "intimatte",
+              "variant_scope": "known_product_line",
+              "type": "问大家回答",
+              "text": "274黄皮日常可以吗提气色吗 — 不可以",
+              "review_id": "review-d2c73baf0d7f0590"
+            }
+          ]
+        },
+        "deep_lip": {
+          "label": "深唇是否适合",
+          "support_count": 7,
+          "oppose_count": 3,
+          "support_examples": [
+            {
+              "platform": "淘宝",
+              "variant": "cream_gift",
+              "variant_scope": "known_product_line",
+              "type": "评价",
+              "text": "很好看的颜色，对于深唇的我来说也是很好看的",
+              "review_id": "review-74e30ce7521b5116"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "cream_gift",
+              "variant_scope": "known_product_line",
+              "type": "评价",
+              "text": "非常漂亮的颜色，黄皮深唇也适合，满意",
+              "review_id": "review-1bc3fba17a000ac0"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "intimatte",
+              "variant_scope": "known_product_line",
+              "type": "问大家回答",
+              "text": "请问黄皮深唇适合粉管274吗 — 可以",
+              "review_id": "review-bd067998a57bd9d7"
+            }
+          ],
+          "oppose_examples": [
+            {
+              "platform": "淘宝",
+              "variant": "cream_gift",
+              "variant_scope": "known_product_line",
+              "type": "评价",
+              "text": "黄黑皮深唇很不适合，涂上感觉很荧光，而且是比较干的质地，只能化妆后涂，而且因为自然妆也不是很适合，涂过不能退了所以用自己以前很深的口红中和一下用。包装很好看很有质感。",
+              "review_id": "review-e4a98f322079d3db"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "intimatte",
+              "variant_scope": "known_product_line",
+              "type": "问大家回答",
+              "text": "274适合黄皮深唇吗 — 不适合",
+              "review_id": "review-ebf4683df0d1480e"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "cream_gift",
+              "variant_scope": "known_product_line",
+              "type": "配图评价",
+              "text": "雾面的口红，包装和香味都挺好，就是黄皮肤深唇有点发紫，显老，在室内开灯就亮点，在外面就颜色深，一般吧，没有那么好",
+              "review_id": "review-2eacf427ddd94dca"
+            }
+          ]
+        },
+        "bare_face": {
+          "label": "素颜是否适合",
+          "support_count": 23,
+          "oppose_count": 2,
+          "support_examples": [
+            {
+              "platform": "淘宝",
+              "variant": "cream",
+              "variant_scope": "known_product_line",
+              "type": "评价",
+              "text": "特别适合我这种奔五懒人素颜，滋润度很好。",
+              "review_id": "review-37f7c8ab09e12e76"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "cream_gift",
+              "variant_scope": "known_product_line",
+              "type": "评价",
+              "text": "素颜涂完全可以 提气色又好看 爱婧仪！",
+              "review_id": "review-943fcfd0abf998ec"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "cream_gift",
+              "variant_scope": "known_product_line",
+              "type": "评价",
+              "text": "用完皮肤不拔干，挺舒服的。素颜友好",
+              "review_id": "review-d54093a8a9facdba"
+            }
+          ],
+          "oppose_examples": [
+            {
+              "platform": "小红书",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "正文",
+              "text": "谁懂口红也有“时差”啊💄\n两年前入手的兰蔻唇釉274，刚上嘴直接嫌弃太淡\n浅奶茶调几乎融唇，素颜涂像没气色，直接打入冷宫压箱底\n今天翻出来随手一涂直接封神！\n现在偏爱淡妆、伪素颜，这支温柔到骨子里\n清透橘棕乌龙奶茶，漆光成膜自带玻璃唇光泽\n薄涂原生嫩唇感，淡妆通勤、见家长、日常出门全适配\n不挑黄皮，低饱和完全不显土，温柔又显干净\n当年嫌寡淡，如今越淡越高级\n以前爱浓郁明艳，现在独爱这种低调耐看的裸奶茶\n闲置两年挖到宝，温柔挂素颜党闭眼冲这支！",
+              "review_id": "review-2465ac34da471511"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "cream",
+              "variant_scope": "known_product_line",
+              "type": "配图评价",
+              "text": "化妆之后还不错黄黑皮可以驾驭但是素颜有点荧光",
+              "review_id": "review-12b1faf17c112602"
+            }
+          ]
+        }
+      },
+      "variant_model": {
+        "family_id": "lancome-274",
+        "taobao_variants": [
+          {
+            "id": "cream",
+            "label": "黑管哑光 #274 奶茶裸",
+            "source_folder": "lancome_274_Cream"
+          },
+          {
+            "id": "cream_gift",
+            "label": "「声色」限定 #274 原声裸茶",
+            "source_folder": "lancome_274_Cream_gift"
+          },
+          {
+            "id": "intimatte",
+            "label": "粉金管唇膏 #274",
+            "source_folder": "lancome_274_Intimatte"
+          }
+        ],
+        "xiaohongshu": {
+          "main_posts": 9,
+          "explicit_lipglaze_or_mirror_posts": 6,
+          "explicit_xiaomanyao_posts": 1,
+          "no_clear_variant_posts": 2,
+          "policy": "Do not force-map Xiaohongshu 274 posts to the three Taobao variants. Use them as family-level evidence unless the post itself provides a high-confidence version clue."
+        },
+        "cross_variant_example": {
+          "platform": "淘宝·粉金管问大家",
+          "text": "问题是“274适合黄皮吗？”，回答者却说“我买过274唇釉，一点都不合适”。这说明即使商品页版本明确，用户回答也可能引用另一个274产品。"
+        }
+      }
+    },
+    "lancome-275": {
+      "dedup_text_records": 736,
+      "claims": {
+        "yellow_skin": {
+          "label": "黄皮是否适合",
+          "support_count": 18,
+          "oppose_count": 2,
+          "support_examples": [
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "哪个颜色自然适合素颜。平时就防晒加口红，求推荐 — 我买的275适合黄皮 挺自然的",
+              "review_id": "review-28bc55993566ee6f"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "黄皮，教资面试可以涂275吗？或者还有哪些适合教资面试涂/:@/:@ — 可以 275挺百搭的",
+              "review_id": "review-5a5f20234912c918"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "请问275显白吗 — 挺显白的，黄皮友好",
+              "review_id": "review-34e3774070ace6f9"
+            }
+          ],
+          "oppose_examples": [
+            {
+              "platform": "小红书",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "评论",
+              "text": "抽一个姐妹送了 橘调的不适合我们黄黑皮",
+              "review_id": "review-cc720638fbb80484"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "配图评价",
+              "text": "真不知道那么多好评哪来的 我黄皮深唇 275真的不提气色 不显白 盖不住深唇❗️❗️",
+              "review_id": "review-4f930cc547c17d20"
+            }
+          ]
+        },
+        "deep_lip": {
+          "label": "深唇是否适合",
+          "support_count": 9,
+          "oppose_count": 2,
+          "support_examples": [
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "275对深唇的遮盖力怎么样呀～ — 挺好的",
+              "review_id": "review-5124cc0023ec7ae0"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "姐妹们，黄皮深唇适合275吗？ — 可以，素颜涂也hold得住",
+              "review_id": "review-04eed4d78a1a5ebb"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "275适合深唇素颜吗 — 挺好的，裸色，亚光",
+              "review_id": "review-e605b6d29b2667b0"
+            }
+          ],
+          "oppose_examples": [
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "哪个是带点橘调的颜色，（唇色深） — 这个 不知道 去专柜试一下 275不推荐深唇购买",
+              "review_id": "review-c39becce403f44cb"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "配图评价",
+              "text": "真不知道那么多好评哪来的 我黄皮深唇 275真的不提气色 不显白 盖不住深唇❗️❗️",
+              "review_id": "review-4f930cc547c17d20"
+            }
+          ]
+        },
+        "bare_face": {
+          "label": "素颜是否适合",
+          "support_count": 23,
+          "oppose_count": 2,
+          "support_examples": [
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "家人们 黄皮 313 279那个更好看？更适合？ — 只买过275  素颜化妆都好看",
+              "review_id": "review-524d7f603232a4ec"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "275好看吗姐妹们 — 我觉着好看 素颜可以涂",
+              "review_id": "review-9a3b4188fd684f70"
+            },
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "请问275 有没有淡粉豆沙色的感觉？谢谢 — 有，很好看，素颜还有化妆都很好看",
+              "review_id": "review-a0dbc3e6a534f7eb"
+            }
+          ],
+          "oppose_examples": [
+            {
+              "platform": "淘宝",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "问大家回答",
+              "text": "那个号适合素颜 — 我觉得275偏暗，不适合素颜，除非你够白",
+              "review_id": "review-86b8ce4e209e8800"
+            },
+            {
+              "platform": "小红书",
+              "variant": "unknown",
+              "variant_scope": "family_only",
+              "type": "评论",
+              "text": "当时看网图特别嫩，根本不适合素颜用而且用一会就开始嘴上起皮",
+              "review_id": "review-d6e183b4f7d6a4e9"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -3,8 +3,11 @@
 Serve the repository root with `python3 -m http.server 8000`.
 
 - `node tests/library-tags.test.mjs`: all 175 label records, text priority,
-  missing native-lip evidence, unchanged color exclusions, and profile preference
-  without changing color similarity.
+  missing native-lip evidence, unchanged color exclusions, quality gating and
+  joint ranking without changing color similarity.
+- `node tests/review-text.test.mjs`: all 2,093 source rows retained after deduplication,
+  author/opinion separation, negation, cross-product scope, exact source quotes
+  and rebuilt support/oppose counts.
 - `python3 tests/test_library_matching.py`: desktop/mobile site loads the current
   catalog and orders accepted media by the saved profile.
 - `python3 tests/test_tag_resolution.py`: explicit makeup text overrides the

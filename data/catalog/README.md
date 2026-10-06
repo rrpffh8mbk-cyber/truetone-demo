@@ -33,6 +33,26 @@ evidence. Label preference never changes an image's color similarity score.
 All 18 existing color exclusions remain unchanged. There is no measured accuracy
 benchmark for these rule labels.
 
+`library-tags.js` now combines four deterministic role assessments into reference
+quality (color analyst 40%, reference auditor 30%, consumer reporter 20%, creator
+advisor 10%). Eligible wearer images require reference quality >=60 and the
+existing color/ROI acceptance. Ranking uses quality 70% plus tag match 30%; when
+no profile is supplied, quality alone. Unknown traits are neutral, not matches;
+low-confidence traits add no preference. These are configurable rule scores,
+not independent model calls or calibrated authenticity probabilities.
+
+Current text: `review_catalog_v2.json` and `evidence_claims_v2.json`. All 2,093
+nonempty source text rows are audited by shared conservative rules, with 18
+reviewed semantic corrections in `review_audit_overrides_v1.json`. Exact duplicates
+leave 1,913 records with all source-file hashes and row references retained.
+Identical question/answer exports shared by Cream and Cream Gift become one
+family-level record, never two SKU-specific votes. Unknown or other-product
+opinions stay in the catalog but do not become current-product claims or
+personalized comments. Questions cannot label the respondent. Suitability
+opinions cannot label the author. Exact linked-author evidence from the image
+labeling task can supplement author tags. Positive and opposing examples link
+to these exact reviewed records; historical v1 counts are no longer loaded.
+
 Current color reference: `lip_color_reference_v3.json`. All 169 original
 sample files and 6 official photos in the user-uploaded `data_original` Release
 have been examined. Official-photo lip colors determine upload similarity;

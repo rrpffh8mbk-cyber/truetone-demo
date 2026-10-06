@@ -66,3 +66,19 @@ quotes must match their source. An original link with no usable caption stays
 unlabeled by text. The JSON/CSV preserve final values, confidence, source quotes,
 image candidates and conflict resolutions for all 175 files, including unreadable
 files. Raw images and source link tokens are not republished.
+
+## Rebuild text evidence
+
+```sh
+python3 scripts/rebuild_review_catalog.py --root /private/extracted
+```
+
+Requires Node.js and openpyxl. The script reads review/answer CSVs, author-body
+and commenter columns of XLSX separately, and photo-linked TXT files. It calls
+the shared `review-text.js` classifier, applies hash-validated reviewed corrections,
+and rebuilds the current review catalog and support/oppose counts. Questions,
+recommendations, negations, other shade numbers and uncertain product scope are
+handled separately. The 18 reviewed corrections retain exact quotes; additional
+ambiguous records conservatively abstain. This is a rule audit, not a claimed
+manual accuracy benchmark. User identifiers, nicknames, IPs and source access
+tokens are omitted.

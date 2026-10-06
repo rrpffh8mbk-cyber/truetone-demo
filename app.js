@@ -1,7 +1,8 @@
-import {attachLibraryLabels,profileTagMatch,rankReferenceMedia} from './library-tags.js?v=20261006-tags-v3';
+import {extractAuthorTags} from './review-text.js?v=20261006-ranking-v4';
+import {attachLibraryLabels,profileTagAssessment,rankReferenceMedia} from './library-tags.js?v=20261006-ranking-v4';
 import {compareUploadedColors,compareLipColor} from './color-similarity.js?v=20261006-official-v3';
 import {analyzeEvidenceFile} from './lip-selection.js?v=20261006-official-v3';
-import {runFourAgents,buildProductConsumerSummary,hsvToHex,ANALYSIS_KEYWORDS,circularHueDistance} from './agents.js?v=20261006-official-v3';
+import {runFourAgents,buildProductConsumerSummary,hsvToHex,ANALYSIS_KEYWORDS,circularHueDistance} from './agents.js?v=20261006-ranking-v4';
 import {createVirtualTryOn} from './tryon.js?v=20261006-official-v3';
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -11,23 +12,6 @@ modal.style.display='none';modal.style.pointerEvents='none';modal.hidden=true;mo
 let manifest, evidenceCatalog, referenceDistributions, cache=new Map(), cloudCache=new Map(), verifyFiles=[], verifyAnalyses=[], selfieFile=null, selfieResult=null, purchaseTargetKey=null, seededFiles=[];
 const USER_TAG_SCHEMA={lip:['浅唇','中唇','深唇'],skin:['白皙','黄皮','黑皮'],makeup:['素颜','淡妆','浓妆'],lighting:['自然光','室内暖光','室内冷光','混合光','不确定'],application:['薄涂','正常涂','厚涂','不确定'],source_platform:['小红书','淘宝','官方','其他']};
 const PARTS={'ysl-610':4,'ysl-1936':4,'lancome-274':0,'lancome-275':0};
-const FALLBACK_REVIEWS={
- 'lancome-274':[
-  {platform:'小红书',type:'正文',text:'兰蔻274经典奶茶色真香。刚上嘴我一直觉得太棕，但等成膜/氧化后颜色会变浅、更奶茶；深唇要谨慎，和YSL 610相比更厚重。',negativeEvidence:true},
-  {platform:'小红书',type:'正文',text:'浅奶茶调刚上嘴几乎融唇，素颜时一度觉得没气色；现在更偏爱淡妆后，反而觉得薄涂温柔、低饱和、日常通勤很合适。'},
-  {platform:'淘宝',type:'评价',text:'274颜色和实物相差比较大，我这里呈现得更暗、更土，是一次踩雷体验。',sku:'「声色」限定#274[原声裸茶]；基本款',negativeEvidence:true},
-  {platform:'淘宝',type:'评价',text:'274奶茶裸低饱和，素颜薄涂提气色，淡妆厚涂更有氛围感。',sku:'兰蔻粉金管唇膏#274'},
-  {platform:'小红书',type:'正文',text:'网上产品图和拿到手差别会很大；我本身唇色很淡又偏干，274在我这里很提气色。',negativeEvidence:true},
-  {platform:'淘宝',type:'问大家回答',text:'我买过274唇釉，在我这里并不合适；不同人上嘴差异很明显。',repeatBuyer:true,negativeEvidence:true}
- ],
- 'lancome-275':[
-  {platform:'淘宝',type:'评价',text:'之前买过274，这次尝试275；刚擦上去颜色还好，但很快会氧化发暗，掉色也比较明显。',sku:'兰蔻菁纯裸唇釉#275 法式裸茶',repeatBuyer:true,negativeEvidence:true},
-  {platform:'小红书',type:'正文',text:'用唇刷把275晕染开后更接近广告里的裸色，带大地色系奶茶调；覆盖力可以，深唇也能遮一些。',negativeEvidence:true},
-  {platform:'淘宝',type:'评价',text:'本人浅唇，275涂出来和广告颜色比较接近，没有很偏橘，掉色也不是很严重。',sku:'兰蔻菁纯裸唇釉#275 法式裸茶'},
-  {platform:'淘宝',type:'问大家回答',text:'275更适合素颜；如果想要更浓一些的显色，可以考虑其他方向。'},
-  {platform:'淘宝',type:'问大家回答',text:'我是深唇，带妆会更好看一点；无美颜无滤镜，只看颜色，希望能帮到你。',negativeEvidence:true},
-  {platform:'小红书',type:'正文',text:'我这里素颜效果并不好，而且偏拔干；网上很多好评不一定适合每个人。',negativeEvidence:true}
- ]};
 const fmt=n=>new Intl.NumberFormat('zh-CN').format(n||0);
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const shadeTarget=p=>p.tryOnColor||p.analysis.center; const color=p=>{const c=shadeTarget(p);return hsvToHex(c.hue,c.saturation,c.brightness)};
@@ -36,15 +20,24 @@ async function ungzipB64(parts){const txt=(await Promise.all(parts.map(u=>fetch(
 async function getManifest(){
  if(manifest)return manifest;
  manifest=await fetch('./data/manifest.json').then(r=>r.json());
- const references=await getReferenceDistributions();
+ const [references,textCatalog]=await Promise.all([getReferenceDistributions(),getReviewCatalog()]);
  for(const p of manifest.products){const r=references?.products?.[p.key];if(r?.center){
   p.colorReference=r;p.analysis={...p.analysis,center:{...r.center}};
   const scores=r.samples.map(sample=>compareLipColor(sample.metrics,r)?.score).filter(Number.isFinite).sort((x,y)=>x-y);
   p.analysis.score=scores.length?scores[Math.floor(scores.length/2)]:null;
- }else p.analysis={...p.analysis,score:null}}
+ }else p.analysis={...p.analysis,score:null};
+  const entry=textCatalog?.products?.[p.key];if(entry)p.analysis={...p.analysis,counts:{...p.analysis.counts,text:entry.review_count},keywordCounts:entry.keywordCounts,reviewQuality:entry.reviewQuality,consumerDifferenceMentions:entry.consumerDifferenceMentions};
+ }
  return manifest;
 }
-async function getEvidenceCatalog(){if(evidenceCatalog)return evidenceCatalog;try{evidenceCatalog=await fetch('./data/catalog/evidence_claims_v1.json',{cache:'no-store'}).then(r=>r.ok?r.json():null)}catch(_){evidenceCatalog=null}return evidenceCatalog}
+async function getEvidenceCatalog(){if(evidenceCatalog)return evidenceCatalog;try{evidenceCatalog=await fetch('./data/catalog/evidence_claims_v2.json',{cache:'no-store'}).then(r=>r.ok?r.json():null)}catch(_){evidenceCatalog=null}return evidenceCatalog}
+let reviewCatalogPromise;
+async function getReviewCatalog(){
+ if(!reviewCatalogPromise)reviewCatalogPromise=fetch('./data/catalog/review_catalog_v2.json',{cache:'no-store'})
+  .then(r=>{if(!r.ok)throw Error('文字评价未加载');return r.json()})
+  .catch(e=>{console.warn(e.message);reviewCatalogPromise=null;return null});
+ return reviewCatalogPromise;
+}
 let libraryLabelsPromise;
 async function getLibraryLabels(){
  if(!libraryLabelsPromise)libraryLabelsPromise=fetch('./data/catalog/sample_tags_v1.json',{cache:'no-store'})
@@ -57,22 +50,13 @@ async function getReferenceDistributions(){if(referenceDistributions)return refe
 function summaryFallback(k){
  const m=manifest.products.find(x=>x.key===k);
  if(!m)throw Error('未找到该色号数据');
- const ids=m.analysis?.topMediaIds||[];
- const media=ids.map((id,i)=>{
-   const platform=id.startsWith('xhs-')?'小红书':'淘宝';
-   const pm=m.analysis?.platform?.[platform]||m.analysis?.center||{hue:0,saturation:0,brightness:50};
-   return {id,platform,type:'离线真实试色记录',thumb:null,referenceScore:Math.max(60,92-i*2),
-     metrics:{hue:pm.hue,saturation:pm.saturation,brightness:pm.brightness,sceneBrightness:pm.brightness,lighting:'媒体记录',dominant:hsvToHex(pm.hue,pm.saturation,pm.brightness)},
-     reasons:['该媒体 ID 来自完整离线数据的 Top reference 排名；原始高清文件将在阿里云 OSS 数据层展示']};
- });
- const reviews=(FALLBACK_REVIEWS[k]||[]).map((r,i)=>({id:`fallback-${k}-${i+1}`,...r,genericTemplate:false}));
- return {...m,media,reviews,asks:[],_summaryOnly:true};
+ return {...m,media:[],reviews:[],asks:[],_summaryOnly:true};
 }
 async function getProduct(k){
  if(cache.has(k))return cache.get(k);
  const n=PARTS[k]||0,urls=Array.from({length:n},(_,i)=>`./data/full/${k}.${i+1}.b64`);
  const p=n?await ungzipB64(urls):summaryFallback(k);
- const [references,labels]=await Promise.all([getReferenceDistributions(),getLibraryLabels()]);p.colorReference=references?.products?.[k]||null;
+ const [references,labels,textCatalog]=await Promise.all([getReferenceDistributions(),getLibraryLabels(),getReviewCatalog()]);p.colorReference=references?.products?.[k]||null;
  if(p.colorReference?.center){
   const r=p.colorReference,a={...p.analysis};a.center={...r.center};
   a.platform=Object.fromEntries(Object.entries(r.platforms).map(([name,d])=>[name,{n:d.n,hue:d.hue.circular_center,saturation:d.saturation.median,brightness:d.brightness.median}]));
@@ -86,6 +70,13 @@ async function getProduct(k){
   p.analysis.topMediaIds=p.media.slice(0,6).map(m=>m.id);
  }
  else{p.analysis={...p.analysis,score:null};p.media=[]}
+ const textEntry=textCatalog?.products?.[k];
+ if(textEntry){
+  p.reviews=textEntry.reviews;p.asks=[];p._textCatalogLoaded=true;
+  p.analysis={...p.analysis,counts:{...p.analysis.counts,text:textEntry.review_count},keywordCounts:textEntry.keywordCounts,
+   reviewQuality:textEntry.reviewQuality,consumerDifferenceMentions:textEntry.consumerDifferenceMentions};
+  p.analysis.representativeReviewIds=personalizedReviews(p,getUserProfile()).map(r=>r.id);
+ }
  cache.set(k,p);return p;
 }
 
@@ -95,14 +86,14 @@ function go(h){location.hash=h}
 function shadeCard(p){return `<a class="shade-card" href="#/shade/${p.key}"><div><div class="shade-brand">${esc(p.brand)}</div><div class="shade-code">#${p.shade}</div><div class="shade-name">${esc(p.name)} · ${esc(p.product)}</div><div class="shade-meta"><span class="mini-chip">${p.analysis.counts.visual} 份视觉素材</span><span class="mini-chip">${p.analysis.counts.text} 条文字证据</span><span class="mini-chip">证据充分度 ${p.analysis.evidenceSufficiency}</span></div></div><div class="shade-swatch" style="background:radial-gradient(circle at 38% 35%,${color(p)} 0,#6b352e 48%,#271715 100%)"></div></a>`}
 function opts(sel){return manifest.products.map(p=>`<option value="${p.key}" ${p.key===sel?'selected':''}>${esc(p.brand)} #${p.shade} ${esc(p.name)}</option>`).join('')}
 function highlight(t){let s=esc(t);for(const k of ANALYSIS_KEYWORDS)s=s.replaceAll(k,`<mark class="highlight">${k}</mark>`);return s}
-function reviewCard(r){return `<article class="review"><p>${highlight(r.text)}</p><small><span>${r.platform}</span><span>${r.type||'评论'}</span>${r.sku?`<span>${esc(r.sku)}</span>`:''}${r.repeatBuyer?'<span>复购线索</span>':''}${r.negativeEvidence?'<span>含负向体验</span>':''}</small></article>`}
+function reviewCard(r){return `<article class="review"><p>${highlight(r.text)}</p><small><span>${r.platform}</span><span>${r.type||'评论'}</span>${r.sku?`<span>${esc(r.sku)}</span>`:''}${r.question?`<span>问题：${esc(r.question)}</span>`:''}${r.repeatBuyer?'<span>复购线索</span>':''}${r.negativeEvidence?'<span>含负向体验</span>':''}</small></article>`}
 async function fetchCloudReferenceMedia(productKey){
  const reference=(await getReferenceDistributions())?.products?.[productKey];
  if(!reference)return [];
  const labels=await getLibraryLabels(),profile=getUserProfile();
  const accepted=new Map(reference.samples.map(s=>[s.source_object_key,s]));
- const fallbackAll=reference.samples.map(s=>attachLibraryLabels({id:s.id,platform:s.platform,label:s.source_filename,url:s.thumbnail,object_key:s.source_object_key,colorDistance:s.assessment.deltaE,reason:'已通过自动唇部选区与官方标准色筛选。'},labels));
- const filtered=media=>media.filter(m=>accepted.has(m.object_key)).map(m=>attachLibraryLabels({...m,colorDistance:accepted.get(m.object_key).assessment.deltaE},labels));
+ const fallbackAll=reference.samples.map(s=>attachLibraryLabels({id:s.id,platform:s.platform,label:s.source_filename,url:s.thumbnail,object_key:s.source_object_key,metrics:s.metrics,referenceScore:compareLipColor(s.metrics,{...reference,selectedVariant:s.variant})?.score,colorDistance:s.assessment.deltaE,reason:'已通过自动唇部选区与官方标准色筛选。'},labels));
+ const filtered=media=>media.filter(m=>accepted.has(m.object_key)).map(m=>attachLibraryLabels({...m,metrics:accepted.get(m.object_key).metrics,referenceScore:compareLipColor(accepted.get(m.object_key).metrics,{...reference,selectedVariant:accepted.get(m.object_key).variant})?.score,colorDistance:accepted.get(m.object_key).assessment.deltaE},labels));
  const fallback=()=>rankReferenceMedia(fallbackAll,profile).slice(0,3);
  const select=media=>{
   const byKey=new Map(fallbackAll.map(m=>[m.object_key,m]));
@@ -134,11 +125,11 @@ function cloudReferenceCard(m,i){
  const platform=esc(m.platform||'真实来源'),label=esc(m.label||'真实试色参考'),reason='已通过自动唇部选区与官方标准色筛选。';
  return `<article class="media-card cloud-media-card" data-cloud-url="${esc(m.url)}">
    <div class="cloud-thumb-wrap"><img src="${esc(m.url)}" alt="${platform}真实试色参考 ${i+1}" loading="lazy" referrerpolicy="no-referrer"><span class="media-source-badge">${platform} · 已筛选样本</span></div>
-   <div class="media-card-body"><div class="rank">#${i+1} · 真实样本</div><div class="source-line">${label}</div><div class="reason">${reason}</div></div>
+   <div class="media-card-body"><div class="rank">#${i+1} · 真实样本</div><div class="source-line">${label}</div><div class="reason">${reason}</div>${recommendationCopy(m)}</div>
  </article>`;
 }
 
-function mediaCard(m,i){const score=Number.isFinite(m.referenceScore)?Math.round(m.referenceScore)+'/100':'优先参考';return `<article class="media-card" data-media="${m.id}">${m.thumb?`<img src="${m.thumb}" alt="真实试色参考图 ${i+1}">`:'<div class="skeleton media-placeholder" style="height:210px"><span>真实媒体记录<br><small>图片暂时没有加载出来</small></span></div>'}<div class="media-card-body"><div class="rank">#${i+1} · ${score}</div><div class="source-line">${m.platform} · ${m.metrics?.lighting||m.type}</div><div class="reason">${esc((m.reasons||[])[0]||'接近多来源参考色域')}</div></div></article>`}
+function mediaCard(m,i){const score=Number.isFinite(m.referenceScore)?Math.round(m.referenceScore)+'/100':'优先参考';return `<article class="media-card" data-media="${m.id}">${m.thumb?`<img src="${m.thumb}" alt="真实试色参考图 ${i+1}">`:'<div class="skeleton media-placeholder" style="height:210px"><span>真实媒体记录<br><small>图片暂时没有加载出来</small></span></div>'}<div class="media-card-body"><div class="rank">#${i+1} · ${score}</div><div class="source-line">${m.platform} · ${m.metrics?.lighting||m.type}</div><div class="reason">${esc((m.reasons||[])[0]||'接近多来源参考色域')}</div>${recommendationCopy(m)}</div></article>`}
 function metric(label,v,max=100,u='%'){return `<div class="metric-row"><label>${label}</label><div class="bar"><i style="width:${Math.min(100,Math.abs(v)/max*100)}%"></i></div><span>${Number(v).toFixed(1)}${u}</span></div>`}
 function evidenceScoreText(a){return `视觉 ${a.counts.images} 图 + ${a.counts.videos} 视频元数据 · 文字 ${fmt(a.counts.text)} 条 · ${a.counts.sources} 类来源`}
 function creatorAdviceForProduct(p){
@@ -155,28 +146,23 @@ function creatorAdviceForProduct(p){
 
 
 function reviewPersonalScore(r,profile){
- const t=(r.text||'');let s=0;
- if(profile.lip&&t.includes(profile.lip))s+=10;
- if(profile.makeup==='素颜'&&t.includes('素颜'))s+=7;
- if(profile.makeup==='淡妆'&&/淡妆|日常|通勤/.test(t))s+=6;
- if(profile.makeup==='浓妆'&&/浓妆|完整妆|厚涂|带妆/.test(t))s+=6;
- const skinMap={'白皙':/冷白|暖白|白皙|白皮/,'黄皮':/黄皮|黄调/,'黑皮':/黑皮|黑肤|深肤|健康肤色/};
- if(skinMap[profile.skin]?.test(t))s+=8;
- if(r.repeatBuyer)s+=4;if(r.negativeEvidence)s+=4;if(r.genericTemplate)s-=7;
- s+=Math.min(5,t.length/60);return s;
+ const match=profileTagAssessment({wearerProfileEvidence:true,labelFields:r.authorTags||{}},profile);
+ return .7*(r.informationScore??0)+.3*(profile?match.score:50);
 }
 function personalizedReviews(p,profile){
- const arr=(p.reviews||[]).filter(r=>r.text&&!r.genericTemplate).map(r=>({r,s:reviewPersonalScore(r,profile)})).sort((a,b)=>b.s-a.s);
- return arr.slice(0,3).map(x=>x.r);
+ const ranked=(p.reviews||[]).filter(r=>r.text&&!r.genericTemplate&&!r.futureOnly&&r.product_scope==='target_context'&&r.variant_scope!=='cross_variant')
+  .map(r=>({r,s:reviewPersonalScore(r,profile)})).sort((a,b)=>b.s-a.s);
+ const selected=ranked.slice(0,3);
+ const negative=ranked.find(x=>x.r.negativeEvidence&&x.r.informationScore>=50&&x.s>=(selected[0]?.s??0)-15);
+ if(negative&&selected.length===3&&!selected.some(x=>x.r.negativeEvidence))selected[2]=negative;
+ return selected.map(x=>x.r);
 }
 function personalizedMedia(p,selfie){
- const light=selfie?.light?.label||'中性光',b=selfie?.light?.brightness??60;
- return (p.media||[]).filter(m=>m.metrics).map(m=>{
-   let s=Number.isFinite(m.referenceScore)?m.referenceScore:72;
-   const ml=m.metrics.lighting||'中性光';if(ml===light)s+=5;else if(['暖光','冷光'].includes(ml))s-=3;
-   s-=Math.min(10,Math.abs((m.metrics.sceneBrightness??m.metrics.brightness??60)-b)*.12);
-   return {...m,profileMatches:profileTagMatch(m,getUserProfile()),personalScore:Math.max(25,Math.min(99,s))};
- }).sort((a,b)=>b.profileMatches-a.profileMatches||b.personalScore-a.personalScore).slice(0,3);
+ return rankReferenceMedia(p.media||[],getUserProfile()).slice(0,3);
+}
+function recommendationCopy(m){
+ const r=m.recommendation;if(!r)return '';
+ return `<p class="source-line">综合推荐 ${Math.round(r.combinedScore)}/100 · 图片参考 ${Math.round(r.qualityScore)}/100${r.match.coverage?' · 条件匹配 '+Math.round(r.match.score)+'/100':''}</p><p class="reason">${esc(r.reason)}</p>`;
 }
 function personalMatchScore(p,selfie,profile,reviews){
  let s=66;const a=p.analysis||{},kw=a.keywordCounts||{};
@@ -203,10 +189,11 @@ async function callCloudAgent(p,profile,selfie,reviews,match){
   trust_score:p.analysis.score,evidence_sufficiency:p.analysis.evidenceSufficiency,
   counts:p.analysis.counts,platform_diff:p.analysis.platformDiff,keyword_counts:p.analysis.keywordCounts,
   representative_reviews:reviews.map(r=>({platform:r.platform,type:r.type,text:r.text,sku:r.sku||'',repeatBuyer:!!r.repeatBuyer,negativeEvidence:!!r.negativeEvidence})),
-  deterministic_match_score:match
+  deterministic_match_score:match,
+  top_reference_media:personalizedMedia(p,selfie).map(m=>({media_id:m.id,source_object_key:m.source_object_key,tags:m.semanticTags,recommendation:m.recommendation}))
  };
  const payload={product_key:p.key,profile,selfie_features:{light:selfie.light,faceRef:selfie.faceRef},evidence};
- const cacheKey='truetone-cloud:'+JSON.stringify([p.key,profile,selfie.light?.label,Math.round(selfie.light?.brightness||0),match]);
+ const cacheKey='truetone-cloud-v4:'+JSON.stringify([p.key,profile,selfie.light?.label,Math.round(selfie.light?.brightness||0),match]);
  if(cloudCache.has(cacheKey))return cloudCache.get(cacheKey);
  try{
    const saved=sessionStorage.getItem(cacheKey);
@@ -455,14 +442,11 @@ async function selfieHome(){
 
 function extractSeedTextSignals(text,p){
  const t=String(text||'').trim(),kw=p.analysis?.keywordCounts||{},flags=[],strengths=[],tags={lip:'',skin:'',makeup:'',lighting:'',application:''};
- const tagMap={
-  lip:[['深唇',/深唇/],['中唇',/中唇|唇色中等/],['浅唇',/浅唇|唇色浅/]],
-  skin:[['白皙',/冷白|暖白|白皙|白皮/],['黄皮',/黄皮|黄调/],['黑皮',/黑皮|黑肤|深肤|健康肤色/]],
-  makeup:[['素颜',/素颜/],['淡妆',/淡妆|日常妆|通勤妆/],['浓妆',/浓妆|完整妆/]],
-  lighting:[['自然光',/自然光|日光/],['室内暖光',/暖光|黄光/],['室内冷光',/冷光|白光/]],
-  application:[['薄涂',/薄涂/],['厚涂',/厚涂/],['正常涂',/正常涂|一层/]]
- };
- Object.entries(tagMap).forEach(([k,arr])=>{const m=arr.find(([,re])=>re.test(t));if(m)tags[k]=m[0]});
+ const authorTags=extractAuthorTags(t);
+ for(const [field,label] of Object.entries(authorTags))tags[field]=label.value;
+ for(const [field,values] of Object.entries({lighting:[['自然光',/自然光|日光/],['室内暖光',/暖光|黄光/],['室内冷光',/冷光|白光/]],application:[['薄涂',/薄涂/],['厚涂',/厚涂/]]})){
+  const hit=values.find(([,pattern])=>pattern.test(t));if(hit)tags[field]=hit[0];
+ }
  const hype=[
   [/闭眼冲|无脑冲|谁涂谁好看|谁涂谁显白/,'用了过于绝对的推荐语'],
   [/全世界最好|天花板|封神|绝绝子/,'使用了强烈营销式表达'],
@@ -475,7 +459,7 @@ function extractSeedTextSignals(text,p){
   [/不氧化|不会氧化/,'氧化','文案称“不氧化”，但真实消费者样本中存在氧化/成膜后变化反馈'],
   [/完全没色差|和图片一模一样|实物和图一样/,'色差','文案把色差说得过于绝对，但样本库中存在颜色差异反馈']
  ];
- contradictions.forEach(([re,key,msg])=>{if(re.test(t)&&(kw[key]||0)>0)flags.push(msg)});
+ contradictions.forEach(([re,key,msg])=>{if(re.test(t)&&(p.reviews||[]).some(r=>r.product_scope==='target_context'&&(r.topics||[]).some(z=>z.label===key&&z.polarity==='reported')))flags.push(msg)});
  const contextWords=['深唇','浅唇','薄涂','厚涂','素颜','淡妆','浓妆','自然光','无滤镜','氧化','拔干','沾杯'];
  const contextHits=contextWords.filter(x=>t.includes(x));
  if(contextHits.length>=2)strengths.push('写出了较具体的使用条件，而不是只给情绪化结论');
@@ -793,7 +777,7 @@ function renderSeededResult({p,profile,rawText,analyses,visual,textReport,databa
    <p>${personal.matched.length?'这条内容里出现了与你相近的'+personal.matched.join('、')+'。':''}${personal.missing.length?' 但它没有明确说明'+personal.missing.join('、')+'，所以这部分不会被系统假装“已经匹配”。':''}</p>
   </section>
 
-  <section class="panel report-section"><div class="section-head"><div><div class="eyebrow">交叉证据</div><h2>再看 3 张真实参考</h2></div><p>这些来自现有 OSS 样本库，用来帮助你确认上传内容是否落在真实消费者常见范围内。</p></div><div class="top-media">${mediaHtml}</div></section>
+  <section class="panel report-section"><div class="section-head"><div><div class="eyebrow">交叉证据</div><h2>再看 3 张真实参考</h2></div><p>在已通过颜色与选区筛选的样本中，综合图片参考质量和与你使用条件的匹配度排序。</p></div><div class="top-media">${mediaHtml}</div></section>
 
   <section class="matched-reviews-block"><div class="section-head"><div><div class="eyebrow">和你更相关的消费者反馈</div><h2>比“平均评价”更值得先看</h2></div><p>你的条件：${esc(profileText)}</p></div>${reviewHtml}</section>
 
@@ -827,7 +811,7 @@ async function runConsumerJourney(){
    ]);
    await wait(80);
    steps[4].classList.add('done');bar.style.width='100%';
-   const stableCloud=cloudNarrative?{...cloudNarrative,reference_media:cloudMedia.length?cloudMedia:(cloudNarrative.reference_media||[])}:{reference_media:cloudMedia};
+   const stableCloud=cloudNarrative?{...cloudNarrative,reference_media:cloudMedia}:{reference_media:cloudMedia};
    renderConsumerResult(p,profile,reviews,media,match,expected,stableCloud);
  }catch(e){
    result.innerHTML=`<section class="sku-warning"><b>这次没有稳定完成自拍分析。</b><br>${esc(e.message)}<br>建议换一张自然光、正脸、嘴唇无遮挡的照片再试。</section>`;
@@ -841,11 +825,11 @@ function cloudMediaHtml(cloudNarrative,localMedia){
  const remote=cloudArray(cloudNarrative&&cloudNarrative.reference_media).filter(m=>m&&m.url);
  if(remote.length)return remote.slice(0,3).map((m,i)=>{
   const platform=esc(m.platform||'真实来源'),label=esc(m.label||'真实试色参考'),reason=esc(m.reason||'来自已核验真实样本，用于辅助判断不同环境下的综合查看色调。'),sku=m.sku?'<small>'+esc(m.sku)+'</small>':'';
-  return '<article class="matched-media real-reference"><div class="real-media-frame"><img src="'+esc(m.url)+'" alt="'+platform+'试色参考 '+(i+1)+'" loading="lazy"><span class="media-source-badge">'+platform+' · 已核验样本</span></div><div class="media-card-copy"><div class="media-rank-line"><b>0'+(i+1)+'</b><span>'+label+'</span></div><p>'+reason+'</p>'+sku+'</div></article>';
+  return '<article class="matched-media real-reference"><div class="real-media-frame"><img src="'+esc(m.url)+'" alt="'+platform+'试色参考 '+(i+1)+'" loading="lazy"><span class="media-source-badge">'+platform+' · 已核验样本</span></div><div class="media-card-copy"><div class="media-rank-line"><b>0'+(i+1)+'</b><span>'+label+'</span></div><p>'+reason+'</p>'+sku+recommendationCopy(m)+'</div></article>';
  }).join('');
  if(localMedia&&localMedia.length)return localMedia.slice(0,3).map((m,i)=>{
   const pic=m.thumb?'<img src="'+esc(m.thumb)+'" alt="试色参考 '+(i+1)+'" loading="lazy">':'<div class="media-placeholder"><span>图片暂不可显示<br><small>该条证据仍参与分析</small></span></div>';
-  return '<article class="matched-media">'+pic+'<div class="media-card-copy"><div class="media-rank-line"><b>0'+(i+1)+'</b><span>'+esc(m.platform||'真实来源')+'</span></div><p>'+esc((m.reasons||[])[0]||'在可信度与当前使用条件之间综合查看排序。')+'</p></div></article>';
+  return '<article class="matched-media">'+pic+'<div class="media-card-copy"><div class="media-rank-line"><b>0'+(i+1)+'</b><span>'+esc(m.platform||'真实来源')+'</span></div><p>'+esc((m.reasons||[])[0]||'在可信度与当前使用条件之间综合查看排序。')+'</p>'+recommendationCopy(m)+'</div></article>';
  }).join('');
  return '<div class="empty">当前没有可稳定展示的真实试色图片。</div>';
 }
@@ -1027,7 +1011,7 @@ function shade274FamilyAnalysisHtml(evidenceEntry,distEntry){
  </section>`;
 }
 async function shadeReport(k){
- const p=await getProduct(k),a=p.analysis,c=buildProductConsumerSummary(p),top=c.top,sku=p.skuLines||[];
+ const p=await getProduct(k),a=p.analysis,c={...buildProductConsumerSummary(p),reviews:personalizedReviews(p,getUserProfile())},top=rankReferenceMedia(p.media||[],getUserProfile()).slice(0,3),sku=p.skuLines||[];
  const [cloudTop,evCatalog,distCatalog]=await Promise.all([
    fetchCloudReferenceMedia(k),
    getEvidenceCatalog(),
@@ -1073,7 +1057,7 @@ async function shadeReport(k){
  ${is274?shade274FamilyAnalysisHtml(evidenceEntry,distEntry):''}
 
  ${sampleUsageHtml(p)}
- <section class="panel report-section" id="top-ref"><div class="section-head"><div><div class="eyebrow">真实参考</div><h2 style="font-size:28px">你最值得先看的 3 张</h2></div><p>只展示通过自动唇部选区和对应标准色筛选的真实图片。</p></div><div class="top-media" id="top-media">${cloudTop.length?cloudTop.map(cloudReferenceCard).join(''):top.map(mediaCard).join('')}</div></section>
+ <section class="panel report-section" id="top-ref"><div class="section-head"><div><div class="eyebrow">真实参考</div><h2 style="font-size:28px">你最值得先看的 3 张</h2></div><p>先筛选参考质量，再综合图片评估与唇色、肤色、妆容匹配推荐。</p></div><div class="top-media" id="top-media">${cloudTop.length?cloudTop.map(cloudReferenceCard).join(''):top.map(mediaCard).join('')}</div></section>
 
  <section class="details-grid">
   <div class="panel"><h3>${is274?'274 家族里大家最常提到什么':'大家最常提到什么'}</h3><div class="keyword-cloud">${Object.entries(a.keywordCounts).sort((x,y)=>y[1]-x[1]).slice(0,18).map(([x,n])=>`<span class="kw">${x} <b>${n}</b></span>`).join('')}</div><div class="plain-note" style="margin-top:15px">${a.consumerDifferenceMentions} 条文本提到偏色、色差或“和图片不一样”等线索。${is274?' 对 274 来说，其中一部分矛盾可能来自版本混用，因此不能直接解释成修图或产品不稳定。':' '}复购或回头客 ${a.reviewQuality.repeatBuyer} 条；负向体验 ${a.reviewQuality.negativeEvidence} 条；信息量很低的泛评 ${a.reviewQuality.genericTemplate} 条会降低权重。</div></div>
@@ -1099,12 +1083,13 @@ async function shadeReport(k){
  $$('.filter-btn[data-prof]').forEach(b=>b.onclick=()=>{
    $$('.filter-btn[data-prof]').forEach(x=>x.classList.remove('active'));
    b.classList.add('active');
-   const prof=b.dataset.prof,cc=buildProductConsumerSummary(p,prof);
-   $('#reviews').innerHTML=cc.reviews.slice(0,7).map(reviewCard).join('')||'<div class="plain-note">当前数据中没有足够匹配评论。</div>';
+   const prof=b.dataset.prof,field=prof==='素颜'?'makeup':'lip';
+   const reviews=prof==='all'?personalizedReviews(p,getUserProfile()):(p.reviews||[]).filter(r=>r.authorTags?.[field]?.value===prof&&!r.genericTemplate&&r.product_scope==='target_context'&&r.variant_scope!=='cross_variant').sort((a,b)=>b.informationScore-a.informationScore);
+   $('#reviews').innerHTML=reviews.slice(0,7).map(reviewCard).join('')||'<div class="plain-note">当前数据中没有足够匹配评论。</div>';
  });
  $$('.media-card[data-media]').forEach(x=>x.onclick=()=>openMedia(p,x.dataset.media));
  $$('.cloud-media-card[data-cloud-url]').forEach(x=>x.onclick=()=>{
-   modalContent.innerHTML=`<div class="eyebrow">真实试色参考</div><h2 id="modal-title">原始高清样本</h2><img src="${esc(x.dataset.cloudUrl)}" style="width:100%;max-height:640px;object-fit:contain;background:#090807;border-radius:14px"><p style="color:var(--muted);line-height:1.7">该图片来自阿里云 OSS 私有样本库，通过短时签名地址加载，仅用于当前 Demo 展示。</p>`;
+   modalContent.innerHTML=`<div class="eyebrow">真实试色参考</div><h2 id="modal-title">试色参考图</h2><img src="${esc(x.dataset.cloudUrl)}" style="width:100%;max-height:640px;object-fit:contain;background:#090807;border-radius:14px"><p style="color:var(--muted);line-height:1.7">该图已通过自动唇部选区和对应标准色筛选，用于比较真实试色。显示尺寸可能是缩略图。</p>`;
    openModal();
  });
  $('#like').onclick=()=>recommend(p,false);
@@ -1129,7 +1114,7 @@ async function tryon(){
  const input=$('#selfie-input'),stage=$('#selfie-stage');stage.onclick=e=>{if(e.target.closest('.toggle'))return;input.click()};input.onchange=()=>{selfieFile=input.files[0];if(!selfieFile)return;const u=URL.createObjectURL(selfieFile);$('#selfie-img').src=u;$('#selfie-img').classList.remove('hidden');$('#selfie-empty').classList.add('hidden');$('#run-try').disabled=false};$$('#try-products .choice').forEach(b=>b.onclick=e=>{e.preventDefault();$$('#try-products .choice').forEach(x=>x.classList.remove('active'));b.classList.add('active')});$('#run-try').onclick=runTry
 }
 async function runTry(){if(!selfieFile)return;const btn=$('#run-try');btn.disabled=true;btn.textContent='正在识别唇部…';const p=await getProduct($('#try-products .active').dataset.p);try{selfieResult=await createVirtualTryOn(selfieFile,p,$('#debug').checked);$('#selfie-img').src=selfieResult.tryon;$('#try-toggle').classList.remove('hidden');$$('#try-toggle button').forEach(b=>b.onclick=e=>{e.preventDefault();$$('#try-toggle button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#selfie-img').src=selfieResult[b.dataset.show]});$('#quality').innerHTML=selfieResult.quality.map(x=>`<div class="quality"><span>${esc(x.label)}</span><b>${esc(x.value)}</b></div>`).join('');renderTryResult(p)}catch(e){$('#quality').innerHTML=`<div class="sku-warning">${esc(e.message)}</div>`}finally{btn.disabled=false;btn.textContent='重新分析'}}
-function renderTryResult(p){const r=selfieResult,a=p.analysis,lip=$('#lip-prof').value,tone=$('#tone-prof').value;let reviews=p.reviews.filter(x=>a.representativeReviewIds.includes(x.id));if(lip!=='all'){const t=reviews.filter(x=>x.text.includes(lip));if(t.length)reviews=t}if(tone==='warm'){const t=reviews.filter(x=>/黄皮|暖调|偏暖/.test(x.text));if(t.length)reviews=t}if(tone==='cool'){const t=reviews.filter(x=>/冷白|冷调|偏冷/.test(x.text));if(t.length)reviews=t}reviews=reviews.slice(0,3);const top=p.media.filter(m=>m.thumb&&m.metrics).map(m=>({...m,personal:(m.referenceScore||0)-(m.metrics.lighting===r.light.label?0:7)-Math.abs((m.metrics.sceneBrightness||60)-r.light.brightness)*.18})).sort((x,y)=>y.personal-x.personal).slice(0,3);const c=a.center,expected={h:c.hue,s:Math.max(5,c.saturation+(r.faceRef.saturation-30)*.08),b:Math.max(5,Math.min(95,c.brightness+(r.light.brightness-60)*.12))};$('#try-results').innerHTML=`<section class="details-grid"><div class="panel"><div class="eyebrow">这张自拍的拍摄情况质量</div><h3>当前照片颜色参考</h3><div style="display:flex;gap:14px;align-items:center"><span class="swatch-dot" style="width:58px;height:58px;background:${r.faceRef.hex}"></span><div class="plain-note">${r.faceRef.tone}<br>${r.faceRef.hex} · 明度 ${r.faceRef.brightness}% · 浓淡 ${r.faceRef.saturation}%<br><small>仅代表当前照片。</small></div></div></div><div class="panel"><div class="eyebrow">预计呈现</div><h3>#${p.shade} 在这张自拍的拍摄情况中可能怎么呈现？</h3><div class="plain-note">当前为 <b style="color:#fff">${r.light.label}</b>。结合多来源参考色域，预计呈现 H ${expected.h.toFixed(1)}° · S ${expected.s.toFixed(1)}% · B ${expected.b.toFixed(1)}%。</div><div class="swatches" style="margin-top:12px"><span class="swatch-dot" title="TrueTone 参考中心" style="background:${hsvToHex(c.hue,c.saturation,c.brightness)}"></span><span class="swatch-dot" title="这张自拍的拍摄情况预计" style="background:${hsvToHex(expected.h,expected.s,expected.b)}"></span></div><div class="disclaimer">颜色预览为视觉模拟，仅供参考，不代表实物最终效果。</div></div></section><section class="panel report-section"><div class="section-head"><div><div class="eyebrow">Personal reference</div><h2 style="font-size:28px">最值得你参考的 3 张真实试色</h2></div><p>同时考虑原 reference score、与你当前光照/明暗的接近程度。</p></div><div class="top-media">${top.map((m,i)=>`<article class="media-card"><img src="${m.thumb}"><div class="media-card-body"><div class="rank">#${i+1} · ${Math.round(m.personal)}/100</div><div class="source-line">${m.platform} · ${m.metrics.lighting}</div><div class="reason">${esc((m.reasons||[])[0]||'接近参考色域')}</div></div></article>`).join('')}</div></section><section class="panel report-section"><div class="section-head"><div><div class="eyebrow">Matched comments</div><h2 style="font-size:28px">最匹配的 3 条消费者反馈</h2></div></div><div class="review-list">${reviews.map(reviewCard).join('')||'<div class="plain-note">当前没有足够匹配文本。</div>'}</div></section><section class="cta-band"><div><h3>下一步：回到完整色号报告</h3><p>把自拍预览、真实 Top 3、消费者反馈和 SKU 信息放在一起做购买判断。</p></div><a class="secondary-btn" href="#/shade/${p.key}">查看 #${p.shade} 报告</a></section>`}
+function renderTryResult(p){const r=selfieResult,a=p.analysis,lip=$('#lip-prof').value,tone=$('#tone-prof').value;let reviews=p.reviews.filter(x=>a.representativeReviewIds.includes(x.id));if(lip!=='all'){const t=reviews.filter(x=>x.text.includes(lip));if(t.length)reviews=t}if(tone==='warm'){const t=reviews.filter(x=>/黄皮|暖调|偏暖/.test(x.text));if(t.length)reviews=t}if(tone==='cool'){const t=reviews.filter(x=>/冷白|冷调|偏冷/.test(x.text));if(t.length)reviews=t}reviews=reviews.slice(0,3);const top=personalizedMedia(p,r);const c=a.center,expected={h:c.hue,s:Math.max(5,c.saturation+(r.faceRef.saturation-30)*.08),b:Math.max(5,Math.min(95,c.brightness+(r.light.brightness-60)*.12))};$('#try-results').innerHTML=`<section class="details-grid"><div class="panel"><div class="eyebrow">这张自拍的拍摄情况质量</div><h3>当前照片颜色参考</h3><div style="display:flex;gap:14px;align-items:center"><span class="swatch-dot" style="width:58px;height:58px;background:${r.faceRef.hex}"></span><div class="plain-note">${r.faceRef.tone}<br>${r.faceRef.hex} · 明度 ${r.faceRef.brightness}% · 浓淡 ${r.faceRef.saturation}%<br><small>仅代表当前照片。</small></div></div></div><div class="panel"><div class="eyebrow">预计呈现</div><h3>#${p.shade} 在这张自拍的拍摄情况中可能怎么呈现？</h3><div class="plain-note">当前为 <b style="color:#fff">${r.light.label}</b>。结合多来源参考色域，预计呈现 H ${expected.h.toFixed(1)}° · S ${expected.s.toFixed(1)}% · B ${expected.b.toFixed(1)}%。</div><div class="swatches" style="margin-top:12px"><span class="swatch-dot" title="TrueTone 参考中心" style="background:${hsvToHex(c.hue,c.saturation,c.brightness)}"></span><span class="swatch-dot" title="这张自拍的拍摄情况预计" style="background:${hsvToHex(expected.h,expected.s,expected.b)}"></span></div><div class="disclaimer">颜色预览为视觉模拟，仅供参考，不代表实物最终效果。</div></div></section><section class="panel report-section"><div class="section-head"><div><div class="eyebrow">Personal reference</div><h2 style="font-size:28px">最值得你参考的 3 张真实试色</h2></div><p>综合图片参考质量与唇色、肤色、妆容标签匹配。</p></div><div class="top-media">${top.map((m,i)=>`<article class="media-card"><img src="${m.thumb}"><div class="media-card-body"><div class="rank">#${i+1} · ${Math.round(m.recommendation.combinedScore)}/100</div><div class="source-line">${m.platform} · ${m.metrics.lighting}</div><div class="reason">${esc((m.reasons||[])[0]||'接近参考色域')}</div>${recommendationCopy(m)}</div></article>`).join('')}</div></section><section class="panel report-section"><div class="section-head"><div><div class="eyebrow">Matched comments</div><h2 style="font-size:28px">最匹配的 3 条消费者反馈</h2></div></div><div class="review-list">${reviews.map(reviewCard).join('')||'<div class="plain-note">当前没有足够匹配文本。</div>'}</div></section><section class="cta-band"><div><h3>下一步：回到完整色号报告</h3><p>把自拍预览、真实 Top 3、消费者反馈和 SKU 信息放在一起做购买判断。</p></div><a class="secondary-btn" href="#/shade/${p.key}">查看 #${p.shade} 报告</a></section>`}
 
 async function compare(){
  await getManifest();page(`<div class="route-head"><a class="backlink" href="#/">← 首页</a><div class="eyebrow" style="margin-top:22px">色号对比</div><h1>纠结两个颜色？放在同一把尺子上。</h1><p>比较多来源参考色域、证据充分度与消费者反馈，而不只比较官方商品图。</p></div><div class="compare-pickers"><div class="compare-col"><select id="ca" class="select" style="width:100%">${opts('ysl-610')}</select></div><div class="compare-col"><select id="cb" class="select" style="width:100%">${opts('lancome-274')}</select></div></div><div id="cmp"></div>`);$('#ca').onchange=renderCmp;$('#cb').onchange=renderCmp;renderCmp()

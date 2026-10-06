@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {attachLibraryLabels,profileTagMatch,rankReferenceMedia} from '../library-tags.js';
+import {attachLibraryLabels,profileTagMatch,rankReferenceMedia,assessReferenceMedia} from '../library-tags.js';
 
 const catalog=JSON.parse(fs.readFileSync(new URL('../data/catalog/sample_tags_v1.json',import.meta.url)));
 const usage=JSON.parse(fs.readFileSync(new URL('../data/catalog/sample_usage_v3.json',import.meta.url)));
@@ -39,9 +39,22 @@ assert.equal(profileTagMatch(tagged,profile),3);
 const weak={...tagged,labelFields:Object.fromEntries(Object.entries(tagged.labelFields).map(([k,v])=>[k,{...v,confidence:'low'}]))};
 assert.equal(profileTagMatch(weak,profile),0);
 assert.equal(profileTagMatch({...tagged,wearerProfileEvidence:false},profile),0);
-const neutral={id:'neutral',colorDistance:0};
-assert.equal(rankReferenceMedia([neutral,tagged],profile)[0],tagged);
-assert.equal(rankReferenceMedia([neutral,tagged],null)[0],neutral);
-assert.equal(tagged.referenceScore,43,'Profile preference must not change color similarity');
-assert.equal(rankReferenceMedia([neutral,weak],profile)[0],neutral);
-console.log('PASS complete catalog, text precedence, native-lip abstention, unchanged exclusions and profile ranking');
+const make=(id,score,labels)=>({...tagged,id,referenceScore:score,
+ metrics:{roiDetected:true,roiSource:'semantic-lips',segmentationConfidence:.99,sceneBrightness:60},
+ labelFields:labels,reviewText:{raw:'自然光，本人使用体验',status:'review_body'},reviewFields:{}});
+const allMatch=Object.fromEntries(Object.entries(profile).map(([k,value])=>[k,{value,confidence:'high'}]));
+const wrong=Object.fromEntries(Object.entries({lip:'浅唇',skin:'白皙',makeup:'浓妆'}).map(([k,value])=>[k,{value,confidence:'high'}]));
+const highQuality=make('excellent',100,wrong),matched=make('matched',80,allMatch);
+const bad=make('weak-picture',10,allMatch);bad.metrics={...bad.metrics,segmentationConfidence:.1,sceneBrightness:4};
+assert.equal(assessReferenceMedia(bad,profile).eligible,false,'Perfect labels cannot rescue a poor picture');
+const ranked=rankReferenceMedia([highQuality,matched,bad],profile);
+assert.deepEqual(ranked.map(m=>m.id),['matched','excellent'],'Joint score must differ from quality-only ranking');
+assert.equal(rankReferenceMedia([highQuality,matched],null)[0].id,'excellent');
+assert.equal(ranked[0].referenceScore,80,'Ranking must preserve color similarity');
+assert.equal(rankReferenceMedia([{...highQuality,useForColorReference:false}],profile).length,0);
+assert.equal(rankReferenceMedia([{...highQuality,wearerProfileEvidence:false}],profile).length,0);
+const unknown=make('unknown',100,{});const result=assessReferenceMedia(unknown,profile);
+assert.equal(result.match.coverage,0);assert.equal(result.match.score,50);
+assert.equal(result.combinedScore,.7*result.qualityScore+.3*50);
+assert.deepEqual(Object.keys(result.agents),['colorAnalyst','referenceAuditor','reporter','creatorAdvisor']);
+console.log('PASS complete catalog, text priority, quality gate, joint ranking, neutral missing tags and unchanged color scores');

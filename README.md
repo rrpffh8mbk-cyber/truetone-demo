@@ -33,6 +33,8 @@ https://rrpffh8mbk-cyber.github.io/truetone-demo/
 - `color-similarity.js`：CIELAB / CIEDE2000 颜色比较；相同颜色 100，明显不同颜色可为 0，没有 82 起算或最低保底分，文字不会抬高颜色相似度。
 - `data/catalog/lip_color_reference_v3.json`：已检查 data_original 中全部 169 张样本及 6 张官方标准图，采用 151 张、排除 18 张；唇部识别失败、无法读取、重复或与对应标准色差超过 ΔE00 20 的图片标记为不使用。上传图直接对照官方标准色。全部使用标记见 `data/catalog/sample_usage_v3.csv`，重算方法见 `scripts/README.md`。
 - `tests/`：颜色公式、自动特写、失败处理和浏览器回归检查，运行方法见 `tests/README.md`。
+- `library-tags.js`：TOP3 先筛选参考质量，再按“四角色规则评估 70%＋本人标签匹配 30%”综合排序。缺少标签不补猜，商品示意图和色号冲突配图不作真人推荐；综合推荐分不修改颜色相似度。
+- `review-text.js` / `data/catalog/review_catalog_v2.json`：复查原始 CSV、XLSX、TXT 的 2,093 条文字，去重保留 1,913 条可追溯记录。本人条件、适用人群意见和问答上下文分开；保留负面体验，其他色号的意见不计入当前色号。
 - `tryon.js`：MediaPipe Face Mesh 唇部 landmarks，outer lip − inner mouth polygon mask，局部 alpha blending；不做人脸身份识别
 - `prompts/TRUE_TONE_AGENT_SYSTEM.md`：后续在 Base44 backend 中使用的最终 runtime system instructions
 - `DATA_PROVENANCE.md`：当前数据来源、统计规模与公开版边界
