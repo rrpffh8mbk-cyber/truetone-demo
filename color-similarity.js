@@ -1,6 +1,7 @@
 // Photo appearance similarity, not a calibrated probability of authenticity.
-export const COLOR_PIPELINE_VERSION='auto-lips-v2';
+export const COLOR_PIPELINE_VERSION='auto-lips-v3';
 export const ZERO_SIMILARITY_DELTA_E=30;
+export const MAX_OFFICIAL_DELTA_E=20;
 export function rgbToLab(rgb){
  const c=rgb.map(v=>{v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)});
  const xyz=[(c[0]*.4124564+c[1]*.3575761+c[2]*.1804375)/.95047,c[0]*.2126729+c[1]*.7151522+c[2]*.0721750,(c[0]*.0193339+c[1]*.1191920+c[2]*.9503041)/1.08883];
@@ -24,9 +25,29 @@ export function deltaE2000(a,b){
 export function similarityFromDeltaE(d){
  return Number.isFinite(d)?Math.round(100*Math.max(0,1-d/ZERO_SIMILARITY_DELTA_E)):null;
 }
+export function nearestOfficialColor(metrics,officials,variant='unknown'){
+ if(!Array.isArray(metrics?.lab)||metrics.lab.length!==3||!metrics.lab.every(Number.isFinite))return null;
+ const candidates=(officials||[]).filter(o=>o.metrics?.roiDetected===true&&Array.isArray(o.metrics.lab)&&o.metrics.lab.length===3&&o.metrics.lab.every(Number.isFinite)&&(variant==='unknown'||!variant||o.variant===variant));
+ let best=null;
+ for(const official of candidates){const distance=deltaE2000(metrics.lab,official.metrics.lab);if(!best||distance<best.distance)best={official,distance}}
+ return best;
+}
+export function assessReferenceSample(metrics,officials,variant='unknown'){
+ if(metrics?.roiDetected!==true)return {use:false,code:'no_reliable_lips',reason:metrics?.roiReason||'未识别到可靠唇部'};
+ if(metrics.roiSource==='semantic-lips'&&(!Number.isFinite(metrics.segmentationConfidence)||metrics.segmentationConfidence<.65))return {use:false,code:'low_segmentation_confidence',reason:'唇部自动选区置信度不足'};
+ const match=nearestOfficialColor(metrics,officials,variant);
+ if(!match)return {use:false,code:'missing_official',reason:'缺少对应产品线的可靠标准图'};
+ const deltaE=+match.distance.toFixed(2),use=match.distance<=MAX_OFFICIAL_DELTA_E;
+ return {use,code:use?'accepted':'official_color_outlier',reason:use?'自动唇部选区通过，颜色在标准图允许范围内':`与对应标准图色差 ΔE00 ${deltaE}，超过 ${MAX_OFFICIAL_DELTA_E}；不用于颜色参考`,deltaE,officialId:match.official.id,officialVariant:match.official.variant};
+}
 export function compareLipColor(metrics,reference){
  const validLab=lab=>Array.isArray(lab)&&lab.length===3&&lab.every(Number.isFinite);
- if(metrics?.roiDetected!==true||!validLab(metrics.lab)||reference?.pipeline!==COLOR_PIPELINE_VERSION||!validLab(reference?.center?.lab)||!reference.samples?.length)return null;
+ if(metrics?.roiDetected!==true||!validLab(metrics.lab)||reference?.pipeline!==COLOR_PIPELINE_VERSION)return null;
+ if(reference.officials?.length){
+  const match=nearestOfficialColor(metrics,reference.officials,reference.selectedVariant||'unknown');if(!match)return null;
+  return {score:similarityFromDeltaE(match.distance),deltaE:+match.distance.toFixed(2),referenceKind:'official',officialId:match.official.id,officialLabel:match.official.label,officialVariant:match.official.variant,referenceCount:reference.samples?.length||0,officialCount:reference.officials.length,variantUnspecified:reference.officials.length>1&&(!reference.selectedVariant||reference.selectedVariant==='unknown')};
+ }
+ if(!validLab(reference?.center?.lab)||!reference.samples?.length)return null;
  const distance=deltaE2000(metrics.lab,reference.center.lab);
  return {score:similarityFromDeltaE(distance),deltaE:+distance.toFixed(2),referenceCount:reference.samples.length};
 }

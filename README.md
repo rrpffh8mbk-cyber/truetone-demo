@@ -31,7 +31,7 @@ https://rrpffh8mbk-cyber.github.io/truetone-demo/
 - `semantic-lips.js`：本地 BiSeNet 上唇 / 下唇语义分割，支持特写的中性色输入与上下文缩放；不需要逐张手动涂选。首次需下载并校验模型，之后缓存复用。
 - `lips.js`：MediaPipe 几何唇部遮罩，供试妆和识别失败时使用。
 - `color-similarity.js`：CIELAB / CIEDE2000 颜色比较；相同颜色 100，明显不同颜色可为 0，没有 82 起算或最低保底分，文字不会抬高颜色相似度。
-- `data/catalog/lip_color_reference_v2.json`：25 张可获取样本的自动重算基准（12 张原图、13 张缩略图），并非历史全集；旧红色筛选统计不参与颜色评分。完整重算方法见 `scripts/README.md`。
+- `data/catalog/lip_color_reference_v3.json`：已检查 data_original 中全部 169 张样本及 6 张官方标准图，采用 151 张、排除 18 张；唇部识别失败、无法读取、重复或与对应标准色差超过 ΔE00 20 的图片标记为不使用。上传图直接对照官方标准色。全部使用标记见 `data/catalog/sample_usage_v3.csv`，重算方法见 `scripts/README.md`。
 - `tests/`：颜色公式、自动特写、失败处理和浏览器回归检查，运行方法见 `tests/README.md`。
 - `tryon.js`：MediaPipe Face Mesh 唇部 landmarks，outer lip − inner mouth polygon mask，局部 alpha blending；不做人脸身份识别
 - `prompts/TRUE_TONE_AGENT_SYSTEM.md`：后续在 Base44 backend 中使用的最终 runtime system instructions

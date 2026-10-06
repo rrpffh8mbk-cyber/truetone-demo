@@ -2,7 +2,7 @@
   "version": "2026-10-05-v1",
   "storage_policy": {
     "raw_media": "private_oss",
-    "github": "indexes_and_derived_metadata_only"
+    "github": "indexes_and_derived_metadata_in_checkout; user_uploaded_original_archives_in_data_original_release"
   },
   "oss": {
     "xhs_prefix": "Data-XHS/",
@@ -89,5 +89,25 @@
         "淘宝"
       ]
     }
+  },
+  "release_originals": {
+    "repository": "rrpffh8mbk-cyber/truetone-demo",
+    "tag": "data_v1",
+    "title": "data_original",
+    "assets": [
+      "Data-XHS.zip",
+      "Data_clean_taobao.zip",
+      "color_official.zip"
+    ],
+    "sample_images": 169,
+    "official_images": 6
+  },
+  "current_color_reference": {
+    "pipeline": "auto-lips-v3",
+    "source_images_examined": 169,
+    "accepted": 151,
+    "excluded": 18,
+    "catalog": "lip_color_reference_v3.json",
+    "usage_ledger": "sample_usage_v3.csv"
   }
 }

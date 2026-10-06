@@ -15,7 +15,7 @@ export function createSelectedLipMask(strokes,w,h){
 
 const automaticResults=new WeakMap();
 export async function analyzeEvidenceFile(file){
- const {analyzeImageFile}=await import('./agents.js?v=20261006-auto-v2');
+ const {analyzeImageFile}=await import('./agents.js?v=20261006-official-v3');
  if(automaticResults.has(file))return automaticResults.get(file);
  const result=await analyzeImageFile(file);
  if(result.metrics.roiDetected)automaticResults.set(file,result);

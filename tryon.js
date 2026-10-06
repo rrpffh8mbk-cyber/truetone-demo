@@ -1,5 +1,5 @@
-import {hsvToRgb,hsvToHex,rgbToHsv} from './agents.js?v=20261006-auto-v2';
-import {detectLipLandmarks,createLipMask,polygon,OUTER,INNER} from './lips.js?v=20261006-auto-v2';
+import {hsvToRgb,hsvToHex,rgbToHsv} from './agents.js?v=20261006-official-v3';
+import {detectLipLandmarks,createLipMask,polygon,OUTER,INNER} from './lips.js?v=20261006-official-v3';
 function loadImage(file){return new Promise((resolve,reject)=>{const img=new Image();const u=URL.createObjectURL(file);img.onload=()=>{URL.revokeObjectURL(u);resolve(img)};img.onerror=reject;img.src=u})}
 function avgAround(data,w,h,points,r=8){let sr=0,sg=0,sb=0,n=0;for(const p of points){const cx=Math.round(p.x*w),cy=Math.round(p.y*h);for(let y=Math.max(0,cy-r);y<Math.min(h,cy+r);y++)for(let x=Math.max(0,cx-r);x<Math.min(w,cx+r);x++){const i=(y*w+x)*4;sr+=data[i];sg+=data[i+1];sb+=data[i+2];n++}}return n?[Math.round(sr/n),Math.round(sg/n),Math.round(sb/n)]:[0,0,0]}
 function classifyLight(data){let r=0,g=0,b=0,v=0,n=data.length/4;for(let i=0;i<data.length;i+=4){r+=data[i];g+=data[i+1];b+=data[i+2];v+=(Math.max(data[i],data[i+1],data[i+2])/255*100)}r/=n;g/=n;b/=n;v/=n;let label='中性光';if(v>82)label='过曝';else if(v<28)label='偏暗';else if(r-b>18)label='暖光';else if(r-b<-12)label='冷光';return {label,brightness:+v.toFixed(1),warm:+(r-b).toFixed(1)}}

@@ -5,13 +5,13 @@ for(const [a,b,d] of [[[50,2.6772,-79.7751],[50,0,-82.7485],2.0425],[[50,3.1571,
 assert.equal(similarityFromDeltaE(0),100);assert.equal(similarityFromDeltaE(30),0);
 assert.equal(similarityFromDeltaE(15),50);assert.equal(similarityFromDeltaE(null),null);
 const warm=rgbToLab([160,80,80]),blue=rgbToLab([20,35,200]);
-const ref={pipeline:'auto-lips-v2',center:{lab:warm},samples:[{}]};
+const ref={pipeline:'auto-lips-v3',center:{lab:warm},samples:[{}]};
 const image=lab=>({metrics:{roiDetected:true,lab}});
 assert.equal(compareUploadedColors([image(warm)],ref).score,100);
 assert.equal(compareUploadedColors([image(blue)],ref).score,0);
 assert.equal(compareUploadedColors([image(warm),image(blue)],ref).score,0);
 assert.equal(compareUploadedColors([{metrics:{roiDetected:false,lab:null}}],ref).score,null);
 assert.equal(compareUploadedColors([image(blue)],{center:{lab:warm},samples:[{}]}).score,null);
-assert.equal(compareUploadedColors([image(blue)],{pipeline:'auto-lips-v2',center:{lab:warm},samples:[]}).score,null);
+assert.equal(compareUploadedColors([image(blue)],{pipeline:'auto-lips-v3',center:{lab:warm},samples:[]}).score,null);
 assert.equal(compareUploadedColors([image([NaN,0,0])],ref).score,null);
 console.log('PASS CIEDE2000 standard pairs, similarity endpoints, blue/warm mismatch, missing ROI/reference and legacy baseline rejection');

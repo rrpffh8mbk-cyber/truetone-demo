@@ -2,7 +2,8 @@
 
 This directory stores lightweight indexes and derived metadata only.
 
-- Raw scraped images, videos and source tables remain in private Alibaba Cloud OSS.
+- Original storage is Alibaba Cloud OSS. The user also uploaded the source ZIPs
+  to the public `data_original` GitHub Release (`data_v1`) for this rebuild.
 - GitHub should not become the raw media store; this keeps the public demo repository small and avoids exposing the full scraped corpus.
 - `source_registry.json` records the OSS prefixes and dataset counts.
 - `tag_schema.json` is the single vocabulary used by both user-profile inputs and evidence-library labels.
@@ -18,7 +19,12 @@ Final Top Reference ranking should combine:
 
 Unknown semantic attributes must stay `不确定` rather than being guessed.
 
-Current color reference: `lip_color_reference_v2.json` (automatic lip masks, 25
-retrievable unique images). `reference_distributions_v1.json` is a legacy
-red-candidate heuristic archive and must not be used as the new color baseline.
-See `scripts/README.md` for full-corpus reprocessing and coverage limits.
+Current color reference: `lip_color_reference_v3.json`. All 169 original
+sample files and 6 official photos in the user-uploaded `data_original` Release
+have been examined. Official-photo lip colors determine upload similarity;
+samples with official CIEDE2000 distance >20, unreliable ROI, unreadable bytes
+or within-product/variant duplicates are marked not for color reference.
+`sample_usage_v3.json` and `sample_usage_v3.csv` retain every original filename,
+usage mark and reason. Only accepted samples enter statistics and media ranking.
+The v1 red heuristic and v2 partial-corpus references remain archival only.
+See `scripts/README.md` for reproducible processing and threshold limitations.

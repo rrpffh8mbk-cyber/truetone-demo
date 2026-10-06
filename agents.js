@@ -1,7 +1,7 @@
-import {detectLipLandmarks,createLipMask} from './lips.js?v=20261006-auto-v2';
-import {createSelectedLipMask} from './lip-selection.js?v=20261006-auto-v2';
-import {automaticLipMask} from './semantic-lips.js?v=20261006-auto-v2';
-import {rgbToLab,compareUploadedColors,COLOR_PIPELINE_VERSION} from './color-similarity.js?v=20261006-auto-v2';
+import {detectLipLandmarks,createLipMask} from './lips.js?v=20261006-official-v3';
+import {createSelectedLipMask} from './lip-selection.js?v=20261006-official-v3';
+import {automaticLipMask} from './semantic-lips.js?v=20261006-official-v3';
+import {rgbToLab,compareUploadedColors,COLOR_PIPELINE_VERSION} from './color-similarity.js?v=20261006-official-v3';
 export const ANALYSIS_KEYWORDS = ['偏暗','偏亮','偏粉','偏紫','偏红','偏橘','偏棕','色差','滤镜','原图','自然光','暖光','冷光','氧化','深唇','浅唇','薄涂','厚涂','显白','荧光','不一样','差距','假货','批次','素颜','无滤镜'];
 
 export function circularHueDistance(a,b){const d=Math.abs(a-b)%360;return Math.min(d,360-d)}
@@ -19,7 +19,7 @@ export async function analyzeImageFile(file,{lipSelection=null}={}){
  if(lipSelection){mask=createSelectedLipMask(lipSelection,w,h);roiSource='selected-lips'}
  else{
   try{const result=await automaticLipMask(base);mask=result.mask;roiAugmentation=result.augmentation||'none';roiReason=result.reason||'';segmentationConfidence=result.confidence??null;if(mask)roiSource='semantic-lips'}catch(e){roiReason='自动唇部分割暂不可用'}
-  if(!mask)try{detection=await detectLipLandmarks(base);if(detection.landmarks){mask=createLipMask(detection.landmarks,w,h);roiSource='mediapipe-lips';roiAugmentation='geometry-fallback';roiReason=''}}catch{}
+  if(!mask||segmentationConfidence<.65)try{detection=await detectLipLandmarks(base);if(detection.landmarks){mask=createLipMask(detection.landmarks,w,h);roiSource='mediapipe-lips';roiAugmentation='geometry-fallback';segmentationConfidence=null;roiReason=''}}catch{}
  }
  const maskPixels=mask?.getContext('2d').getImageData(0,0,w,h).data;
  if(!mask&&!roiReason)roiReason='未自动识别到可靠唇部，无法计算颜色相似度。';
@@ -48,9 +48,9 @@ export function runFourAgents(analyses,product=null){
   if(m.sceneBrightness>80)findings.push({type:'画面过曝/提亮',severity:'medium',imageIndex,evidence:`整体亮度 ${m.sceneBrightness}%`,impact:'曝光可能改变照片中的颜色观感'});
   if(m.sceneBrightness<30)findings.push({type:'画面偏暗',severity:'low',imageIndex,evidence:`整体亮度 ${m.sceneBrightness}%`,impact:'曝光可能改变照片中的颜色观感'});
   const match=comparison.perImage[imageIndex];
-  if(match&&match.score<50)findings.push({type:'与多来源参考色域偏离',severity:match.score===0?'high':'medium',imageIndex,evidence:`感知色差 ΔE00 ${match.deltaE}；颜色相似度 ${match.score}/100`,impact:'唇部颜色与该色号可用参考样本不同'});
+  if(match&&match.score<50)findings.push({type:'与官方标准色偏离',severity:match.score===0?'high':'medium',imageIndex,evidence:`感知色差 ΔE00 ${match.deltaE}；颜色相似度 ${match.score}/100`,impact:'唇部颜色与该色号官方标准图不同'});
  });
- let summary=comparison.score===null?'没有可用的唇部选区或自动重算的参考样本，无法计算颜色相似度。':comparison.score===0?'唇部颜色与参考样本明显不同，颜色相似度为 0；不能用它代表该色号的颜色。':comparison.score<50?'唇部颜色与参考样本差异较大，作为该色号颜色参考需要谨慎。':'唇部颜色与当前可用参考样本较接近；这不等于图片或文案真实。';
+ let summary=comparison.score===null?'没有可用的唇部选区或自动重算的参考样本，无法计算颜色相似度。':comparison.score===0?'唇部颜色与官方标准图明显不同，颜色相似度为 0；不能用它代表该色号的颜色。':comparison.score<50?'唇部颜色与官方标准图差异较大，作为该色号颜色参考需要谨慎。':'唇部颜色与官方标准图较接近；这不等于图片或文案真实。';
  if(comparison.compared<comparison.total&&comparison.compared)summary+=' 部分图片未成功选区，未纳入相似度计算。';
  return {score:comparison.score,comparison,findings,summary,suggestions:[{title:'在相同光照下核对实物',why:'这里比较的是照片中的颜色，不是实物色度或真实性概率',impact:'减少光照、曝光和个体唇色的影响'}],confidence:null};
 }

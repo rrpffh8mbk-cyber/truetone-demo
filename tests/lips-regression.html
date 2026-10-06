@@ -3,10 +3,10 @@
 <title>Lip ROI regression checks</title>
 <pre id="result">Running…</pre>
 <script type="module">
-import {OUTER,INNER,createLipMask,detectLipLandmarks} from '../lips.js?v=20261006-auto-v2';
-import {analyzeImageFile,runFourAgents,circularHueDistance} from '../agents.js?v=20261006-auto-v2';
-import {rgbToLab} from '../color-similarity.js?v=20261006-auto-v2';
-import {createVirtualTryOn} from '../tryon.js?v=20261006-auto-v2';
+import {OUTER,INNER,createLipMask,detectLipLandmarks} from '../lips.js?v=20261006-official-v3';
+import {analyzeImageFile,runFourAgents,circularHueDistance} from '../agents.js?v=20261006-official-v3';
+import {rgbToLab} from '../color-similarity.js?v=20261006-official-v3';
+import {createVirtualTryOn} from '../tryon.js?v=20261006-official-v3';
 const assert=(value,message)=>{if(!value)throw Error(message)};
 const landmarks=Array.from({length:468},()=>({x:.5,y:.5}));
 for(const [ids,rx,ry] of [[OUTER,.3,.2],[INNER,.14,.08]])ids.forEach((id,i)=>{const angle=i/ids.length*2*Math.PI;landmarks[id]={x:.5+rx*Math.cos(angle),y:.5+ry*Math.sin(angle)}});
@@ -15,7 +15,7 @@ window.FaceMesh=class{setOptions(){} onResults(cb){this.cb=cb} async send(){asse
 const canvas=document.createElement('canvas');canvas.width=200;canvas.height=200;const ctx=canvas.getContext('2d');
 const file=async()=>new File([await new Promise(r=>canvas.toBlob(r))],'fixture.png',{type:'image/png'});
 const strokes=[{radius:.025,points:[{x:.25,y:.35},{x:.75,y:.35}]},{radius:.025,points:[{x:.25,y:.65},{x:.75,y:.65}]}];
-const reference={pipeline:'auto-lips-v2',center:{lab:rgbToLab([160,80,80])},samples:[{}]};
+const reference={pipeline:'auto-lips-v3',center:{lab:rgbToLab([160,80,80])},samples:[{}]};
 try{
  const mask=createLipMask(landmarks,200,200);
  assert(mask.getContext('2d').getImageData(100,100,1,1).data[3]===0,'Mouth interior must be excluded');
@@ -25,7 +25,7 @@ try{
   const a=await analyzeImageFile(await file(),{lipSelection:strokes});
   assert(a.metrics.roiDetected&&circularHueDistance(a.metrics.hue,hue)<3,label+' must use selected lip pixels, not the red background');
   if(label==='blue')assert(runFourAgents([a],{colorReference:reference}).score===0,'Blue/warm mismatch must be 0');
-  assert(runFourAgents([a],{colorReference:{pipeline:'auto-lips-v2',center:{lab:a.metrics.lab},samples:[{}]}}).score===100,'Identical lip color must be 100');
+  assert(runFourAgents([a],{colorReference:{pipeline:'auto-lips-v3',center:{lab:a.metrics.lab},samples:[{}]}}).score===100,'Identical lip color must be 100');
  }
  const input=await file(),product={analysis:{center:{hue:15,saturation:40,brightness:60}}};
  const pair=await Promise.all([createVirtualTryOn(input,product),createVirtualTryOn(input,product)]);

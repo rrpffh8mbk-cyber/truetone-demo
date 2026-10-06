@@ -317,3 +317,4 @@ body:not(.modal-open) #modal-backdrop[aria-hidden="true"]{
 .family-claim{border-top:1px solid var(--line);padding:18px 0}
 .family-claim:first-of-type{border-top:0}
 @media(max-width:760px){.variant-card-grid{grid-template-columns:1fr}}
+.usage-table-wrap{overflow-x:auto;margin-top:16px}.usage-table{border-collapse:collapse;width:100%;font-size:13px;min-width:640px}.usage-table th,.usage-table td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}.usage-table td:first-child{overflow-wrap:anywhere;max-width:360px}.sample-usage summary{cursor:pointer;padding:12px 0}.sample-usage h2{font-size:clamp(22px,3vw,30px)}
