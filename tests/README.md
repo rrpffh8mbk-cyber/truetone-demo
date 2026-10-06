@@ -10,7 +10,8 @@ Serve the repository root with `python3 -m http.server 8000`.
   light, reflection following reversed source illumination and empty-mask handling.
 - `python3 tests/test_personal_color.py`: desktop/mobile P1/P2 color and source
   consistency, changed profiles despite cached product data, mirror/matte labels,
-  variant selection and honest sample scarcity. Landmark detection is a test double;
+  variant selection, honest sample scarcity, explicit missing-condition reasons and
+  generic-reference labeling when no profile match is confirmed. Landmark detection is a test double;
   the real color catalog, sample selection and pixel rendering run unchanged.
   `TRUETONE_TEST_URL` also supports the published site using verified HTTPS.
 

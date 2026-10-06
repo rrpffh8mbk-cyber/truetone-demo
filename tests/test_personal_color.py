@@ -45,6 +45,22 @@ with sync_playwright() as p:
   section.locator('summary').click();assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   if not BASE.startswith('https://'):
    section.screenshot(path=f'/tmp/truetone-color-{width}.png')
+  # Reproduce the reported ten unconfirmed images: no accepted, reliable black-skin match.
+  page.evaluate('sessionStorage.setItem("truetone-user-profile",JSON.stringify({lip:"中唇",skin:"黑皮",makeup:"淡妆"}))')
+  page.goto(BASE+'/#/search',wait_until='networkidle');page.goto(BASE+'/#/shade/ysl-610',wait_until='networkidle')
+  page.locator('#start-product-analysis').click();page.wait_for_selector('.personal-color-section')
+  general=page.locator('.personal-color-section')
+  assert '暂无已确认匹配' in general.locator('.personal-color-headline').inner_text()
+  assert '通用颜色参考' in general.locator('h3').inner_text()
+  assert general.locator('figcaption').count()==10
+  for text in general.locator('figcaption').all_text_contents():
+   assert '原生唇色未说明' in text and '肤色判断把握较低' in text,text
+   assert '条件尚未确认' not in text
+  # Color matching only needs the two relevant fields, even without makeup.
+  page.evaluate('sessionStorage.setItem("truetone-user-profile",JSON.stringify({lip:"深唇",skin:"黄皮"}))')
+  page.goto(BASE+'/#/search',wait_until='networkidle');page.goto(BASE+'/#/shade/ysl-610',wait_until='networkidle')
+  page.locator('#start-product-analysis').click();page.wait_for_selector('.personal-color-section')
+  assert page.locator('.personal-color-section').get_attribute('data-personal-color')==expected['color']['hex']
   page.evaluate('sessionStorage.setItem("truetone-user-profile",JSON.stringify({lip:"浅唇",skin:"白皙",makeup:"淡妆"}))')
   page.goto(BASE+'/#/search',wait_until='networkidle');page.goto(BASE+'/#/shade/ysl-610',wait_until='networkidle')
   page.locator('#start-product-analysis').click();page.wait_for_selector('.personal-color-section')

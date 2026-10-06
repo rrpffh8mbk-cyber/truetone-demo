@@ -40,6 +40,8 @@ export function buildPersonalColor(product,profile,variant=defaultPreviewVariant
   const samples=selected.map(m=>({id:m.id,source_object_key:m.source_object_key||m.object_key,
     source_image_sha256:m.sourceImageHash,variant:m.variant,lab:m.metrics.lab.slice(),
     thumbnail:m.thumb||m.thumbnail||m.url,matchedFields:matchedFields(m),
+    conditionLabels:Object.fromEntries(['lip','skin'].map(k=>[k,{
+      value:m.labelFields?.[k]?.value||'不确定',confidence:m.labelFields?.[k]?.confidence||'unknown'}])),
     qualityScore:m.recommendation.qualityScore,combinedScore:m.recommendation.combinedScore,
     roiSource:m.metrics.roiSource,segmentationConfidence:m.metrics.segmentationConfidence}));
   let color=null;
@@ -49,21 +51,37 @@ export function buildPersonalColor(product,profile,variant=defaultPreviewVariant
   const counts={full:0,partial:0,unknown:0};
   for(const s of samples){if(requested.length&&s.matchedFields.length===requested.length)counts.full++;
     else if(s.matchedFields.length)counts.partial++;else counts.unknown++}
-  return {version:'2026-10-06-personal-color-v1',variant,profile:profile?{lip:profile.lip,skin:profile.skin}:null,
+  return {version:'2026-10-06-personal-color-v2',variant,profile:requested.length?{lip:profile.lip,skin:profile.skin}:null,
     requestedFields:requested,targetCount:PERSONAL_COLOR_SAMPLE_LIMIT,usedCount:samples.length,eligibleCount:ranked.length,
     compatibleCount:compatible.length,counts,samples,color,shortfall:samples.length<PERSONAL_COLOR_SAMPLE_LIMIT,
     method:'Top compatible real wearer photos, prioritizing confirmed lip/skin matches and combined quality; component-wise median of premeasured lip-region CIELAB. No declared mismatch, official graphic, excluded image, duplicate bytes or cross-variant image.'};
 }
 
+export function personalSampleCopy(sample){
+  return ['skin','lip'].map(field=>{
+    const label=sample.conditionLabels?.[field],name=field==='skin'?'肤色':'原生唇色';
+    if(!label||label.value==='不确定')return field==='lip'?'原生唇色未说明':'肤色缺少可靠依据';
+    if(!reliable(label))return field==='skin'?'肤色判断把握较低':'原生唇色依据不足';
+    if(sample.matchedFields.includes(field))return `${name}相近（${label.value}）`;
+    return `${name}：${label.value}`;
+  });
+}
+
 export function personalColorCopy(selection){
   if(!selection?.usedCount)return {headline:'相近条件的样本还不够，暂不生成参考色',detail:'当前没有通过筛选且与你已确认条件相容的试色图。可以先查看真实图片，或调整产品版本。',method:'TrueTone 从数据库里真实涂过这支口红的唇部取色，并保留取色依据。'};
   const n=selection.usedCount,c=selection.counts,profile=selection.profile;
-  const headline=profile?`为你从 ${n} 张真实试色里取色`:`从 ${n} 张参考质量较高的真实试色里取色`;
+  const hasMatch=c.full+c.partial>0;
+  const headline=profile?(hasMatch?`为你从 ${n} 张真实试色里取色`:`暂无已确认匹配 · 以下 ${n} 张为通用参考`):`从 ${n} 张参考质量较高的真实试色里取色`;
   const facts=[];
   const names=(selection.requestedFields||['skin','lip']).map(k=>k==='skin'?'肤色':'唇色').join('、');
   if(profile){if(c.full)facts.push(`${c.full} 张已确认的${names}与你相近`);
     if(c.partial)facts.push(`${c.partial} 张确认了其中一项，另一项尚未确认`);
-    if(c.unknown)facts.push(`${c.unknown} 张未能确认这两项，只作补充参考`)}
-  const detail=(facts.length?facts.join('；')+'。':'')+(selection.shortfall?`目前只找到 ${n} 张可用图，未凑满 10 张。`:'优先选取相近条件、说明较完整的前 10 张。');
-  return {headline,detail,method:'TrueTone 先找真实涂过这支口红、与你条件相近的人，再从她们的唇部提取颜色。你看到的预览有真实试色图片作依据。'};
+    if(c.unknown)facts.push(`${c.unknown} 张未能确认${names}，只作通用补充参考`)}
+  const context=profile?(!hasMatch?'目前没有已确认与你条件相近的可用图片，以下只能提供这个色号的一般颜色方向。':''):
+    '你尚未填写肤色或原生唇色，此处按图片参考质量取色；填写后会优先匹配你的条件。';
+  const detail=context+(facts.length?facts.join('；')+'。':'')+(selection.shortfall?`目前只找到 ${n} 张可用图，未凑满 10 张。`:
+    hasMatch?'优先选取相近条件、说明较完整的前 10 张。':'选取参考质量较高的前 10 张，条件未知的图片不代表已经与你匹配。');
+  const method=profile&&hasMatch?'TrueTone 先找真实涂过这支口红、与你条件相近的人，再从她们的唇部提取颜色。你看到的预览有真实试色图片作依据。':
+    'TrueTone 从真实上唇照片提取参考色，并保留取色依据；没有已确认匹配时，会明确展示通用参考。';
+  return {headline,detail,method};
 }

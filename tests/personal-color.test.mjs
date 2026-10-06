@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {buildPersonalColor,personalColorCopy,labToRgb} from '../personal-color.js';
+import {buildPersonalColor,personalColorCopy,personalSampleCopy,labToRgb} from '../personal-color.js';
 import {rgbToLab,compareLipColor} from '../color-similarity.js';
 import {attachLibraryLabels} from '../library-tags.js';
 const read=name=>JSON.parse(fs.readFileSync(new URL('../data/catalog/'+name,import.meta.url)));
@@ -56,6 +56,15 @@ const cream=buildPersonalColor(product('lancome-274'),null,'cream');assert.equal
 const a=buildPersonalColor(product('ysl-610'),{lip:'浅唇',skin:'白皙'}),b=buildPersonalColor(product('ysl-610'),{lip:'深唇',skin:'黄皮'});
 assert.notEqual(a.color.hex,b.color.hex);assert.notDeepEqual(a.samples.map(s=>s.id),b.samples.map(s=>s.id));
 assert.notEqual(b.color.hex,'#b85f62','Personal color must replace the old hard-coded preview');
+const black=buildPersonalColor(product('ysl-610'),{lip:'中唇',skin:'黑皮'});
+assert.deepEqual(black.counts,{full:0,partial:0,unknown:10});
+assert.match(personalColorCopy(black).headline,/暂无已确认匹配.*通用参考/);
+assert.doesNotMatch(personalColorCopy(black).method,/与你条件相近的人/);
+for(const s of black.samples){assert.deepEqual(personalSampleCopy(s,black),['肤色判断把握较低','原生唇色未说明']);}
+assert.match(personalColorCopy(buildPersonalColor(product('ysl-610'),null)).detail,/尚未填写/);
+const skinOnly=buildPersonalColor(product('ysl-610'),{skin:'黄皮'});
+assert.ok(skinOnly.counts.full>0);assert.match(personalColorCopy(skinOnly).detail,/已确认的肤色与你相近/);
+assert.doesNotMatch(personalColorCopy(buildPersonalColor(product('ysl-610'),{lip:'',skin:''})).headline,/为你/);
 const finishes=read('product_finishes_v1.json').products,reviews=read('review_catalog_v2.json').products;
 for(const [key,p] of Object.entries(finishes))for(const finish of p.variants?Object.values(p.variants):[p]){
   for(const image of finish.image_evidence){const row=records.get(image.source_object_key);assert.equal(row.id,image.id);assert.equal(row.source_image_sha256,image.image_sha256);}

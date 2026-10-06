@@ -1,4 +1,4 @@
-import {buildPersonalColor,personalColorCopy,defaultPreviewVariant,PREVIEW_VARIANTS} from './personal-color.js?v=20261006-personal-color-v5';
+import {buildPersonalColor,personalColorCopy,personalSampleCopy,defaultPreviewVariant,PREVIEW_VARIANTS} from './personal-color.js?v=20261006-source-conditions-v7';
 import {extractAuthorTags} from './review-text.js?v=20261006-personal-color-v5';
 import {attachLibraryLabels,profileTagAssessment,rankReferenceMedia} from './library-tags.js?v=20261006-personal-color-v5';
 import {compareUploadedColors,compareLipColor} from './color-similarity.js?v=20261006-official-v3';
@@ -88,7 +88,7 @@ async function getPreviewProduct(key,variant=defaultPreviewVariant(key)){
  const finishes=await finishCatalogPromise;
  variant=key==='lancome-274'?(PREVIEW_VARIANTS.some(v=>v.id===variant)?variant:defaultPreviewVariant(key)):null;
  const media=base.media.filter(m=>key!=='lancome-274'||m.variant===variant);
- const personalColor=buildPersonalColor({...base,media},getUserProfile(),variant);
+ const personalColor=buildPersonalColor({...base,media},getUserProfileDraft(),variant);
  const finish=key==='lancome-274'?finishes.products[key].variants[variant]:finishes.products[key];
  return {...base,media,reviews:base.reviews.filter(r=>key!=='lancome-274'||r.variant===variant||r.variant==='unknown'),
   personalColor,finish,selectedPreviewVariant:variant,
@@ -104,11 +104,11 @@ function previewSwatch(p,cls='direction-swatch'){
 }
 function colorSourceDetails(selection){
  if(!selection?.samples.length)return '';
- return `<details class="color-evidence"><summary>看看这 ${selection.usedCount} 张取色参考图</summary><div class="personal-color-samples">${selection.samples.map((m,i)=>`<figure data-color-sample="${esc(m.id)}"><img src="${esc(m.thumbnail)}" alt="取色参考 ${i+1}" loading="lazy"><figcaption>参考 ${i+1}${m.matchedFields.length?' · '+m.matchedFields.map(k=>k==='lip'?'唇色':'肤色').join('、')+'相近':' · 条件尚未确认'}</figcaption></figure>`).join('')}</div><p>只从嘴唇取色，排除皮肤、牙齿和口腔；综合多张图，减少单张照片过亮、过暗的影响。图片里未说明的条件不会补猜。</p></details>`;
+ return `<details class="color-evidence"><summary>看看这 ${selection.usedCount} 张取色参考图</summary><div class="personal-color-samples">${selection.samples.map((m,i)=>`<figure data-color-sample="${esc(m.id)}"><img src="${esc(m.thumbnail)}" alt="取色参考 ${i+1}" loading="lazy"><figcaption>参考 ${i+1}<br>${personalSampleCopy(m).map(esc).join('<br>')}</figcaption></figure>`).join('')}</div><p>只从嘴唇取色，排除皮肤、牙齿和口腔；综合多张图，减少单张照片过亮、过暗的影响。图片里未说明的条件不会补猜。</p></details>`;
 }
 function colorDirectionHtml(p,controls=false){
  const copy=personalColorCopy(p.personalColor);
- return `<div class="panel personal-color-section" data-personal-color="${p.personalColor?.color?.hex||''}" data-sample-count="${p.personalColor?.usedCount||0}"><h3>这个颜色在相近条件下是什么方向</h3>${controls?variantPicker(p,'shade-preview-variant'):''}<div class="direction-swatch-wrap">${previewSwatch(p)}<div><b>#${p.shade} · ${esc(p.name)}</b><p class="finish-label">${esc(p.finish?.label||'质地待确认')}</p><p class="personal-color-headline">${esc(copy.headline)}</p></div></div><p class="personal-color-copy">${esc(copy.detail)}</p><p class="personal-color-method">${esc(copy.method)}</p><p class="finish-copy">${esc(p.finish?.note||'')}</p>${colorSourceDetails(p.personalColor)}<p class="disclaimer">真实样本中的参考方向，实物仍会受光线、原生唇色和涂抹厚度影响。</p></div>`;
+ return `<div class="panel personal-color-section" data-personal-color="${p.personalColor?.color?.hex||''}" data-sample-count="${p.personalColor?.usedCount||0}"><h3>${p.personalColor?.counts.full+p.personalColor?.counts.partial>0?'这个颜色在相近条件下是什么方向':'这个色号的通用颜色参考'}</h3>${controls?variantPicker(p,'shade-preview-variant'):''}<div class="direction-swatch-wrap">${previewSwatch(p)}<div><b>#${p.shade} · ${esc(p.name)}</b><p class="finish-label">${esc(p.finish?.label||'质地待确认')}</p><p class="personal-color-headline">${esc(copy.headline)}</p></div></div><p class="personal-color-copy">${esc(copy.detail)}</p><p class="personal-color-method">${esc(copy.method)}</p><p class="finish-copy">${esc(p.finish?.note||'')}</p>${colorSourceDetails(p.personalColor)}<p class="disclaimer">真实样本中的参考方向，实物仍会受光线、原生唇色和涂抹厚度影响。</p></div>`;
 }
 
 function meta(k){return manifest.products.find(x=>x.key===k)}
