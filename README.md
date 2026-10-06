@@ -35,7 +35,7 @@ https://rrpffh8mbk-cyber.github.io/truetone-demo/
 - `tests/`：颜色公式、自动特写、失败处理和浏览器回归检查，运行方法见 `tests/README.md`。
 - `library-tags.js`：TOP3 先筛选参考质量，再按“四角色规则评估 70%＋本人标签匹配 30%”综合排序。缺少标签不补猜，商品示意图和色号冲突配图不作真人推荐；综合推荐分不修改颜色相似度。
 - `personal-color.js`：自拍预览和色号详情共用个性化参考色。优先选择肤色、原生唇色已确认相近的高质量真人图，最多 10 张；排除已确认条件冲突、重复图片和不同版本，再对唇部 CIELAB 分量取中位数。未知条件可补充，但页面明确显示完全匹配、部分匹配、未确认和实际张数，少于 10 张不补造样本。改变用户条件会重新取色，旧预设 `tryOnColor` 不参与当前预览。
-- `lip-finish.js` / `data/catalog/product_finishes_v1.json`：质地参考产品版本、12 张样本图片和可追溯评价；610 呈现镜面光泽，274 按版本呈现哑光或较弱缎光。保留相反评价；自拍中的反光是受限的视觉模拟，不是物理质地测量。唇部以外、牙齿及口腔不参与着色。
+- `lip-finish.js` / `data/catalog/product_finishes_v1.json`：质地参考产品版本、12 张样本图片和可追溯评价；610 呈现镜面光泽，274 按版本呈现哑光或较弱缎光。保留相反评价；镜面光泽跟随原照片的局部明暗和唇纹，边缘向内柔化，不在固定位置绘制亮带。自拍中的反光是受限的视觉模拟，不是物理质地测量。唇部以外、牙齿及口腔不参与着色。
 - `review-text.js` / `data/catalog/review_catalog_v2.json`：复查原始 CSV、XLSX、TXT 的 2,093 条文字，去重保留 1,913 条可追溯记录。本人条件、适用人群意见和问答上下文分开；保留负面体验，其他色号的意见不计入当前色号。
 - `tryon.js`：MediaPipe Face Mesh 唇部 landmarks，outer lip − inner mouth polygon mask，局部 alpha blending；不做人脸身份识别
 - `prompts/TRUE_TONE_AGENT_SYSTEM.md`：后续在 Base44 backend 中使用的最终 runtime system instructions

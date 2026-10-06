@@ -4,7 +4,7 @@ import {attachLibraryLabels,profileTagAssessment,rankReferenceMedia} from './lib
 import {compareUploadedColors,compareLipColor} from './color-similarity.js?v=20261006-official-v3';
 import {analyzeEvidenceFile} from './lip-selection.js?v=20261006-official-v3';
 import {runFourAgents,buildProductConsumerSummary,hsvToHex,ANALYSIS_KEYWORDS,circularHueDistance} from './agents.js?v=20261006-personal-color-v5';
-import {createVirtualTryOn} from './tryon.js?v=20261006-personal-color-v5';
+import {createVirtualTryOn} from './tryon.js?v=20261006-natural-gloss-v6';
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const app=$('#app'),toast=$('#toast'),modal=$('#modal-backdrop'),modalContent=$('#modal-content');

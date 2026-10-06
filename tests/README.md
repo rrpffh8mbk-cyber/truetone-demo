@@ -6,7 +6,8 @@ Serve the repository root with `python3 -m http.server 8000`.
   combinations, confirmed-mismatch exclusion, exact version isolation, duplicate
   removal, Lab conversion, median robustness, actual sample counts and finish provenance.
 - `node tests/lip-finish.test.mjs`: gloss/matte differences, retained local contrast,
-  unchanged face/teeth outside the mask, rotated reflection and empty-mask handling.
+  unchanged face/teeth outside the mask, edge blending, no painted band under flat
+  light, reflection following reversed source illumination and empty-mask handling.
 - `python3 tests/test_personal_color.py`: desktop/mobile P1/P2 color and source
   consistency, changed profiles despite cached product data, mirror/matte labels,
   variant selection and honest sample scarcity. Landmark detection is a test double;

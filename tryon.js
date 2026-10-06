@@ -1,4 +1,4 @@
-import {renderLipFinish} from './lip-finish.js?v=20261006-personal-color-v5';
+import {renderLipFinish} from './lip-finish.js?v=20261006-natural-gloss-v6';
 import {hsvToHex,rgbToHsv} from './agents.js?v=20261006-official-v3';
 import {detectLipLandmarks,createLipMask,polygon,OUTER,INNER} from './lips.js?v=20261006-official-v3';
 function loadImage(file){return new Promise((resolve,reject)=>{const img=new Image();const u=URL.createObjectURL(file);img.onload=()=>{URL.revokeObjectURL(u);resolve(img)};img.onerror=reject;img.src=u})}
