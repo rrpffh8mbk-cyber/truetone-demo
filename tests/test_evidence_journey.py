@@ -19,7 +19,7 @@ with sync_playwright() as p:
   if BASE.startswith('https://'):ctx.route(BASE+'/**',remote)
   if REAL:
    ctx.route('https://cdn.jsdelivr.net/**',remote)
-   model=pathlib.Path('/workspace/.cache/truetone-models/face-parsing-resnet18.onnx').read_bytes()
+   model=pathlib.Path(os.environ.get('TRUETONE_MODEL_FILE','/workspace/.cache/truetone-models/face-parsing-resnet18.onnx')).read_bytes()
    assert hashlib.sha256(model).hexdigest()=='0d9bd318e46987c3bdbfacae9e2c0f461cae1c6ac6ea6d43bbe541a91727e33f'
    ctx.route('**/models/resnet18.onnx',lambda r:r.fulfill(status=200,body=model,content_type='application/octet-stream'))
   else:
@@ -49,6 +49,7 @@ with sync_playwright() as p:
    assert '示例条件' in page.locator('.profile-summary-bar').inner_text()
    assert '深唇' in page.locator('.profile-summary-bar').inner_text()
    assert '无法仅凭最终成片验证' in page.locator('.text-assessment').inner_text()
+   assert '无法' in page.locator('.cross-modal-notes').inner_text()
    if id=='marketing':
     assert page.locator('.seed-report').get_attribute('data-decision')=='caution'
     assert page.locator('[data-counter-review]').count()>0
@@ -63,7 +64,7 @@ with sync_playwright() as p:
     image=page.locator('.seed-report').get_attribute('data-image-score')
     assert image!='','Actual model must find a usable lip region for these known examples'
     print('Measured actual-model case:',id,'text',score,'image',image,flush=True)
-    rows.append({'case':id,'textScore':score,'imageColorSimilarity':int(image),'decision':page.locator('.seed-report').get_attribute('data-decision'),'roiNotes':notes})
+    rows.append({'case':id,'textScore':score,'imageColorSimilarity':int(image),'decision':page.locator('.seed-report').get_attribute('data-decision'),'roiNotes':notes,'crossModalNotes':page.locator('.cross-modal-notes').inner_text()})
     page.locator('.image-evidence-detail').screenshot(path='/tmp/truetone-case-roi-'+id+'.png')
    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
    if not REAL:page.locator('#seed-result').screenshot(path=f'/tmp/truetone-evidence-{id}-{width}.png')
@@ -91,7 +92,7 @@ with sync_playwright() as p:
  browser.close()
 if REAL:
  out=pathlib.Path('data/evaluation');out.mkdir(exist_ok=True)
- files=['app.js','demo-cases.js','evidence-assessment.js','review-text.js','library-tags.js','personal-color.js','brand-actions.js','data/catalog/lip_color_reference_v3.json','data/catalog/review_catalog_v2.json',*[str(f) for f in sorted(pathlib.Path('data/demo-cases').glob('*.jpg'))]]
+ files=['app.js','demo-cases.js','evidence-assessment.js','review-text.js','library-tags.js','personal-color.js','brand-actions.js','cross-modal.js','agents.js','data/catalog/lip_color_reference_v3.json','data/catalog/review_catalog_v2.json',*[str(f) for f in sorted(pathlib.Path('data/demo-cases').glob('*.jpg'))]]
  import subprocess
  result={'evaluationType':'known_demo_stress_cases_not_blind_validation','ruleVersion':'evidence-reference-v1','baseCommitBeforeChanges':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'workingTreeIncludesEvaluationChanges':True,'modelSha256':hashlib.sha256(model).hexdigest(),'inputSha256':{f:hashlib.sha256(pathlib.Path(f).read_bytes()).hexdigest() for f in files},'profile':{'skin':'黄皮','lip':'深唇','makeup':'淡妆'},'results':rows,'limitations':'No independent human truth labels, calibrated trust probability, cross-product accuracy or business outcome was measured.'}
  (out/'demo_cases_v1.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')

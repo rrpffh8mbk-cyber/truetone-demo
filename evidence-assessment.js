@@ -16,7 +16,9 @@ export function assessEvidenceText(text,product={}){
  const t=String(text||'').trim(),assessment=reviewTextAssessment(t),authorTags=extractAuthorTags(t);
  const tags=Object.fromEntries(Object.entries(authorTags).map(([k,v])=>[k,v.value]));
  if(/薄涂/.test(t))tags.application='薄涂';else if(/厚涂/.test(t))tags.application='厚涂';
- if(/自然光|日光/.test(t))tags.lighting='自然光';
+ if(/暖光|黄光/.test(t))tags.lighting='室内暖光';
+ else if(/冷光|白光/.test(t))tags.lighting='室内冷光';
+ else if(/自然光|日光/.test(t))tags.lighting='自然光';
  const bounded=/对我(?:来说)?|在我(?:这里|原生唇色)|我觉得|我个人|可能|因人而异|最好.*参考|唇部状态|记得打底/.test(t);
  const observedNegative=assessment.topics.some(z=>z.polarity==='reported')||/显唇纹|能看到.*唇纹/.test(t);
  const observedPositive=/颜色好看|颜色真的|顺滑|好晕染|提气色|滋润|喜欢|会回购|真爱色/.test(t);
@@ -64,7 +66,7 @@ export function assessEvidenceText(text,product={}){
  const score=Math.round(Math.min(cap,Math.max(0,informationScore-penalty)));
  const flags=risks.map(r=>r.label+'：“'+r.quote+'”。');
  const strengths=criteria.filter(c=>c.earned).map(c=>c.label+'有具体信息。');
- return {version:ASSESSMENT_VERSION,score,informationScore,criteria,penalty,cap,risks,flags,strengths,tags,authorTags,uncertainties,counterEvidence,variant,
+ return {rawText:t,version:ASSESSMENT_VERSION,score,informationScore,criteria,penalty,cap,risks,flags,strengths,tags,authorTags,uncertainties,counterEvidence,variant,
   riskLevel:highRisks?'high':risks.length||unresolvedVariant?'medium':'low',
   contextHits:Object.values(tags),agreement:null};
 }

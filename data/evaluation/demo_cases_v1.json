@@ -1,17 +1,19 @@
 {
   "evaluationType": "known_demo_stress_cases_not_blind_validation",
   "ruleVersion": "evidence-reference-v1",
-  "baseCommitBeforeChanges": "f8fa10baad9164bc6ec6a9a8a64a5fc94ffa0193",
+  "baseCommitBeforeChanges": "1a1c61881d750e38c69bd03765694406a7e8606e",
   "workingTreeIncludesEvaluationChanges": true,
   "modelSha256": "0d9bd318e46987c3bdbfacae9e2c0f461cae1c6ac6ea6d43bbe541a91727e33f",
   "inputSha256": {
-    "app.js": "56b92d5cc91d607618fc98142da419ab7904ab1089cba6bbc12d9ea293e71348",
+    "app.js": "fb919175c6077183b0abfd77d2d19c1c8ed4bec52b9ffa71edf960917b3d3f3d",
     "demo-cases.js": "334c3fb2bd0393b9577cf81da85d11f9c42833e40995db78daef8a8c37a2054b",
-    "evidence-assessment.js": "6ebd27bddbab39b250a9770c3ec722d4089a1b23e1c0ee879ded078e06b2603e",
+    "evidence-assessment.js": "1bf2f7a6d83c433620d325100e737d673d90ab5055ae1d1130d7629d76255459",
     "review-text.js": "608ca85c0ef553e6913dd4903edc41e2d2709c73f166d525fe0017537f3f5f9a",
     "library-tags.js": "8ca3d4412e09bde5558d0d3a63a2c293f7d53c381fe1524bde12d0a3d19553e0",
     "personal-color.js": "ee2954df563664ba0327fcf9abdf62e289b88854722f40072eeb8a742c096fe3",
     "brand-actions.js": "f970bc6c15127539570f50ae8b1e013516a53d16a53368fc0d7d5c3b5f97d6d5",
+    "cross-modal.js": "c42c949bb18689166dc3e6dc835cbf26201388402495a5eac4bc055c1d39137c",
+    "agents.js": "64eeae779f82b896c00ad1d725b7c685c293e3c6fd8ef3b67d0bb15772f16e75",
     "data/catalog/lip_color_reference_v3.json": "ce4a707179653bbcfef6342c3ef7e415d034b202db3d561ec6278e40b3e38eb8",
     "data/catalog/review_catalog_v2.json": "78db14576ec68f0e5b0fa88edb3ec08f0bcf01cac76f74c47ffd4156125aee6e",
     "data/demo-cases/experience.jpg": "1ca9d49e76af41286930936f6acff54752fd65c8eb185548ce038f38a19b241b",
@@ -29,21 +31,24 @@
       "textScore": 0,
       "imageColorSimilarity": 73,
       "decision": "caution",
-      "roiNotes": "查看自动选区\n图片 1\n暖光（画面表现）\n画面偏暖，可能影响橘、棕调观感；不能仅凭像素确认真实光源。\n已自动分割上唇和下唇，排除皮肤、牙齿与口腔。\n与 YSL-610 官方标准图 的唇部颜色比较：感知色差 ΔE00 8.23，颜色相似度 73/100。\n唇部颜色与官方标准图较接近，但这不是真实性结论。"
+      "roiNotes": "查看自动选区\n图片 1\n暖光（画面表现）\n画面偏暖，可能影响橘、棕调观感；不能仅凭像素确认真实光源。\n已自动分割上唇和下唇，排除皮肤、牙齿与口腔。\n与 YSL-610 官方标准图 的唇部颜色比较：感知色差 ΔE00 8.23，颜色相似度 73/100。\n唇部颜色与官方标准图较接近，但这不是真实性结论。",
+      "crossModalNotes": "图文有没有说同一件事？\n\n只核对能从画面粗略比较的冷暖、浓淡与多图表现，不证明光源、滤镜或作者真实性。\n\n文案提到“自然光”，但仅凭成片无法可靠证明光源类型；这里只能展示画面中的冷暖倾向，不自动加分。\n文案对“清透/低饱和”的描述，与图片唇部饱和度方向不完全一致。\n“完全没色差 / 和实物一模一样”无法由上传图片单独证明，属于需要额外实物证据的绝对说法。\n“原相机 / 无滤镜 / 零修图”无法仅凭最终成片被可靠验证，因此不会自动增加图文一致性分。"
     },
     {
       "case": "variant",
       "textScore": 46,
       "imageColorSimilarity": 81,
       "decision": "clarify",
-      "roiNotes": "查看自动选区\n图片 1\n暖光（画面表现）\n画面偏暖，可能影响橘、棕调观感；不能仅凭像素确认真实光源。\n已自动分割上唇和下唇，排除皮肤、牙齿与口腔。\n与 兰蔻 #274 声色限定原声裸茶 的唇部颜色比较：感知色差 ΔE00 5.59，颜色相似度 81/100。\n274 产品线未确认：这里只显示与三个官方标准图中最接近者的颜色相似度，不据此判断产品版本。\n唇部颜色与官方标准图较接近，但这不是真实性结论。"
+      "roiNotes": "查看自动选区\n图片 1\n暖光（画面表现）\n画面偏暖，可能影响橘、棕调观感；不能仅凭像素确认真实光源。\n已自动分割上唇和下唇，排除皮肤、牙齿与口腔。\n与 兰蔻 #274 声色限定原声裸茶 的唇部颜色比较：感知色差 ΔE00 5.59，颜色相似度 81/100。\n274 产品线未确认：这里只显示与三个官方标准图中最接近者的颜色相似度，不据此判断产品版本。\n唇部颜色与官方标准图较接近，但这不是真实性结论。",
+      "crossModalNotes": "图文有没有说同一件事？\n\n只核对能从画面粗略比较的冷暖、浓淡与多图表现，不证明光源、滤镜或作者真实性。\n\n文案把颜色描述为“偏暖”，但图片中的唇色方向更接近“偏冷/偏粉紫”。这可能来自光线、后期或个体唇色差异。\n“原相机 / 无滤镜 / 零修图”无法仅凭最终成片被可靠验证，因此不会自动增加图文一致性分。"
     },
     {
       "case": "experience",
       "textScore": 100,
       "imageColorSimilarity": 85,
       "decision": "reference",
-      "roiNotes": "查看自动选区\n图片 1\n暖光（画面表现）\n画面偏暖，可能影响橘、棕调观感；不能仅凭像素确认真实光源。\n已自动分割上唇和下唇，排除皮肤、牙齿与口腔。\n与 YSL-610 官方标准图 的唇部颜色比较：感知色差 ΔE00 4.53，颜色相似度 85/100。\n唇部颜色与官方标准图较接近，但这不是真实性结论。"
+      "roiNotes": "查看自动选区\n图片 1\n暖光（画面表现）\n画面偏暖，可能影响橘、棕调观感；不能仅凭像素确认真实光源。\n已自动分割上唇和下唇，排除皮肤、牙齿与口腔。\n与 YSL-610 官方标准图 的唇部颜色比较：感知色差 ΔE00 4.53，颜色相似度 85/100。\n唇部颜色与官方标准图较接近，但这不是真实性结论。",
+      "crossModalNotes": "图文有没有说同一件事？\n\n只核对能从画面粗略比较的冷暖、浓淡与多图表现，不证明光源、滤镜或作者真实性。\n\n文案提到“自然光”，但仅凭成片无法可靠证明光源类型；这里只能展示画面中的冷暖倾向，不自动加分。"
     }
   ],
   "limitations": "No independent human truth labels, calibrated trust probability, cross-product accuracy or business outcome was measured."

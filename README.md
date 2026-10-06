@@ -40,6 +40,7 @@
 | --- | --- |
 | 同产品、同版本边界与可追溯证据 | `review-text.js`、`data/catalog/`、`demo-cases.js` |
 | 可比较的唇部颜色 | `semantic-lips.js`、`lips.js`、`color-similarity.js` |
+| 图文冷暖/浓淡与样本近邻色差（辅助依据） | `cross-modal.js` |
 | 文案信息与表达边界 | `evidence-assessment.js` |
 | 已确认标签匹配与证据排序 | `library-tags.js`、`personal-color.js` |
 | 品牌素材改进清单 | `brand-actions.js` |

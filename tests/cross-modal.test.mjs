@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {assessEvidenceText} from '../evidence-assessment.js';
+import {crossModalAssessment,visualCorpusAgreement} from '../cross-modal.js';
+const m={roiDetected:true,lab:[50,20,20],hue:20,saturation:30,sceneBrightness:60,sceneSaturation:30,lighting:'暖光'};
+const analyze=text=>crossModalAssessment(assessEvidenceText(text),[{metrics:m}]);
+assert.equal(analyze('自然光、原相机、无滤镜。').score,null,'Unprovable claims add no score');
+assert.match(analyze('自然光、原相机、无滤镜。').notes.join(' '),/无法/);
+const warm=analyze('暖光下偏棕、清透。'),cool=analyze('冷光下偏紫、高饱和。');
+assert.ok(warm.tested>=2);assert.ok(cool.score<warm.score,'Retain coarse upstream contradictions');
+assert.equal(crossModalAssessment(null,[{metrics:m}]).score,null);
+assert.equal(crossModalAssessment(assessEvidenceText('偏棕'),[]).score,null);
+const ref={key:'lancome-274',colorReference:{selectedVariant:'cream',samples:[{variant:'cream',metrics:{lab:[50,20,20]}},{variant:'intimatte',metrics:{lab:[70,-30,-30]}}]}};
+assert.equal(visualCorpusAgreement(ref,[{metrics:m}]),100);
+assert.equal(visualCorpusAgreement({...ref,colorReference:{...ref.colorReference,selectedVariant:'intimatte'}},[{metrics:m}]),0,'Never compare a different declared version as a nearby sample');
+assert.equal(visualCorpusAgreement(ref,[{metrics:{lab:null}}]),null);
+console.log('PASS retained cross-modal cues, unverifiable claims and exact-version neighbor color comparison');

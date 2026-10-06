@@ -70,6 +70,6 @@ export function buildProductConsumerSummary(product,lipProfile='all'){
  if(diff.hue>35)conclusion='不同平台间存在明显色相差异，建议优先看高参考分的真实返图。';
  else if(Math.abs(diff.brightness)>15)conclusion='两类来源的亮度存在一定差异，颜色本身较接近，但不要把曝光差异当成色号差异。';
  if(product.key==='lancome-274'&&(product.skuLines||[]).length>1)conclusion+=' 同为 274 的不同产品线需要分开比较。';
- if(product._summaryOnly&&!product._textCatalogLoaded)conclusion+=' 当前公开页已载入完整聚合统计；逐条评论与原始高分辨率媒体将在安全数据层接入后展开。';
+ if(product._summaryOnly&&!product._textCatalogLoaded)conclusion+=' 当前结果基于已载入的聚合证据；没有足够原文支持的细节不会被强行补全。';
  return {conclusion,top:top.slice(0,3),reviews:chosen,normal};
 }

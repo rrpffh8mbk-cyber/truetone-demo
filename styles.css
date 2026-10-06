@@ -369,3 +369,16 @@ body:not(.modal-open) #modal-backdrop[aria-hidden="true"]{
 .brand-actions{display:grid;gap:12px;margin-bottom:18px}.brand-actions article{border:1px solid var(--line);border-radius:12px;padding:18px}.brand-actions h3{font-size:18px;line-height:1.5}
 .method-flow{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:760px){.benchmark-grid{grid-template-columns:1fr}.benchmark-card{padding:20px}.proof-steps{display:grid;gap:6px}.evidence-primary-actions{align-items:stretch}.evidence-primary-actions a{width:100%}.evidence-hero h1{font-size:clamp(33px,8vw,43px);line-height:1.2}.auxiliary-entry{padding:16px}.method-flow{grid-template-columns:1fr}.seed-card,.evidence-result-hero{min-width:0}.demo-case-notice{padding:13px 15px}}
+
+
+.trust-score-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+.trust-mini-metrics{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.trust-mini-metrics span{display:flex;flex-direction:column;gap:4px;min-width:122px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:rgba(18,13,12,.55);font-size:11px;color:var(--muted);line-height:1.45}
+.trust-mini-metrics b{font-family:var(--serif);font-size:20px;color:var(--text);font-weight:600}
+.seed-score-grid.trust-score-grid>div{min-height:92px}
+.seed-score-grid.trust-score-grid>div span{line-height:1.4}
+.seed-score-grid.trust-score-grid>div b{word-break:break-word}
+@media(max-width:980px){.trust-score-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:620px){.trust-score-grid{grid-template-columns:1fr 1fr}.trust-mini-metrics span{min-width:calc(50% - 4px);flex:1}}
+
+.cross-modal-notes{border:1px solid var(--line);border-radius:16px;padding:20px;margin:18px 0}.cross-modal-notes h3{font:500 22px Georgia,"Songti SC",serif}.cross-modal-notes p,.cross-modal-notes li{font-size:13px;line-height:1.8;color:var(--muted)}
