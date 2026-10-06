@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-06-v2",
+  "version": "2026-10-06-v3",
   "principle": "User profile labels and evidence-library labels must use the same vocabulary. Unknown is allowed and preferred over forced guessing.",
   "fields": {
     "lip": {
@@ -88,14 +88,27 @@
       "yellow_skin_alias": "评论自述“黄皮”直接归类为“黄皮”。"
     },
     "makeup": {
-      "basis": "user_requested_visual_heuristic",
+      "basis": "explicit_author_text_then_user_requested_visual_heuristic",
       "steps": [
         "可见面部肤色不均：素颜。",
         "可见面部肤色较均匀：按妆后判断。",
         "妆后且有明显浓眼妆：浓妆；轻眼妆：淡妆。",
         "按妆后判断但眼部没有入镜：淡妆。"
       ],
-      "note": "这是用户指定的试标规则；光线、滤镜和肤质会影响肤色均匀程度，规则标签不等同于已核实的实际化妆状态。"
+      "note": "这是用户指定的试标规则；光线、滤镜和肤质会影响肤色均匀程度，规则标签不等同于已核实的实际化妆状态。",
+      "made_up_unspecified": "文字明确带妆但未说明浓淡：有明确浓眼妆则浓妆，否则按约定默认淡妆，并标明分级来自眼妆/默认规则。"
+    },
+    "conflict_resolution": {
+      "priority": "explicit_author_text_over_image",
+      "scope": "本人自述或明确本次试色说明，按对应图片/评论范围应用。",
+      "unknown_text": "文字没有明确说明时，肤色、妆容使用图片候选；原生唇色仍不确定。",
+      "excluded_text": [
+        "其他用户留言",
+        "适用人群建议",
+        "与当前配图不对应的图号说明",
+        "否定句、下次化妆等未来计划"
+      ],
+      "trace": "保留原图判断、原文、最终标签与冲突记录。"
     }
   }
 }

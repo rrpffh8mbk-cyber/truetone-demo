@@ -1,3 +1,4 @@
+import {attachLibraryLabels,profileTagMatch,rankReferenceMedia} from './library-tags.js?v=20261006-tags-v3';
 import {compareUploadedColors,compareLipColor} from './color-similarity.js?v=20261006-official-v3';
 import {analyzeEvidenceFile} from './lip-selection.js?v=20261006-official-v3';
 import {runFourAgents,buildProductConsumerSummary,hsvToHex,ANALYSIS_KEYWORDS,circularHueDistance} from './agents.js?v=20261006-official-v3';
@@ -44,6 +45,14 @@ async function getManifest(){
  return manifest;
 }
 async function getEvidenceCatalog(){if(evidenceCatalog)return evidenceCatalog;try{evidenceCatalog=await fetch('./data/catalog/evidence_claims_v1.json',{cache:'no-store'}).then(r=>r.ok?r.json():null)}catch(_){evidenceCatalog=null}return evidenceCatalog}
+let libraryLabelsPromise;
+async function getLibraryLabels(){
+ if(!libraryLabelsPromise)libraryLabelsPromise=fetch('./data/catalog/sample_tags_v1.json',{cache:'no-store'})
+  .then(r=>{if(!r.ok)throw Error('样本标签未加载');return r.json()})
+  .then(c=>new Map(c.images.map(row=>[row.source_object_key,row])))
+  .catch(e=>{console.warn(e.message);libraryLabelsPromise=null;return new Map()});
+ return libraryLabelsPromise;
+}
 async function getReferenceDistributions(){if(referenceDistributions)return referenceDistributions;try{referenceDistributions=await fetch('./data/catalog/lip_color_reference_v3.json',{cache:'no-store'}).then(r=>r.ok?r.json():null)}catch(_){referenceDistributions=null}return referenceDistributions}
 function summaryFallback(k){
  const m=manifest.products.find(x=>x.key===k);
@@ -63,7 +72,7 @@ async function getProduct(k){
  if(cache.has(k))return cache.get(k);
  const n=PARTS[k]||0,urls=Array.from({length:n},(_,i)=>`./data/full/${k}.${i+1}.b64`);
  const p=n?await ungzipB64(urls):summaryFallback(k);
- const references=await getReferenceDistributions();p.colorReference=references?.products?.[k]||null;
+ const [references,labels]=await Promise.all([getReferenceDistributions(),getLibraryLabels()]);p.colorReference=references?.products?.[k]||null;
  if(p.colorReference?.center){
   const r=p.colorReference,a={...p.analysis};a.center={...r.center};
   a.platform=Object.fromEntries(Object.entries(r.platforms).map(([name,d])=>[name,{n:d.n,hue:d.hue.circular_center,saturation:d.saturation.median,brightness:d.brightness.median}]));
@@ -73,7 +82,7 @@ async function getProduct(k){
   a.score=scores.length?scores[Math.floor(scores.length/2)]:null;p.analysis=a;
   const outlierCount=r.excluded.filter(s=>s.assessment.code==='official_color_outlier').length;
   a.findings=outlierCount?[{type:'与对应官方标准色差距过大，已标记不使用',count:outlierCount,severity:'medium'}]:[];
-  p.media=r.samples.map(s=>({id:s.id,platform:s.platform,type:'image',filename:s.source_filename,source_object_key:s.source_object_key,variant:s.variant,thumb:s.thumbnail,metrics:s.metrics,referenceScore:compareLipColor(s.metrics,{...r,selectedVariant:s.variant})?.score??0,reasons:['自动唇部选区通过，与对应官方标准图的色差在允许范围内。']})).sort((x,y)=>y.referenceScore-x.referenceScore);
+  p.media=r.samples.map(s=>attachLibraryLabels({id:s.id,platform:s.platform,type:'image',filename:s.source_filename,source_object_key:s.source_object_key,variant:s.variant,thumb:s.thumbnail,metrics:s.metrics,referenceScore:compareLipColor(s.metrics,{...r,selectedVariant:s.variant})?.score??0,reasons:['自动唇部选区通过，与对应官方标准图的色差在允许范围内。']},labels)).sort((x,y)=>y.referenceScore-x.referenceScore);
   p.analysis.topMediaIds=p.media.slice(0,6).map(m=>m.id);
  }
  else{p.analysis={...p.analysis,score:null};p.media=[]}
@@ -90,14 +99,21 @@ function reviewCard(r){return `<article class="review"><p>${highlight(r.text)}</
 async function fetchCloudReferenceMedia(productKey){
  const reference=(await getReferenceDistributions())?.products?.[productKey];
  if(!reference)return [];
- const accepted=new Set(reference.samples.map(s=>s.source_object_key));
- const filtered=media=>media.filter(m=>accepted.has(m.object_key));
- const fallback=()=>reference.samples.slice().sort((a,b)=>a.assessment.deltaE-b.assessment.deltaE).slice(0,3).map(s=>({id:s.id,platform:s.platform,label:s.source_filename,url:s.thumbnail,object_key:s.source_object_key,reason:'已通过自动唇部选区与官方标准色筛选。'}));
+ const labels=await getLibraryLabels(),profile=getUserProfile();
+ const accepted=new Map(reference.samples.map(s=>[s.source_object_key,s]));
+ const fallbackAll=reference.samples.map(s=>attachLibraryLabels({id:s.id,platform:s.platform,label:s.source_filename,url:s.thumbnail,object_key:s.source_object_key,colorDistance:s.assessment.deltaE,reason:'已通过自动唇部选区与官方标准色筛选。'},labels));
+ const filtered=media=>media.filter(m=>accepted.has(m.object_key)).map(m=>attachLibraryLabels({...m,colorDistance:accepted.get(m.object_key).assessment.deltaE},labels));
+ const fallback=()=>rankReferenceMedia(fallbackAll,profile).slice(0,3);
+ const select=media=>{
+  const byKey=new Map(fallbackAll.map(m=>[m.object_key,m]));
+  for(const m of filtered(media))byKey.set(m.object_key,m);
+  return rankReferenceMedia([...byKey.values()],profile).slice(0,3);
+ };
  const api=(window.TRUETONE_CONFIG?.apiBase||'').replace(/\/$/,'');if(!api)return fallback();
  const cacheKey='truetone-media:'+productKey;
  try{
    const saved=sessionStorage.getItem(cacheKey),parsed=saved&&JSON.parse(saved);
-   if(parsed?.savedAt&&Date.now()-parsed.savedAt<5*60*1000&&Array.isArray(parsed.value)&&parsed.value.length){const valid=filtered(parsed.value);return valid.length?valid:fallback()}
+   if(parsed?.savedAt&&Date.now()-parsed.savedAt<5*60*1000&&Array.isArray(parsed.value)&&parsed.value.length){return select(parsed.value)}
  }catch(_){}
  for(let attempt=0;attempt<2;attempt++){
    try{
@@ -106,7 +122,7 @@ async function fetchCloudReferenceMedia(productKey){
      clearTimeout(timer);
      if(!r.ok)throw Error('HTTP '+r.status);
      const out=await r.json(),media=Array.isArray(out?.media)?out.media.filter(x=>x&&x.url).slice(0,3):[];
-     if(media.length){try{sessionStorage.setItem(cacheKey,JSON.stringify({savedAt:Date.now(),value:media}))}catch(_){};const valid=filtered(media);return valid.length?valid:fallback()}
+     if(media.length){try{sessionStorage.setItem(cacheKey,JSON.stringify({savedAt:Date.now(),value:media}))}catch(_){};return select(media)}
    }catch(e){
      console.warn('Reference image attempt '+(attempt+1)+' unavailable',e);
      if(attempt===0)await wait(300);
@@ -159,8 +175,8 @@ function personalizedMedia(p,selfie){
    let s=Number.isFinite(m.referenceScore)?m.referenceScore:72;
    const ml=m.metrics.lighting||'中性光';if(ml===light)s+=5;else if(['暖光','冷光'].includes(ml))s-=3;
    s-=Math.min(10,Math.abs((m.metrics.sceneBrightness??m.metrics.brightness??60)-b)*.12);
-   return {...m,personalScore:Math.max(25,Math.min(99,s))};
- }).sort((a,b)=>b.personalScore-a.personalScore).slice(0,3);
+   return {...m,profileMatches:profileTagMatch(m,getUserProfile()),personalScore:Math.max(25,Math.min(99,s))};
+ }).sort((a,b)=>b.profileMatches-a.profileMatches||b.personalScore-a.personalScore).slice(0,3);
 }
 function personalMatchScore(p,selfie,profile,reviews){
  let s=66;const a=p.analysis||{},kw=a.keywordCounts||{};

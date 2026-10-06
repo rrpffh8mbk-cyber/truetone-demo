@@ -19,6 +19,20 @@ Final Top Reference ranking should combine:
 
 Unknown semantic attributes must stay `不确定` rather than being guessed.
 
+Current semantic labels: `sample_tags_v1.json` / `.csv`, covering all 169
+samples and the 6 separately identified official images. `labeling_annotations_v1.json`
+retains reviewed image observations and folder-linked author-text selections.
+Explicit author text overrides conflicting image labels; recommendations,
+other commenters, future plans and descriptions of absent photo numbers do not
+describe the current wearer. Native lip depth uses only author text. Skin uses
+白皙 / 黄皮 / 黑皮; makeup follows the user-requested skin-uniformity/eye rule
+when text is absent. Unknown and low-confidence fields add no matching preference.
+`app.js` loads this catalog and uses matching medium/high-confidence wearer labels
+to order accepted reference images. Official/product graphics are not wearer
+evidence. Label preference never changes an image's color similarity score.
+All 18 existing color exclusions remain unchanged. There is no measured accuracy
+benchmark for these rule labels.
+
 Current color reference: `lip_color_reference_v3.json`. All 169 original
 sample files and 6 official photos in the user-uploaded `data_original` Release
 have been examined. Official-photo lip colors determine upload similarity;

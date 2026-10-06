@@ -48,3 +48,21 @@ Equal colors are 100, distance 30 or greater is 0, missing ROI/official is no sc
 Multiple uploads use the lowest successfully measured similarity. The display
 scale and exclusion threshold are explicit rules, not a calibrated authenticity
 probability or a physical color measurement. See tests/README.md for validation.
+
+## Rebuild semantic labels
+
+Install `olefile==0.47`, `openpyxl` and Pillow, then run:
+
+```sh
+python3 scripts/label_sample_library.py --root /private/extracted
+```
+
+This rebuild applies the checked-in AI-reviewed image/text annotations; it does
+not perform a new AI inspection. Image and text SHA-256 checks reject changed
+sources. Word DOC piece tables supply XHS post IDs/titles; Excel author bodies
+are joined only by an exact post ID, never from the other-commenter column.
+Taobao TXT files are joined by their original image folder. Author evidence
+quotes must match their source. An original link with no usable caption stays
+unlabeled by text. The JSON/CSV preserve final values, confidence, source quotes,
+image candidates and conflict resolutions for all 175 files, including unreadable
+files. Raw images and source link tokens are not republished.

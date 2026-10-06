@@ -2,6 +2,15 @@
 
 Serve the repository root with `python3 -m http.server 8000`.
 
+- `node tests/library-tags.test.mjs`: all 175 label records, text priority,
+  missing native-lip evidence, unchanged color exclusions, and profile preference
+  without changing color similarity.
+- `python3 tests/test_library_matching.py`: desktop/mobile site loads the current
+  catalog and orders accepted media by the saved profile.
+- `python3 tests/test_tag_resolution.py`: explicit makeup text overrides the
+  image heuristic; unspecified made-up state uses the agreed eye/default rule.
+  Requires the labeling script dependencies documented in `scripts/README.md`.
+
 - `node tests/reference-filtering.test.mjs`: official-color outliers, correct SKU
   comparison, missing/weak ROI, and primary-mouth cleanup.
 - `python3 tests/test_library_usage.py`: all four reports show exact usage counts
