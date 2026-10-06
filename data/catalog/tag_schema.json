@@ -1,18 +1,101 @@
 {
-  "version": "2026-10-05-v1",
+  "version": "2026-10-06-v2",
   "principle": "User profile labels and evidence-library labels must use the same vocabulary. Unknown is allowed and preferred over forced guessing.",
   "fields": {
-    "lip": {"allowed": ["浅唇","中唇","深唇","不确定"],"user_collect": true,"evidence_tag": true},
-    "skin": {"allowed": ["白皙偏冷","白皙偏暖","自然黄调","自然中性","橄榄调","健康深肤","不确定"],"user_collect": true,"evidence_tag": true},
-    "makeup": {"allowed": ["素颜","淡妆","浓妆","不确定"],"user_collect": true,"evidence_tag": true},
-    "lighting": {"allowed": ["自然光","室内暖光","室内冷光","混合光","偏暗","过曝","不确定"],"user_collect": false,"evidence_tag": true},
-    "application": {"allowed": ["薄涂","正常涂","厚涂","不确定"],"user_collect": false,"evidence_tag": true},
-    "source_platform": {"allowed": ["小红书","淘宝","官方","其他"],"user_collect": false,"evidence_tag": true}
+    "lip": {
+      "allowed": [
+        "浅唇",
+        "中唇",
+        "深唇",
+        "不确定"
+      ],
+      "user_collect": true,
+      "evidence_tag": true
+    },
+    "skin": {
+      "allowed": [
+        "白皙",
+        "黄皮",
+        "黑皮",
+        "不确定"
+      ],
+      "user_collect": true,
+      "evidence_tag": true
+    },
+    "makeup": {
+      "allowed": [
+        "素颜",
+        "淡妆",
+        "浓妆",
+        "不确定"
+      ],
+      "user_collect": true,
+      "evidence_tag": true
+    },
+    "lighting": {
+      "allowed": [
+        "自然光",
+        "室内暖光",
+        "室内冷光",
+        "混合光",
+        "偏暗",
+        "过曝",
+        "不确定"
+      ],
+      "user_collect": false,
+      "evidence_tag": true
+    },
+    "application": {
+      "allowed": [
+        "薄涂",
+        "正常涂",
+        "厚涂",
+        "不确定"
+      ],
+      "user_collect": false,
+      "evidence_tag": true
+    },
+    "source_platform": {
+      "allowed": [
+        "小红书",
+        "淘宝",
+        "官方",
+        "其他"
+      ],
+      "user_collect": false,
+      "evidence_tag": true
+    }
   },
   "confidence_policy": {
     "high": "explicit text or clearly visible cue",
     "medium": "supported by more than one cue",
     "low": "weak single cue; keep out of personalized matching unless no better evidence",
     "unknown": "do not infer"
+  },
+  "tagging_policy": {
+    "lip": {
+      "basis": "explicit_review_self_report_only",
+      "missing": "不确定",
+      "note": "原生唇色只取评论中明确的本人自述；不根据口红覆盖后的图片推断，不把针对他人的建议当作作者唇色。"
+    },
+    "skin": {
+      "allowed_user": [
+        "白皙",
+        "黄皮",
+        "黑皮"
+      ],
+      "basis": "explicit_review_self_report_then_image",
+      "yellow_skin_alias": "评论自述“黄皮”直接归类为“黄皮”。"
+    },
+    "makeup": {
+      "basis": "user_requested_visual_heuristic",
+      "steps": [
+        "可见面部肤色不均：素颜。",
+        "可见面部肤色较均匀：按妆后判断。",
+        "妆后且有明显浓眼妆：浓妆；轻眼妆：淡妆。",
+        "按妆后判断但眼部没有入镜：淡妆。"
+      ],
+      "note": "这是用户指定的试标规则；光线、滤镜和肤质会影响肤色均匀程度，规则标签不等同于已核实的实际化妆状态。"
+    }
   }
 }

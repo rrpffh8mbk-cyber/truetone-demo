@@ -38,7 +38,7 @@ with sync_playwright() as p:
         page.on('pageerror',lambda e:errors.append(str(e)))
         page.goto(BASE+'/',wait_until='networkidle')
         encoded=page.evaluate("""()=>{
-          sessionStorage.setItem('truetone-user-profile',JSON.stringify({lip:'浅唇',skin:'自然中性',makeup:'淡妆'}));
+          sessionStorage.setItem('truetone-user-profile',JSON.stringify({lip:'浅唇',skin:'黄皮',makeup:'淡妆'}));
           const c=document.createElement('canvas');c.width=400;c.height=300;const x=c.getContext('2d');
           x.fillStyle='#d0aa99';x.fillRect(0,0,400,300);x.fillStyle='#1423c8';x.fillRect(80,80,240,60);
           x.fillStyle='white';x.fillRect(120,105,160,10);x.fillStyle='#1423c8';x.fillRect(300,200,20,80);

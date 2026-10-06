@@ -8,7 +8,7 @@ const app=$('#app'),toast=$('#toast'),modal=$('#modal-backdrop'),modalContent=$(
 // Defensive initial state: never allow the modal overlay to block the app on first paint.
 modal.style.display='none';modal.style.pointerEvents='none';modal.hidden=true;modal.setAttribute('aria-hidden','true');
 let manifest, evidenceCatalog, referenceDistributions, cache=new Map(), cloudCache=new Map(), verifyFiles=[], verifyAnalyses=[], selfieFile=null, selfieResult=null, purchaseTargetKey=null, seededFiles=[];
-const USER_TAG_SCHEMA={lip:['浅唇','中唇','深唇'],skin:['白皙偏冷','白皙偏暖','自然黄调','自然中性','橄榄调','健康深肤'],makeup:['素颜','淡妆','浓妆'],lighting:['自然光','室内暖光','室内冷光','混合光','不确定'],application:['薄涂','正常涂','厚涂','不确定'],source_platform:['小红书','淘宝','官方','其他']};
+const USER_TAG_SCHEMA={lip:['浅唇','中唇','深唇'],skin:['白皙','黄皮','黑皮'],makeup:['素颜','淡妆','浓妆'],lighting:['自然光','室内暖光','室内冷光','混合光','不确定'],application:['薄涂','正常涂','厚涂','不确定'],source_platform:['小红书','淘宝','官方','其他']};
 const PARTS={'ysl-610':4,'ysl-1936':4,'lancome-274':0,'lancome-275':0};
 const FALLBACK_REVIEWS={
  'lancome-274':[
@@ -144,7 +144,7 @@ function reviewPersonalScore(r,profile){
  if(profile.makeup==='素颜'&&t.includes('素颜'))s+=7;
  if(profile.makeup==='淡妆'&&/淡妆|日常|通勤/.test(t))s+=6;
  if(profile.makeup==='浓妆'&&/浓妆|完整妆|厚涂|带妆/.test(t))s+=6;
- const skinMap={'白皙偏冷':/冷白|白皙|白皮/,'白皙偏暖':/暖白|白皙|白皮/,'自然黄调':/黄皮|黄调/,'自然中性':/中性皮|自然肤色/,'橄榄调':/橄榄皮|橄榄调/,'健康深肤':/深肤|健康肤色/};
+ const skinMap={'白皙':/冷白|暖白|白皙|白皮/,'黄皮':/黄皮|黄调/,'黑皮':/黑皮|黑肤|深肤|健康肤色/};
  if(skinMap[profile.skin]?.test(t))s+=8;
  if(r.repeatBuyer)s+=4;if(r.negativeEvidence)s+=4;if(r.genericTemplate)s-=7;
  s+=Math.min(5,t.length/60);return s;
@@ -290,13 +290,21 @@ function detectBrandOnly(brandRaw){
  return groups.find(g=>tokenMatches(b,g.aliases.map(normalizeTargetInput)))||null;
 }
 
-function getUserProfile(){
+function getUserProfileDraft(){
  try{
   const x=JSON.parse(sessionStorage.getItem('truetone-user-profile')||'null');
-  if(x&&x.lip&&x.skin&&x.makeup)return x;
+  if(!x||typeof x!=='object'||Array.isArray(x))return null;
+  const legacySkin={'白皙偏冷':'白皙','白皙偏暖':'白皙','自然黄调':'黄皮','健康深肤':'黑皮'};
+  const normalized={...x,
+   lip:USER_TAG_SCHEMA.lip.includes(x.lip)?x.lip:'',
+   skin:USER_TAG_SCHEMA.skin.includes(x.skin)?x.skin:(legacySkin[x.skin]||''),
+   makeup:USER_TAG_SCHEMA.makeup.includes(x.makeup)?x.makeup:''};
+  if(normalized.lip!==x.lip||normalized.skin!==x.skin||normalized.makeup!==x.makeup)saveUserProfile(normalized);
+  return normalized;
  }catch(_){}
  return null;
 }
+function getUserProfile(){const x=getUserProfileDraft();return x?.lip&&x?.skin&&x?.makeup?x:null}
 function saveUserProfile(p){sessionStorage.setItem('truetone-user-profile',JSON.stringify(p))}
 function profileSummary(p){
  if(!p)return '尚未填写';
@@ -307,7 +315,7 @@ function renderProfileChips(p){return '<span>'+esc(p.lip)+'</span><span>'+esc(p.
 
 async function home(){
  await getManifest();selfieFile=null;selfieResult=null;purchaseTargetKey=null;seededFiles=[];
- const saved=getUserProfile();
+ const saved=getUserProfile(),draft=getUserProfileDraft();
  page(`
  <section class="consumer-hero gateway-hero">
    <div class="eyebrow">TRUETONE · TRUST FIRST, THEN FIT</div>
@@ -319,10 +327,11 @@ async function home(){
    <div class="step-num">01</div>
    <div class="step-copy"><div class="eyebrow">先告诉我们一点关于你</div><h2>你的真实使用条件</h2><p>这些信息只用于匹配真实样本；不会从自拍推断种族、年龄或身份。</p></div>
    <div class="profile-fields profile-first">
-     <label>原生唇色<select id="profile-lip" class="select">${profileOption(USER_TAG_SCHEMA.lip,saved?.lip||'')}</select></label>
-     <label>肤色表现<select id="profile-skin" class="select">${profileOption(USER_TAG_SCHEMA.skin,saved?.skin||'')}</select></label>
-     <label>平时妆面<select id="profile-makeup" class="select">${profileOption(USER_TAG_SCHEMA.makeup,saved?.makeup||'')}</select></label>
+     <label>原生唇色<select id="profile-lip" class="select">${profileOption(USER_TAG_SCHEMA.lip,draft?.lip||'')}</select></label>
+     <label>肤色<select id="profile-skin" class="select">${profileOption(USER_TAG_SCHEMA.skin,draft?.skin||'')}</select></label>
+     <label>平时妆面<select id="profile-makeup" class="select">${profileOption(USER_TAG_SCHEMA.makeup,draft?.makeup||'')}</select></label>
    </div>
+   ${draft&&!draft.skin?'<p>请按白皙、黄皮、黑皮重新选择你的肤色。</p>':''}
    <button class="primary-btn profile-save" id="profile-save" disabled>${saved?'更新我的信息':'保存并继续'}</button>
  </section>
 
@@ -432,7 +441,7 @@ function extractSeedTextSignals(text,p){
  const t=String(text||'').trim(),kw=p.analysis?.keywordCounts||{},flags=[],strengths=[],tags={lip:'',skin:'',makeup:'',lighting:'',application:''};
  const tagMap={
   lip:[['深唇',/深唇/],['中唇',/中唇|唇色中等/],['浅唇',/浅唇|唇色浅/]],
-  skin:[['橄榄调',/橄榄皮|橄榄调/],['自然黄调',/黄皮|黄调/],['白皙偏冷',/冷白皮|白皮偏冷/],['白皙偏暖',/暖白皮|白皮偏暖/],['健康深肤',/深肤|健康肤色/]],
+  skin:[['白皙',/冷白|暖白|白皙|白皮/],['黄皮',/黄皮|黄调/],['黑皮',/黑皮|黑肤|深肤|健康肤色/]],
   makeup:[['素颜',/素颜/],['淡妆',/淡妆|日常妆|通勤妆/],['浓妆',/浓妆|完整妆/]],
   lighting:[['自然光',/自然光|日光/],['室内暖光',/暖光|黄光/],['室内冷光',/冷光|白光/]],
   application:[['薄涂',/薄涂/],['厚涂',/厚涂/],['正常涂',/正常涂|一层/]]
@@ -519,7 +528,7 @@ function detect274Variant(text=''){
 function relevantEvidenceClaims(profile,rawText,evidenceEntry){
  const claims=evidenceEntry?.claims||{},wanted=[];
  const add=k=>{if(claims[k]&&!wanted.includes(k))wanted.push(k)};
- if(profile?.skin==='自然黄调'||/黄皮|黄黑皮/.test(rawText))add('yellow_skin');
+ if(profile?.skin==='黄皮'||/黄皮|黄黑皮/.test(rawText))add('yellow_skin');
  if(profile?.lip==='深唇'||/深唇/.test(rawText))add('deep_lip');
  if(profile?.lip==='浅唇'||/浅唇/.test(rawText))add('light_lip');
  if(profile?.makeup==='素颜'||/素颜/.test(rawText))add('bare_face');

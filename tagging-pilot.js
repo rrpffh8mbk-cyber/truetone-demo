@@ -1,6 +1,7 @@
 const fields = { lip: '原生唇色', skin: '肤色表现', makeup: '整体妆容', application: '涂法' };
 const confidence = { high: '高', medium: '中', low: '低', unknown: '证据不足' };
-const storageKey = 'truetone-tagging-review-2026-10-06-pilot-v1';
+const basisNames = { explicit_review_self_report_only: '评论自述', explicit_review_self_report: '评论自述', image_observation: '图片观察', user_requested_visual_heuristic: '图片规则' };
+const storageKey = 'truetone-tagging-review-2026-10-06-pilot-v2';
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
 let data, reviews = {};
 try {
@@ -11,7 +12,7 @@ try {
 function labelRows(values, keys) {
   return keys.map(key => {
     const item = values[key];
-    return `<div class="label-row"><div class="label-head"><span class="field-name">${fields[key]}</span><span class="tag">${escapeHtml(item.value)}</span><span class="confidence ${escapeHtml(item.confidence)}">${confidence[item.confidence]}</span></div><p class="reason">${escapeHtml(item.reason)}</p>${item.evidence_quote ? `<p class="reason">依据：“${escapeHtml(item.evidence_quote)}”</p>` : ''}</div>`;
+    return `<div class="label-row"><div class="label-head"><span class="field-name">${fields[key]}</span><span class="tag">${escapeHtml(item.value)}</span><span class="confidence ${escapeHtml(item.confidence)}">${confidence[item.confidence]}</span>${basisNames[item.basis] ? `<span class="confidence">${basisNames[item.basis]}</span>` : ''}</div><p class="reason">${escapeHtml(item.reason)}</p>${item.evidence_quote ? `<p class="reason">依据：“${escapeHtml(item.evidence_quote)}”</p>` : ''}</div>`;
   }).join('');
 }
 
@@ -25,9 +26,9 @@ function renderCard(sample) {
       <p class="photo-caption">点击放大 · 保留完整画面与比例，未裁出唇部。原图 ${sample.original_size.join(' × ')}。</p>
       <details class="source"><summary>查看来源文件</summary><p>${escapeHtml(sample.source_object_key)}</p><p>TXT：${escapeHtml(r.source_object_key)}</p></details>
     </div><div>
-      <h3>图片判断 · AI 试标</h3>
-      ${labelRows(sample.visual.fields, ['lip', 'skin', 'makeup'])}
-      <div class="visible"><strong>当前可见唇色（包含唇妆）</strong><br>${escapeHtml(sample.visual.visible_lip_observation)}</div>
+      <h3>试标结果 · 新规则</h3>
+      <div class="final-labels">${labelRows(sample.labels.fields, ['lip', 'skin', 'makeup'])}</div>
+      <details class="source image-evidence"><summary>展开图片观察记录</summary>${labelRows(sample.visual.fields, ['skin', 'makeup'])}<p>当前可见唇色（仅作外观描述，不用于原生唇色标签）：${escapeHtml(sample.visual.visible_lip_observation)}</p></details>
       <details class="text-evidence"><summary>展开同目录 TXT 与独立文字标签</summary>
         <p class="reason">文字置信度表示原文是否明确，不能作为视觉识别准确率。</p>
         <blockquote class="quote">${escapeHtml(r.raw)}</blockquote>
@@ -36,7 +37,7 @@ function renderCard(sample) {
         ${r.topics.map(t => `<p class="topic-evidence">${escapeHtml(t.tag)}：“${escapeHtml(t.evidence_quote)}”${t.note ? `<br>${escapeHtml(t.note)}` : ''}</p>`).join('')}
         <p class="mapping">对应范围：${escapeHtml(r.mapping_note)}</p>
       </details>
-      <div class="review"><h3>你的图片标签判断</h3><p class="reason">可只填写你有把握的项；“不确定”也是有效判断。</p><div class="review-fields">${['lip','skin','makeup'].map(key => `<label for="review-${sample.number}-${key}">${fields[key]}<select id="review-${sample.number}-${key}" data-sample="${sample.sample_id}" data-field="${key}">${options(key)}</select></label>`).join('')}</div></div>
+      <div class="review"><h3>你的标签复核</h3><p class="reason">唇色核对评论，肤色与妆容核对图片及标注规则；可只填写有把握的项。</p><div class="review-fields">${['lip','skin','makeup'].map(key => `<label for="review-${sample.number}-${key}">${fields[key]}<select id="review-${sample.number}-${key}" data-sample="${sample.sample_id}" data-field="${key}">${options(key)}</select></label>`).join('')}</div></div>
     </div></div></article>`;
 }
 
@@ -59,7 +60,7 @@ function saveReviews() {
 }
 
 async function start() {
-  const response = await fetch(new URL('./data/catalog/tagging_pilot_v1.json', import.meta.url));
+  const response = await fetch(new URL('./data/catalog/tagging_pilot_v2.json', import.meta.url));
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   data = await response.json();
   document.querySelector('#samples').innerHTML = data.samples.map(renderCard).join('');
@@ -85,7 +86,7 @@ async function start() {
     viewer.showModal();
   });
   document.querySelector('#export-review').addEventListener('click', () => {
-    const result = { pilot_version: data.version, schema_version: data.schema_version, reviewed_at: new Date().toISOString(), samples: data.samples.map(sample => ({ number: sample.number, sample_id: sample.sample_id, source_image_sha256: sample.source_image_sha256, visual_prediction: sample.visual.fields, user_labels: Object.fromEntries(['lip','skin','makeup'].map(key => [key, validReview(sample,key)])) })) };
+    const result = { pilot_version: data.version, schema_version: data.schema_version, reviewed_at: new Date().toISOString(), samples: data.samples.map(sample => ({ number: sample.number, sample_id: sample.sample_id, source_image_sha256: sample.source_image_sha256, prediction: sample.labels.fields, visual_prediction: sample.visual.fields, text_prediction: sample.review_text.fields, user_labels: Object.fromEntries(['lip','skin','makeup'].map(key => [key, validReview(sample,key)])) })) };
     const url = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2) + '\n'], {type:'application/json'}));
     const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'truetone-five-image-review.json'; anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);

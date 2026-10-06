@@ -5,25 +5,25 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>TrueTone · 五张图片标签试标</title>
-  <link rel="stylesheet" href="./tagging-pilot.css?v=1">
-  <script type="module" src="./tagging-pilot.js?v=1"></script>
+  <link rel="stylesheet" href="./tagging-pilot.css?v=2">
+  <script type="module" src="./tagging-pilot.js?v=2"></script>
 </head>
 <body>
   <main>
-    <nav><a href="./">TrueTone</a><span>样本标签试标 · 01</span></nav>
+    <nav><a href="./">TrueTone</a><span>样本标签试标 · 02</span></nav>
     <header>
       <p class="eyebrow">先看五张，再决定是否扩展</p>
       <h1>这些标签，判断得对吗？</h1>
-      <p>图片标签由 AI 逐图观察；同目录 TXT 另行提取文字标签。你可以点击图片放大、展开评论核对，并在每张下方修改标签。</p>
+      <p>肤色统一为白皙、黄皮、黑皮。原生唇色只取评论自述；妆容按你指定的图片规则重新判断。你可以放大图片、展开评论核对，并在每张下方修改标签。</p>
       <div class="facts"><span>5 张试标</span><span>标签与用户选项一致</span><span>尚未计算准确率</span></div>
-      <div class="note">“原生唇色”指涂口红前的深浅。当前可见唇色另列，避免把口红颜色当作原生唇色。肤色标签描述照片中的表现，可能受光线影响。</div>
+      <div class="note">妆容试标规则：肤色不均归素颜；肤色较均匀按妆后判断，再看眼妆浓淡；妆后且眼部未入镜归淡妆。光线、滤镜也会改变肤色均匀度，因此保留规则依据和置信度，供你复核。</div>
     </header>
     <section id="samples" aria-label="五张图片的独立试标" aria-live="polite"><p>正在加载试标记录…</p></section>
     <footer>
       <h2>你的复核</h2>
       <p>只保存在当前浏览器。导出后可以把复核文件发给我，也可以直接按图号告诉我哪些标签需要改。</p>
       <p id="review-count" role="status">尚未填写复核标签。</p>
-      <div class="actions"><button id="export-review" disabled>导出我的复核</button><button id="reset-review" class="secondary">清空复核</button><a href="./data/catalog/tagging_pilot_v1.json" download>下载试标数据</a></div>
+      <div class="actions"><button id="export-review" disabled>导出我的复核</button><button id="reset-review" class="secondary">清空复核</button><a href="./data/catalog/tagging_pilot_v2.json" download>下载试标数据</a></div>
       <p class="small">本次选择覆盖四个色号及 274 的两条产品线。仅保存这五张试标，等待复核；全库个性化匹配尚未采用这些新标签。</p>
     </footer>
   </main>

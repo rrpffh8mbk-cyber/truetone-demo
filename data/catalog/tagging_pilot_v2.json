@@ -1,0 +1,727 @@
+{
+  "version": "2026-10-06-pilot-v2",
+  "schema_version": "2026-10-06-v2",
+  "label_options": {
+    "lip": [
+      "浅唇",
+      "中唇",
+      "深唇",
+      "不确定"
+    ],
+    "skin": [
+      "白皙",
+      "黄皮",
+      "黑皮",
+      "不确定"
+    ],
+    "makeup": [
+      "素颜",
+      "淡妆",
+      "浓妆",
+      "不确定"
+    ],
+    "application": [
+      "薄涂",
+      "正常涂",
+      "厚涂",
+      "不确定"
+    ]
+  },
+  "method": "Revision requested by user: native lip depth exclusively from explicit review self-report; skin uses three everyday categories; makeup follows the specified visible skin-uniformity/eye-makeup heuristic. Text and image evidence retain separate provenance.",
+  "field_semantics": {
+    "lip": "原生唇色只依据评论中明确的本人自述；没有自述则不确定。",
+    "skin": "白皙、黄皮、黑皮；明确的本人文字自述优先，图片补充。",
+    "makeup": "按用户指定的图片规则：肤色不均归素颜；肤色均匀按妆后判断，再依据眼妆分浓淡；妆后且没有眼部入镜归淡妆。",
+    "text": "TXT 为评论级证据；编号限定描述只归属相应配图。"
+  },
+  "selection": "Five review photos selected to cover YSL 610, YSL 1936, Lancome 274 Cream, Lancome 274 Intimatte and Lancome 275; not a random accuracy benchmark.",
+  "coverage": {
+    "taobao_jpg": 117,
+    "same_folder_txt_paired_images": 117,
+    "review_folders": 87
+  },
+  "accuracy": null,
+  "accuracy_note": "尚无用户提供的真实标签，不能声称准确率。",
+  "samples": [
+    {
+      "number": 1,
+      "sample_id": "sample-5932bf5089af50ab",
+      "product_key": "ysl-610",
+      "variant": "unknown",
+      "product_label": "YSL 610",
+      "source_platform": "淘宝",
+      "source_object_key": "Data_clean_taobao/YSL_610/YSL_610_P1/610_P1_1.jpg",
+      "source_image_sha256": "28f9937a94a9bda0298ad8a79787531f8d05fe324330f3b1697b0f66f7059fb3",
+      "original_size": [
+        720,
+        960
+      ],
+      "preview_size": [
+        720,
+        960
+      ],
+      "image_path": "./data/tagging-pilot/pilot-1.jpg",
+      "preview_sha256": "30685ca9026ee1e88f23e360d4169b54b3472428dcce6ebf2980bbcc18df8485",
+      "visual": {
+        "number": 1,
+        "basis": "image_only_user_requested_heuristic",
+        "fields": {
+          "skin": {
+            "value": "黄皮",
+            "confidence": "medium",
+            "reason": "可见面颊和颈部呈自然偏黄肤色，按日常感知归为黄皮；照片光线可能影响判断。",
+            "basis": "image_observation"
+          },
+          "makeup": {
+            "value": "淡妆",
+            "confidence": "low",
+            "reason": "可见面颊整体肤色较均匀，按新规则归为妆后；眼部未入镜，归为淡妆。画面模糊，均匀度判断置信度较低。",
+            "basis": "user_requested_visual_heuristic"
+          }
+        },
+        "visible_lip_observation": "当前可见颜色较深，偏玫瑰棕；不等同于原生深唇。",
+        "makeup_observations": {
+          "skin_uniformity": "relatively_even",
+          "eye_visible": false,
+          "eye_makeup": "not_visible"
+        }
+      },
+      "review_text": {
+        "basis": "same_folder_content_txt",
+        "source_object_key": "Data_clean_taobao/YSL_610/YSL_610_P1/content.txt",
+        "raw": "第二次发货和第一次收到的一点都不一样、你们有没有这种情况？第二次收到的没有第一次滋润、黏稠度也不一样、再就是字体也不一样、客服非说批次不一样字体不一样、字体咱先不说、就说口红、用着根本就不一样、颜色和第一次也不一样、而且还容易掉色、一看就是假货、打开了也不给退！你当消费者是**么？我就想问问第二次买的有没有和我这情况一样的、看是我自己这样还是大家也有这情况的！",
+        "source_sha256": "a9e298ae2e3e53326da0112ec4c116ab5d19edef6e784dbb99eb3955d54c8814",
+        "folder_photo_count": 1,
+        "fields": {
+          "lip": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "评论未自述此项。",
+            "evidence_quote": null,
+            "scope": "review_author",
+            "basis": "explicit_review_self_report_only"
+          },
+          "skin": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "评论未自述此项。",
+            "evidence_quote": null,
+            "scope": "review_author"
+          },
+          "makeup": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "评论未自述此项。",
+            "evidence_quote": null,
+            "scope": "review_author"
+          },
+          "application": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "评论未自述此项。",
+            "evidence_quote": null,
+            "scope": "review_author"
+          }
+        },
+        "topics": [
+          {
+            "tag": "质地差异",
+            "evidence_quote": "第二次收到的没有第一次滋润、黏稠度也不一样",
+            "scope": "selected_review",
+            "note": null
+          },
+          {
+            "tag": "颜色差异",
+            "evidence_quote": "颜色和第一次也不一样",
+            "scope": "selected_review",
+            "note": null
+          },
+          {
+            "tag": "易掉色",
+            "evidence_quote": "还容易掉色",
+            "scope": "selected_review",
+            "note": null
+          },
+          {
+            "tag": "真伪质疑",
+            "evidence_quote": "一看就是假货",
+            "scope": "selected_review",
+            "note": "这是买家主张，尚未核验真伪。"
+          },
+          {
+            "tag": "退货争议",
+            "evidence_quote": "打开了也不给退",
+            "scope": "selected_review",
+            "note": null
+          }
+        ],
+        "mapping_note": "本评论只有一张配图，文字可对应此评论；主观评价不代表事实核验。"
+      },
+      "review_status": "awaiting_user_review",
+      "admitted_to_personalized_matching": false,
+      "labels": {
+        "basis": "field_specific_user_policy",
+        "fields": {
+          "lip": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "评论未明确自述原生唇色深浅，按新规则不从图片补猜。",
+            "evidence_quote": null,
+            "scope": "review_author",
+            "basis": "explicit_review_self_report_only"
+          },
+          "skin": {
+            "value": "黄皮",
+            "confidence": "medium",
+            "reason": "可见面颊和颈部呈自然偏黄肤色，按日常感知归为黄皮；照片光线可能影响判断。",
+            "basis": "image_observation"
+          },
+          "makeup": {
+            "value": "淡妆",
+            "confidence": "low",
+            "reason": "可见面颊整体肤色较均匀，按新规则归为妆后；眼部未入镜，归为淡妆。画面模糊，均匀度判断置信度较低。",
+            "basis": "user_requested_visual_heuristic"
+          }
+        }
+      }
+    },
+    {
+      "number": 2,
+      "sample_id": "sample-a1f45f3302dda0c4",
+      "product_key": "ysl-1936",
+      "variant": "unknown",
+      "product_label": "YSL 1936",
+      "source_platform": "淘宝",
+      "source_object_key": "Data_clean_taobao/YSL_1936/YSL_1936_P1/1936_P1_1.jpg",
+      "source_image_sha256": "000f12f1bb51b98f1cee0d9c03039a524e71ad271e58b74b8032919089e709d4",
+      "original_size": [
+        1279,
+        1059
+      ],
+      "preview_size": [
+        1279,
+        1059
+      ],
+      "image_path": "./data/tagging-pilot/pilot-2.jpg",
+      "preview_sha256": "16db572d13940aadfcccff1ea69f4c780fc2cb5f8301cb94f2039ae16b2d5fbc",
+      "visual": {
+        "number": 2,
+        "basis": "image_only_user_requested_heuristic",
+        "fields": {
+          "skin": {
+            "value": "白皙",
+            "confidence": "medium",
+            "reason": "可见脸部明度较高，按日常感知归为白皙；照片光线可能影响判断。",
+            "basis": "image_observation"
+          },
+          "makeup": {
+            "value": "淡妆",
+            "confidence": "medium",
+            "reason": "可见面颊和下巴肤色整体较均匀，按新规则归为妆后；眼部未入镜，归为淡妆。",
+            "basis": "user_requested_visual_heuristic"
+          }
+        },
+        "visible_lip_observation": "当前可见颜色中等深度，偏红，唇面有光泽。",
+        "makeup_observations": {
+          "skin_uniformity": "relatively_even",
+          "eye_visible": false,
+          "eye_makeup": "not_visible"
+        }
+      },
+      "review_text": {
+        "basis": "same_folder_content_txt",
+        "source_object_key": "Data_clean_taobao/YSL_1936/YSL_1936_P1/content.txt",
+        "raw": "颜值超高的限定版，简直太好看了吧～自从夜光斑马丢了之后就一直在等下一个心仪的细管，图四是610冰乌龙叠涂1936，给闺蜜也买了一支，要一起美丽^_^",
+        "source_sha256": "a2529e3180f5896595c6191b4338e97cba5de294cd5efd7ddd3059d3873330c2",
+        "folder_photo_count": 1,
+        "fields": {
+          "lip": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "评论未自述此项。",
+            "evidence_quote": null,
+            "scope": "review_author",
+            "basis": "explicit_review_self_report_only"
+          },
+          "skin": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "评论未自述此项。",
+            "evidence_quote": null,
+            "scope": "review_author"
+          },
+          "makeup": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "评论未自述此项。",
+            "evidence_quote": null,
+            "scope": "review_author"
+          },
+          "application": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "仅图四被明确说明为叠涂；当前是图一，不能据此确定本图涂法。",
+            "evidence_quote": null,
+            "scope": "review_author"
+          }
+        },
+        "topics": [
+          {
+            "tag": "包装好评",
+            "evidence_quote": "颜值超高的限定版",
+            "scope": "selected_review",
+            "note": null
+          },
+          {
+            "tag": "叠涂",
+            "evidence_quote": "图四是610冰乌龙叠涂1936",
+            "scope": "image_4_only",
+            "note": "不适用于当前图一；提供的文件夹中未找到图四。"
+          }
+        ],
+        "mapping_note": "TXT 提到图四，但本文件夹只有图一。叠涂标签仅保留为图四的文字证据，不赋予当前图片。"
+      },
+      "review_status": "awaiting_user_review",
+      "admitted_to_personalized_matching": false,
+      "labels": {
+        "basis": "field_specific_user_policy",
+        "fields": {
+          "lip": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "评论未明确自述原生唇色深浅，按新规则不从图片补猜。",
+            "evidence_quote": null,
+            "scope": "review_author",
+            "basis": "explicit_review_self_report_only"
+          },
+          "skin": {
+            "value": "白皙",
+            "confidence": "medium",
+            "reason": "可见脸部明度较高，按日常感知归为白皙；照片光线可能影响判断。",
+            "basis": "image_observation"
+          },
+          "makeup": {
+            "value": "淡妆",
+            "confidence": "medium",
+            "reason": "可见面颊和下巴肤色整体较均匀，按新规则归为妆后；眼部未入镜，归为淡妆。",
+            "basis": "user_requested_visual_heuristic"
+          }
+        }
+      }
+    },
+    {
+      "number": 3,
+      "sample_id": "sample-12a99b3d2ae96554",
+      "product_key": "lancome-274",
+      "variant": "cream",
+      "product_label": "兰蔻 274 · Cream",
+      "source_platform": "淘宝",
+      "source_object_key": "Data_clean_taobao/lancome_274/lancome_274_Cream/lancome_274_Cream_P3/274_P3_1.jpg",
+      "source_image_sha256": "424e9eccda32055ad617440ce48ab3fea6e774f28a57b10353dad1e80c8a13b9",
+      "original_size": [
+        1719,
+        2292
+      ],
+      "preview_size": [
+        1050,
+        1400
+      ],
+      "image_path": "./data/tagging-pilot/pilot-3.jpg",
+      "preview_sha256": "d679adea6e9b4d73292eb40895f8f76ba0c57b8028fd14f73b6ffcbfa9d24330",
+      "visual": {
+        "number": 3,
+        "basis": "image_only_user_requested_heuristic",
+        "fields": {
+          "skin": {
+            "value": "白皙",
+            "confidence": "low",
+            "reason": "可见脸部明度较高，按日常感知归为白皙；照片光线可能影响判断。",
+            "basis": "image_observation"
+          },
+          "makeup": {
+            "value": "淡妆",
+            "confidence": "medium",
+            "reason": "可见面部肤色整体较均匀，眉眼修饰较轻，没有明显浓眼妆，按新规则归为淡妆。",
+            "basis": "user_requested_visual_heuristic"
+          }
+        },
+        "visible_lip_observation": "当前可见颜色中等深度，偏柔和玫瑰红。",
+        "makeup_observations": {
+          "skin_uniformity": "relatively_even",
+          "eye_visible": true,
+          "eye_makeup": "light"
+        }
+      },
+      "review_text": {
+        "basis": "same_folder_content_txt",
+        "source_object_key": "Data_clean_taobao/lancome_274/lancome_274_Cream/lancome_274_Cream_P3/content.txt",
+        "raw": "颜色还可以",
+        "source_sha256": "a11bb76277c64432a8c9a1beeea6da05ef89e03408a1194ad3c67070dae903d9",
+        "folder_photo_count": 1,
+        "fields": {
+          "lip": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "评论未自述此项。",
+            "evidence_quote": null,
+            "scope": "review_author",
+            "basis": "explicit_review_self_report_only"
+          },
+          "skin": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "评论未自述此项。",
+            "evidence_quote": null,
+            "scope": "review_author"
+          },
+          "makeup": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "评论未自述此项。",
+            "evidence_quote": null,
+            "scope": "review_author"
+          },
+          "application": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "评论未自述此项。",
+            "evidence_quote": null,
+            "scope": "review_author"
+          }
+        },
+        "topics": [
+          {
+            "tag": "颜色评价较正面",
+            "evidence_quote": "颜色还可以",
+            "scope": "selected_review",
+            "note": null
+          }
+        ],
+        "mapping_note": "本评论只有一张配图；短评没有提供唇色、肤色或妆容信息。"
+      },
+      "review_status": "awaiting_user_review",
+      "admitted_to_personalized_matching": false,
+      "labels": {
+        "basis": "field_specific_user_policy",
+        "fields": {
+          "lip": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "评论未明确自述原生唇色深浅，按新规则不从图片补猜。",
+            "evidence_quote": null,
+            "scope": "review_author",
+            "basis": "explicit_review_self_report_only"
+          },
+          "skin": {
+            "value": "白皙",
+            "confidence": "low",
+            "reason": "可见脸部明度较高，按日常感知归为白皙；照片光线可能影响判断。",
+            "basis": "image_observation"
+          },
+          "makeup": {
+            "value": "淡妆",
+            "confidence": "medium",
+            "reason": "可见面部肤色整体较均匀，眉眼修饰较轻，没有明显浓眼妆，按新规则归为淡妆。",
+            "basis": "user_requested_visual_heuristic"
+          }
+        }
+      }
+    },
+    {
+      "number": 4,
+      "sample_id": "sample-0f83789db03c1f83",
+      "product_key": "lancome-274",
+      "variant": "intimatte",
+      "product_label": "兰蔻 274 · Intimatte",
+      "source_platform": "淘宝",
+      "source_object_key": "Data_clean_taobao/lancome_274/lancome_274_Intimatte/lancome_274_Intimatte_P17/274_P17_2.jpg",
+      "source_image_sha256": "b253f0fd5d5cceb5ff9a266727027daba3d27683eb50cd1cbc1fc30a6e59643e",
+      "original_size": [
+        2315,
+        1959
+      ],
+      "preview_size": [
+        1400,
+        1185
+      ],
+      "image_path": "./data/tagging-pilot/pilot-4.jpg",
+      "preview_sha256": "9b58cbed225e1395b84d45959d1e51936b6b1c2bfb64420f84c72d43794be2f0",
+      "visual": {
+        "number": 4,
+        "basis": "image_only_user_requested_heuristic",
+        "fields": {
+          "skin": {
+            "value": "黄皮",
+            "confidence": "medium",
+            "reason": "可见面颊和颈部呈自然偏黄肤色，按日常感知归为黄皮；照片光线可能影响判断。",
+            "basis": "image_observation"
+          },
+          "makeup": {
+            "value": "素颜",
+            "confidence": "medium",
+            "reason": "面颊与口周可见局部红棕色差，肤色不均，按新规则归为素颜；此分支不因眼部未入镜改成淡妆。",
+            "basis": "user_requested_visual_heuristic"
+          }
+        },
+        "visible_lip_observation": "当前可见颜色中等深度，偏粉棕；下唇比上唇深。",
+        "makeup_observations": {
+          "skin_uniformity": "uneven",
+          "eye_visible": false,
+          "eye_makeup": "not_visible"
+        }
+      },
+      "review_text": {
+        "basis": "same_folder_content_txt",
+        "source_object_key": "Data_clean_taobao/lancome_274/lancome_274_Intimatte/lancome_274_Intimatte_P17/content.txt",
+        "raw": "颜色很好看 素颜浅涂了一下 我唇色本身有点深 这是涂了三四个小时的效果 、下次化妆再厚涂看看效果 保湿效果：还不错",
+        "source_sha256": "f6e930430a8f0aaed6eb88bddc3b3dd83915d1f1759180efecda2d69c0adbd4c",
+        "folder_photo_count": 3,
+        "fields": {
+          "lip": {
+            "value": "深唇",
+            "confidence": "high",
+            "reason": "买家明确描述自己的原生唇色偏深。",
+            "evidence_quote": "我唇色本身有点深",
+            "scope": "review_author",
+            "basis": "explicit_review_self_report_only"
+          },
+          "skin": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "评论未自述此项。",
+            "evidence_quote": null,
+            "scope": "review_author"
+          },
+          "makeup": {
+            "value": "素颜",
+            "confidence": "high",
+            "reason": "买家明确自述本次试色为素颜；尚未逐张指认配图。",
+            "evidence_quote": "素颜浅涂了一下",
+            "scope": "review_session"
+          },
+          "application": {
+            "value": "薄涂",
+            "confidence": "high",
+            "reason": "将“浅涂”归一为既有标签“薄涂”；厚涂是下次计划。",
+            "evidence_quote": "素颜浅涂了一下",
+            "scope": "review_session"
+          }
+        },
+        "topics": [
+          {
+            "tag": "颜色好评",
+            "evidence_quote": "颜色很好看",
+            "scope": "selected_review",
+            "note": null
+          },
+          {
+            "tag": "上妆后三四小时",
+            "evidence_quote": "这是涂了三四个小时的效果",
+            "scope": "review_session",
+            "note": null
+          },
+          {
+            "tag": "保湿评价正面",
+            "evidence_quote": "保湿效果：还不错",
+            "scope": "selected_review",
+            "note": null
+          }
+        ],
+        "mapping_note": "同评论共有三张配图，当前为图二。深唇属于作者自述；素颜、薄涂属于这次试色的文字描述，TXT 未逐张区分三张图。"
+      },
+      "review_status": "awaiting_user_review",
+      "admitted_to_personalized_matching": false,
+      "labels": {
+        "basis": "field_specific_user_policy",
+        "fields": {
+          "lip": {
+            "value": "深唇",
+            "confidence": "high",
+            "reason": "买家明确描述自己的原生唇色偏深。",
+            "evidence_quote": "我唇色本身有点深",
+            "scope": "review_author",
+            "basis": "explicit_review_self_report_only"
+          },
+          "skin": {
+            "value": "黄皮",
+            "confidence": "medium",
+            "reason": "可见面颊和颈部呈自然偏黄肤色，按日常感知归为黄皮；照片光线可能影响判断。",
+            "basis": "image_observation"
+          },
+          "makeup": {
+            "value": "素颜",
+            "confidence": "medium",
+            "reason": "面颊与口周可见局部红棕色差，肤色不均，按新规则归为素颜；此分支不因眼部未入镜改成淡妆。",
+            "basis": "user_requested_visual_heuristic"
+          }
+        }
+      }
+    },
+    {
+      "number": 5,
+      "sample_id": "sample-89834506020f370a",
+      "product_key": "lancome-275",
+      "variant": "unknown",
+      "product_label": "兰蔻 275",
+      "source_platform": "淘宝",
+      "source_object_key": "Data_clean_taobao/lancome_275/lancome_275_P12/275_P12_1.jpg",
+      "source_image_sha256": "a0f80d819429b64ecbf35b9b5767189bf4faf29d25e13bf661da1921e63d1748",
+      "original_size": [
+        2314,
+        2584
+      ],
+      "preview_size": [
+        1254,
+        1400
+      ],
+      "image_path": "./data/tagging-pilot/pilot-5.jpg",
+      "preview_sha256": "8cdd9ca4bdd09b2d64cb908eeda937a518a17dfbea94b672cf4f5e0fa86dcfd2",
+      "visual": {
+        "number": 5,
+        "basis": "image_only_user_requested_heuristic",
+        "fields": {
+          "skin": {
+            "value": "黄皮",
+            "confidence": "medium",
+            "reason": "可见面颊和颈部呈自然偏黄肤色，按日常感知归为黄皮；照片光线可能影响判断。",
+            "basis": "image_observation"
+          },
+          "makeup": {
+            "value": "素颜",
+            "confidence": "medium",
+            "reason": "面颊可见局部色斑、下巴有发红的痘点，肤色不均，按新规则归为素颜。",
+            "basis": "user_requested_visual_heuristic"
+          }
+        },
+        "visible_lip_observation": "当前可见颜色较深，偏红棕，有光泽。",
+        "makeup_observations": {
+          "skin_uniformity": "uneven",
+          "eye_visible": false,
+          "eye_makeup": "not_visible"
+        }
+      },
+      "review_text": {
+        "basis": "same_folder_content_txt",
+        "source_object_key": "Data_clean_taobao/lancome_275/lancome_275_P12/content.txt",
+        "raw": "真不知道那么多好评哪来的 我黄皮深唇 275真的不提气色 不显白 盖不住深唇❗️❗️",
+        "source_sha256": "28b8b858d14216adbf3ce445c4c9825e342baa7d1c59247a86dbf0a6e6acf820",
+        "folder_photo_count": 1,
+        "fields": {
+          "lip": {
+            "value": "深唇",
+            "confidence": "high",
+            "reason": "买家明确自述原生深唇。",
+            "evidence_quote": "我黄皮深唇",
+            "scope": "review_author",
+            "basis": "explicit_review_self_report_only"
+          },
+          "skin": {
+            "value": "黄皮",
+            "confidence": "high",
+            "reason": "买家明确自述“我黄皮”，按新的三类直接归为黄皮。",
+            "evidence_quote": "我黄皮深唇",
+            "scope": "review_author",
+            "basis": "explicit_review_self_report"
+          },
+          "makeup": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "评论未自述此项。",
+            "evidence_quote": null,
+            "scope": "review_author"
+          },
+          "application": {
+            "value": "不确定",
+            "confidence": "unknown",
+            "reason": "评论未自述此项。",
+            "evidence_quote": null,
+            "scope": "review_author"
+          }
+        },
+        "topics": [
+          {
+            "tag": "自述黄皮",
+            "evidence_quote": "我黄皮深唇",
+            "scope": "review_author",
+            "note": "按新的日常肤色分类，直接归类为“黄皮”。"
+          },
+          {
+            "tag": "未提气色",
+            "evidence_quote": "275真的不提气色",
+            "scope": "selected_review",
+            "note": null
+          },
+          {
+            "tag": "未显白",
+            "evidence_quote": "不显白",
+            "scope": "selected_review",
+            "note": null
+          },
+          {
+            "tag": "深唇遮盖不足",
+            "evidence_quote": "盖不住深唇",
+            "scope": "selected_review",
+            "note": "描述此买家的使用感受，不推断所有深唇用户。"
+          }
+        ],
+        "mapping_note": "本评论只有一张配图；“我黄皮深唇”明确说明作者的肤色与原生唇色，可关联当前评论配图。"
+      },
+      "review_status": "awaiting_user_review",
+      "admitted_to_personalized_matching": false,
+      "labels": {
+        "basis": "field_specific_user_policy",
+        "fields": {
+          "lip": {
+            "value": "深唇",
+            "confidence": "high",
+            "reason": "买家明确自述原生深唇。",
+            "evidence_quote": "我黄皮深唇",
+            "scope": "review_author",
+            "basis": "explicit_review_self_report_only"
+          },
+          "skin": {
+            "value": "黄皮",
+            "confidence": "high",
+            "reason": "买家明确自述“我黄皮”，按新的三类直接归为黄皮。",
+            "evidence_quote": "我黄皮深唇",
+            "scope": "review_author",
+            "basis": "explicit_review_self_report"
+          },
+          "makeup": {
+            "value": "素颜",
+            "confidence": "medium",
+            "reason": "面颊可见局部色斑、下巴有发红的痘点，肤色不均，按新规则归为素颜。",
+            "basis": "user_requested_visual_heuristic"
+          }
+        }
+      }
+    }
+  ],
+  "supersedes": "2026-10-06-pilot-v1",
+  "tagging_policy": {
+    "lip": {
+      "basis": "explicit_review_self_report_only",
+      "missing": "不确定",
+      "note": "原生唇色只取评论中明确的本人自述；不根据口红覆盖后的图片推断，不把针对他人的建议当作作者唇色。"
+    },
+    "skin": {
+      "allowed_user": [
+        "白皙",
+        "黄皮",
+        "黑皮"
+      ],
+      "basis": "explicit_review_self_report_then_image",
+      "yellow_skin_alias": "评论自述“黄皮”直接归类为“黄皮”。"
+    },
+    "makeup": {
+      "basis": "user_requested_visual_heuristic",
+      "steps": [
+        "可见面部肤色不均：素颜。",
+        "可见面部肤色较均匀：按妆后判断。",
+        "妆后且有明显浓眼妆：浓妆；轻眼妆：淡妆。",
+        "按妆后判断但眼部没有入镜：淡妆。"
+      ],
+      "note": "这是用户指定的试标规则；光线、滤镜和肤质会影响肤色均匀程度，规则标签不等同于已核实的实际化妆状态。"
+    }
+  }
+}

@@ -1,35 +1,45 @@
-# Five-image tagging pilot
+# Five-image tagging pilot, revision 2
 
-Preview: [tagging-pilot.html](../../tagging-pilot.html). Records:
-[tagging_pilot_v1.json](../catalog/tagging_pilot_v1.json).
+Preview: [tagging-pilot.html](../../tagging-pilot.html). Current records:
+[tagging_pilot_v2.json](../catalog/tagging_pilot_v2.json). The original
+[tagging_pilot_v1.json](../catalog/tagging_pilot_v1.json) remains an archive.
 
-These five Taobao review photos cover YSL 610, YSL 1936, Lancome 274 Cream,
+The five Taobao photos cover YSL 610, YSL 1936, Lancome 274 Cream,
 Lancome 274 Intimatte and Lancome 275. This is a user-review pilot, not a random
-accuracy benchmark. No accuracy has been calculated and the records are not used
-for production personalized matching.
+accuracy benchmark. No accuracy has been calculated. These records await user
+review and are not used for production personalized matching.
 
-Visual assessments were recorded separately before extracting the five selected
-comments. They remain independent of comment-derived labels. The original review
-text, filename, directory, image hash, confidence level and reasons are preserved
-in the records. Shared label options come from `data/catalog/tag_schema.json`.
-Confidence levels are qualitative assessments, not calibrated probabilities.
+User-requested revision:
 
-`lip` means native lip depth before lipstick. The current visible lip color is a
-separate observation; lipstick-covered pixels cannot establish native depth.
-`skin` describes appearance in the photograph, without lighting calibration.
-`makeup` is unknown when the visible crop does not provide sufficient evidence.
+- Skin categories are `白皙`, `黄皮`, `黑皮`, with `不确定` for missing evidence.
+  Explicit author self-report takes priority; the photograph supplements it.
+  `我黄皮` maps directly to `黄皮` under this everyday classification.
+- Native lip depth comes exclusively from explicit review-author self-report.
+  Missing self-report stays `不确定`; visible lipstick color does not fill it.
+- Makeup follows the requested visual heuristic. Uneven visible facial skin
+  color yields `素颜`. Relatively even skin yields a made-up candidate; prominent
+  eye makeup yields `浓妆`, light eye makeup yields `淡妆`, and absent eyes in
+  this made-up branch yield `淡妆`. Uneven skin takes precedence over absent eyes.
+  Illumination, filters, blur and natural skin appearance can affect the heuristic;
+  labels retain reasons and qualitative confidence and are not verified makeup facts.
 
-All 117 JPG files in the supplied Taobao archive have a same-folder `content.txt`,
-across 87 review folders. One comment can describe multiple photos. Explicit
-numbered-photo references must keep their scope: the YSL 1936 pilot comment
-describes layering only in image four, while its folder contains only image one.
-The Intimatte pilot comment explicitly self-reports deep native lips, a bare-face
-session and light application; its three attached photos are not individually
-identified in the text. `浅涂` is normalized to `薄涂`. The LC275 comment's `黄皮`
-is preserved as a quoted topic, since it does not uniquely identify one of the
-six skin options. Buyer complaints remain attributed claims, not verified facts.
+`labels.fields` stores the new field-specific result; `visual.fields` contains
+only image-derived skin/makeup labels, and `review_text.fields` retains text
+labels with exact quotes and scope. Original text, filename, source directory,
+image hash and previews are unchanged. Vocabulary and policies are documented
+in `data/catalog/tag_schema.json` (version `2026-10-06-v2`).
 
-The five JPEG previews preserve the full frame, resize only when needed, strip
-EXIF metadata and retain an existing ICC profile. Original files stay outside
-the checkout. User corrections stay in the browser and can be exported as JSON;
-the page does not submit them to a server or change the published predictions.
+All 117 supplied Taobao JPGs have same-folder `content.txt` across 87 review
+folders. Numbered-photo references retain their scope: the YSL 1936 pilot's
+layering comment refers only to image four, while the folder only contains image
+one. The Intimatte comment's deep-lip description applies to the author; bare
+face/light application describe the review session without individual photo
+identification. `浅涂` maps to `薄涂`; future planned thick application is not
+assigned to the present photo. Buyer complaints remain attributed claims.
+
+The five previews retain the complete frame and existing ICC profiles, with
+EXIF stripped. Originals stay outside Git. Revision-2 corrections are stored
+separately in the browser, preventing revision-1 judgments from silently being
+reused with the new rules. Exported JSON includes the combined predictions,
+separate image/text evidence and user corrections; no corrections are uploaded
+or used to modify published labels automatically.
