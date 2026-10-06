@@ -6,7 +6,8 @@ export function attachLibraryLabels(media, records) {
   return row?{...media,semanticTags:row.tags,labelFields:row.labels.fields,
     wearerProfileEvidence:row.wearer_profile_evidence,tagRecordId:row.id,
     reviewText:row.review_text,reviewFields:row.review_fields,textNotes:row.text_notes,
-    imageSize:row.image_size,useForColorReference:row.use_for_color_reference}:media;
+    imageSize:row.image_size,useForColorReference:row.use_for_color_reference,
+    sourceImageHash:row.source_image_sha256}:media;
 }
 
 export function profileTagMatch(media, profile) {

@@ -1,0 +1,196 @@
+{
+  "version": "2026-10-06-finish-v1",
+  "method": "Product/SKU descriptions checked against 12 sample photos and explicit original review statements. Contrary or mixed finish feedback retained. Mirror gloss is not glitter. 274 known variants remain isolated from unknown historical lipglazes.",
+  "products": {
+    "ysl-610": {
+      "kind": "gloss",
+      "label": "镜面光泽",
+      "note": "带有湿润的反光，保留唇纹与明暗，模拟镜面成膜的亮泽。",
+      "glossStrength": 0.24,
+      "basis": "product description, reviewed sample photos and explicit texture reviews; bounded visual simulation, not physical finish measurement",
+      "image_evidence": [
+        {
+          "id": "sample-840c6b222ce8d24a",
+          "source_object_key": "Data_clean_taobao/YSL_610/YSL_610_P13/610_P13_1.jpg",
+          "image_sha256": "19f7982811206e8e31d26308e35057291484334244d5a40f520347076d09f360"
+        },
+        {
+          "id": "sample-9e10e99c57cce8ce",
+          "source_object_key": "Data-XHS/YSL-610/YSL-610-P8/YSL-610-P8-1.jpg",
+          "image_sha256": "434ea731d5fde9dd8da7253bf13c064e6929c094d6ef24b47463d91867968405"
+        }
+      ],
+      "text_evidence": [
+        {
+          "review_id": "review-59a9e7040c87fb2b",
+          "quote": "纯欲镜面口红天花板！很喜欢！",
+          "variant": "unknown"
+        },
+        {
+          "review_id": "review-9d965342eda1e570",
+          "quote": "610一直在纠结买新版还是旧版 为了保险买了新版 很美丽的颜色 唇部不用打底液很显色 成膜以后光泽度很不错",
+          "variant": "unknown"
+        },
+        {
+          "review_id": "review-a680f9ae8c437b2b",
+          "quote": "直接不如老版亮，原来老版的镜面亮的没有平替，后来都是平替了，这新版买的特别失败。",
+          "variant": "unknown"
+        }
+      ]
+    },
+    "ysl-1936": {
+      "kind": "matte",
+      "label": "哑光",
+      "note": "柔和的哑光观感，保留原有唇纹。",
+      "glossStrength": 0,
+      "basis": "product description, reviewed sample photos and explicit texture reviews; bounded visual simulation, not physical finish measurement",
+      "image_evidence": [
+        {
+          "id": "sample-0cea014cf21db3dc",
+          "source_object_key": "Data_clean_taobao/YSL_1936/YSL_1936_P7/1936_P7_1.jpg",
+          "image_sha256": "5d227cdd1404213843e5f5cafaac8046d194d2022aefe17d804536b4b9f5eae6"
+        },
+        {
+          "id": "sample-0293ca70036a8bdc",
+          "source_object_key": "Data-XHS/YSL-1936/YSL-1936-P6/YSL-1936-P6-2.jpg",
+          "image_sha256": "52b1be5563015e4fafe670ff7252ba35fa7ce934fa3731ff4709824062f14831"
+        }
+      ],
+      "text_evidence": [
+        {
+          "review_id": "review-a9d46702794e961e",
+          "quote": "YSL1936琥珀柑茶，质地浓郁的红棕色，干净大气，涂上一整个简约干练的感觉！哑光质地，涂抹上嘴不拔干不显唇纹，好看喜欢",
+          "variant": "unknown"
+        }
+      ]
+    },
+    "lancome-274": {
+      "default_variant": "intimatte",
+      "variants": {
+        "cream": {
+          "kind": "matte",
+          "label": "哑光",
+          "note": "黑管版本按哑光呈现，不混用旧款镜面唇釉的质地。",
+          "glossStrength": 0,
+          "basis": "product description, reviewed sample photos and explicit texture reviews; bounded visual simulation, not physical finish measurement",
+          "image_evidence": [
+            {
+              "id": "sample-f2c6bdf3e8c5b59e",
+              "source_object_key": "Data_clean_taobao/lancome_274/lancome_274_Cream/lancome_274_Cream_P4/274_P4_1.jpg",
+              "image_sha256": "bf1e0c6d5433e666583c00e177d803ae6a485d9677491d5dd504f1fa07b2dc24"
+            },
+            {
+              "id": "sample-510a0442b06ea0ae",
+              "source_object_key": "Data_clean_taobao/lancome_274/lancome_274_Cream/lancome_274_Cream_P1/274_P1_1.jpg",
+              "image_sha256": "c90b3818463a5a3922c14f77927086ac3c3473ba5409745b915cab922c88cfbe"
+            }
+          ],
+          "text_evidence": []
+        },
+        "cream_gift": {
+          "kind": "soft_satin",
+          "label": "柔雾／轻缎光",
+          "note": "声色限定的图片和评价有轻微光泽差异，使用较弱的柔和反光。",
+          "glossStrength": 0.07,
+          "basis": "product description, reviewed sample photos and explicit texture reviews; bounded visual simulation, not physical finish measurement",
+          "image_evidence": [
+            {
+              "id": "sample-3f0a85293da459b7",
+              "source_object_key": "Data_clean_taobao/lancome_274/lancome_274_Cream_gift/lancome_274_Cream_gift_P8/274_P8_1.jpg",
+              "image_sha256": "4346118294dfff98c33ecfc9fc7d30b1816394ad88a3e0ce11d1deffda5a22a7"
+            },
+            {
+              "id": "sample-9b60c3fd2ea7862e",
+              "source_object_key": "Data_clean_taobao/lancome_274/lancome_274_Cream_gift/lancome_274_Cream_gift_P2/274_P2_2.jpg",
+              "image_sha256": "ce7c1f91e5a5f4c1d10dd4afa005a1a74dc3413f5878637ea20cf33c11a2ed3e"
+            }
+          ],
+          "text_evidence": [
+            {
+              "review_id": "review-022b91ade8b53258",
+              "quote": "通勤买的 哑光感 不染唇 颜色元气本来怕偏粉 但不会 黄一白可以驾驭 礼盒满满仪式感 总之很满意 好评",
+              "variant": "cream_gift"
+            },
+            {
+              "review_id": "review-fca164b85b8ead16",
+              "quote": "质地很滋润，涂上嘴唇有光泽感。",
+              "variant": "cream_gift"
+            },
+            {
+              "review_id": "review-cdabe2ad973e663f",
+              "quote": "不完全是哑光质地，容易掉，颜色也不对，和描述的不一样，不显肤色，偏豆沙色",
+              "variant": "cream_gift"
+            }
+          ]
+        },
+        "intimatte": {
+          "kind": "soft_matte",
+          "label": "柔雾哑光",
+          "note": "粉金管版本呈现柔雾哑光，保留唇纹与原有明暗。",
+          "glossStrength": 0.015,
+          "basis": "product description, reviewed sample photos and explicit texture reviews; bounded visual simulation, not physical finish measurement",
+          "image_evidence": [
+            {
+              "id": "sample-009bd87b1604fc6b",
+              "source_object_key": "Data_clean_taobao/lancome_274/lancome_274_Intimatte/lancome_274_Intimatte_P25/274_P25_1.jpg",
+              "image_sha256": "f9aa5cbd3b25666de01270af4fdee289b7a7b436f6e04c954eef2007860b61f8"
+            },
+            {
+              "id": "sample-53db531b2183fee1",
+              "source_object_key": "Data_clean_taobao/lancome_274/lancome_274_Intimatte/lancome_274_Intimatte_P8/274_P8_1.jpg",
+              "image_sha256": "ed7ee27fb6bf5f6981fbc399223c53872e2a452e0d395c95d2a61654f9a6e4e6"
+            }
+          ],
+          "text_evidence": [
+            {
+              "review_id": "review-4393933e5077958c",
+              "quote": "哑光的",
+              "variant": "intimatte"
+            },
+            {
+              "review_id": "review-9c5cede8faa92b51",
+              "quote": "橘，雾面橘，不是特别挑人，我黄皮274专柜买的，感觉什么时候都可以涂，我买的196这个雾面的要化妆才好看。以前黑管的196不化妆也好看",
+              "variant": "intimatte"
+            }
+          ]
+        }
+      }
+    },
+    "lancome-275": {
+      "kind": "soft_matte",
+      "label": "柔雾哑光",
+      "note": "根据样本常见的柔雾感呈现；评价中也有非雾面的个别反馈。",
+      "glossStrength": 0.015,
+      "basis": "product description, reviewed sample photos and explicit texture reviews; bounded visual simulation, not physical finish measurement",
+      "image_evidence": [
+        {
+          "id": "sample-d401b3ca80ab1387",
+          "source_object_key": "Data-XHS/lancome-275/lancome-275-P1/lancome-275-P1-2.jpg",
+          "image_sha256": "9b82af4589ad668edd38c4d52f8d264decbb0f86b81724aea6deb495a883fa5e"
+        },
+        {
+          "id": "sample-4512728e4ffbc633",
+          "source_object_key": "Data_clean_taobao/lancome_275/lancome_275_P2/275_P2_1.jpg",
+          "image_sha256": "67bb03dec28f1d7e8ae0fc85a518cedd1245e9cb51fa291f749ab8717cfd1c92"
+        }
+      ],
+      "text_evidence": [
+        {
+          "review_id": "review-efbd19cd38d1f5e5",
+          "quote": "低饱和色调，日常或通勤都很合适，轻薄的哑光雾面质地，上嘴基本无感，妆感自然自带氛围感，不会突显唇纹但也不会遮盖唇纹，就像是嘴唇本身气色好的感觉～就是每次取量很少，基本要取2-3次～",
+          "variant": "unknown"
+        },
+        {
+          "review_id": "review-ac1c8d20d9465d36",
+          "quote": "兰蔻275试色\n哑光但是不拔干",
+          "variant": "unknown"
+        },
+        {
+          "review_id": "review-2d3cccd38df432c6",
+          "quote": "我买的抹上不是雾面，不知道为啥",
+          "variant": "unknown"
+        }
+      ]
+    }
+  }
+}

@@ -2,6 +2,17 @@
 
 Serve the repository root with `python3 -m http.server 8000`.
 
+- `node tests/personal-color.test.mjs`: real-photo selection for 54 profile/version
+  combinations, confirmed-mismatch exclusion, exact version isolation, duplicate
+  removal, Lab conversion, median robustness, actual sample counts and finish provenance.
+- `node tests/lip-finish.test.mjs`: gloss/matte differences, retained local contrast,
+  unchanged face/teeth outside the mask, rotated reflection and empty-mask handling.
+- `python3 tests/test_personal_color.py`: desktop/mobile P1/P2 color and source
+  consistency, changed profiles despite cached product data, mirror/matte labels,
+  variant selection and honest sample scarcity. Landmark detection is a test double;
+  the real color catalog, sample selection and pixel rendering run unchanged.
+  `TRUETONE_TEST_URL` also supports the published site using verified HTTPS.
+
 - `node tests/library-tags.test.mjs`: all 175 label records, text priority,
   missing native-lip evidence, unchanged color exclusions, quality gating and
   joint ranking without changing color similarity.

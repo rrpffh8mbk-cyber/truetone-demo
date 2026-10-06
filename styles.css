@@ -223,7 +223,7 @@ body:not(.modal-open) #modal-backdrop[aria-hidden="true"]{
 .gateway-question>h2{font-family:var(--serif);font-size:clamp(34px,4vw,58px);margin:8px 0 12px}
 .gateway-question>p{color:var(--muted);max-width:720px;line-height:1.7}
 .gateway-cards{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:28px}
-.gateway-card{appearance:none;text-align:left;border:1px solid var(--line);background:linear-gradient(160deg,rgba(45,25,22,.45),rgba(11,10,9,.96));border-radius:22px;padding:30px;color:var(--text);cursor:pointer;min-height:220px;display:flex;flex-direction:column;gap:12px;transition:.2s transform,.2s border-color}
+.gateway-card{appearance:none;text-align:left;border:1px solid var(--line);background:linear-gradient(160deg,rgba(45,25,22,.45),rgba(11,10,9,.96));border-radius:22px;padding:30px;color:var(--ink);cursor:pointer;min-height:220px;display:flex;flex-direction:column;gap:12px;transition:.2s transform,.2s border-color}
 .gateway-card:hover{transform:translateY(-2px);border-color:#8d5d4d}
 .gateway-card b{font-family:var(--serif);font-size:28px;line-height:1.25}
 .gateway-card small{font-size:14px;color:var(--muted);line-height:1.7;max-width:520px}
@@ -247,7 +247,7 @@ body:not(.modal-open) #modal-backdrop[aria-hidden="true"]{
 .seed-preview{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:#120e0c}
 .seed-preview img{width:100%;height:100%;object-fit:cover}
 .seed-preview span{position:absolute;left:7px;bottom:7px;background:rgba(0,0,0,.68);padding:4px 7px;border-radius:999px;font-size:10px}
-.seed-textarea{width:100%;min-height:210px;margin-top:20px;border:1px solid var(--line);border-radius:18px;background:#100d0c;color:var(--text);padding:18px;font:inherit;line-height:1.75;resize:vertical}
+.seed-textarea{width:100%;min-height:210px;margin-top:20px;border:1px solid var(--line);border-radius:18px;background:#100d0c;color:var(--ink);padding:18px;font:inherit;line-height:1.75;resize:vertical}
 .seeded-text-card>small{display:block;color:var(--muted);margin-top:10px}
 .seed-run{margin:0 30px 30px;width:calc(100% - 60px)}
 .seed-report{max-width:1220px;margin:34px auto 80px}
@@ -318,3 +318,25 @@ body:not(.modal-open) #modal-backdrop[aria-hidden="true"]{
 .family-claim:first-of-type{border-top:0}
 @media(max-width:760px){.variant-card-grid{grid-template-columns:1fr}}
 .usage-table-wrap{overflow-x:auto;margin-top:16px}.usage-table{border-collapse:collapse;width:100%;font-size:13px;min-width:640px}.usage-table th,.usage-table td{text-align:left;padding:12px;border-bottom:1px solid var(--line);vertical-align:top}.usage-table td:first-child{overflow-wrap:anywhere;max-width:360px}.sample-usage summary{cursor:pointer;padding:12px 0}.sample-usage h2{font-size:clamp(22px,3vw,30px)}
+
+/* Real-photo color references and a visual indication of the product finish. */
+.finish-swatch{position:relative;overflow:hidden;flex-shrink:0;background:var(--personal-color)}
+.finish-swatch[data-finish="gloss"]::after{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse 38% 11% at 40% 25%,rgba(255,255,255,.72),rgba(255,255,255,.18) 55%,transparent 100%),radial-gradient(ellipse 48% 16% at 52% 72%,rgba(255,255,255,.35),transparent 100%);transform:rotate(-12deg)}
+.finish-swatch[data-finish="soft_satin"]::after{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse 55% 25% at 42% 32%,rgba(255,255,255,.18),transparent 100%)}
+.preview-variant-picker{display:grid;gap:8px;margin:14px 0 20px;min-width:0}
+.preview-variant-picker select{width:100%;max-width:100%;min-width:0}
+.preview-variant-picker small{color:var(--muted);line-height:1.6}
+.personal-color-section{min-width:0}
+.personal-color-section .direction-swatch-wrap{align-items:center}
+.personal-color-section p,.preview-caption p{line-height:1.75;overflow-wrap:anywhere}
+.finish-label{color:var(--gold);margin:7px 0}
+.personal-color-headline{font-weight:600;color:var(--ink)}
+.personal-color-copy,.personal-color-method,.finish-copy{color:var(--muted)}
+.color-evidence{margin:18px 0;border-top:1px solid var(--line);padding-top:14px}
+.color-evidence summary{cursor:pointer;color:var(--gold);line-height:1.6}
+.color-evidence p{font-size:13px;color:var(--muted);line-height:1.7}
+.personal-color-samples{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:16px}
+.personal-color-samples figure{margin:0;min-width:0}
+.personal-color-samples img{width:100%;height:145px;object-fit:contain;background:#17120f;border-radius:12px;display:block}
+.personal-color-samples figcaption{font-size:12px;line-height:1.6;color:var(--muted);margin-top:7px;overflow-wrap:anywhere}
+@media(max-width:760px){.personal-color-samples{grid-template-columns:repeat(2,minmax(0,1fr))}.personal-color-samples img{height:125px}.preview-variant-picker select{font-size:14px}}
