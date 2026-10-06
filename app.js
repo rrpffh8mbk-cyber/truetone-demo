@@ -3,7 +3,7 @@ import {extractAuthorTags,reviewTextAssessment} from './review-text.js?v=2026100
 import {attachLibraryLabels,profileTagAssessment,rankReferenceMedia} from './library-tags.js?v=20261006-personal-color-v5';
 import {compareUploadedColors,compareLipColor,deltaE2000} from './color-similarity.js?v=20261006-official-v3';
 import {analyzeEvidenceFile} from './lip-selection.js?v=20261006-official-v3';
-import {runFourAgents,buildProductConsumerSummary,hsvToHex,ANALYSIS_KEYWORDS,circularHueDistance} from './agents.js?v=20261006-personal-color-v5';
+import {runFourAgents,buildProductConsumerSummary,hsvToHex,ANALYSIS_KEYWORDS,circularHueDistance} from './agents.js?v=20261006-consumer-v6';
 import {createVirtualTryOn} from './tryon.js?v=20261006-natural-gloss-v6';
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -627,43 +627,87 @@ function imageRiskAssessment(p,analyses,visual){
  if(!reliable)referenceScore=Math.min(referenceScore,35);
  return {referenceScore,riskScore,colorSimilarity,corpusAgreement,signals,reliable,total:analyses.length,sufficiency:reliable===analyses.length?'高':reliable?'中':'低'};
 }
+function imageToneDirection(analyses){
+ const hues=analyses.map(a=>a.metrics?.hue).filter(Number.isFinite);
+ if(!hues.length)return {label:'无法判断',confidence:'low'};
+ let x=0,y=0;
+ hues.forEach(h=>{const r=h*Math.PI/180;x+=Math.cos(r);y+=Math.sin(r)});
+ const hue=(Math.atan2(y,x)*180/Math.PI+360)%360;
+ if(hue>=5&&hue<=42)return {label:'偏暖',hue,confidence:'medium'};
+ if(hue>=315||hue<5)return {label:'偏冷/偏粉紫',hue,confidence:'medium'};
+ return {label:'中性或混合',hue,confidence:'low'};
+}
 function crossModalAssessment(textReport,analyses){
- if(!textReport||!analyses.length)return {score:null,notes:[],tested:0};
- const t=textReport.assessment?String(textReport.assessment.rawText||''):''; // kept for schema compatibility
+ if(!textReport||!analyses.length)return {score:null,notes:[],tested:0,status:'missing'};
  const notes=[];let score=100,tested=0;
  const raw=String(textReport.rawText||'');
- const actual=[...new Set(analyses.map(a=>a.metrics?.lighting).filter(Boolean))];
+ const metrics=analyses.map(a=>a.metrics||{}).filter(Boolean);
+ const actualLights=[...new Set(metrics.map(m=>m.lighting).filter(Boolean))];
 
- const claimed=textReport.tags?.lighting;
- if(claimed){
+ // 1) Explicit warm/cool light claims can be checked against the image signal.
+ const claimedLight=textReport.tags?.lighting;
+ if(claimedLight==='室内暖光'||claimedLight==='室内冷光'){
   tested++;
-  const ok=claimed==='自然光'
-   ? actual.every(x=>x==='中性光')
-   : claimed==='室内暖光'?actual.every(x=>x==='暖光')
-   : claimed==='室内冷光'?actual.every(x=>x==='冷光'):true;
-  if(!ok){score-=25;notes.push('文案写的是“'+claimed+'”，但图片检测到的光线更接近 '+actual.join(' / ')+'。')}
-  else notes.push('文案中的光线说明与图片检测结果基本一致。');
+  const expected=claimedLight==='室内暖光'?'暖光':'冷光';
+  const ok=actualLights.length>0&&actualLights.every(x=>x===expected);
+  if(ok)notes.push('文案中的“'+claimedLight+'”与图片检测到的光线方向基本一致。');
+  else{score-=25;notes.push('文案写的是“'+claimedLight+'”，但图片检测到的光线更接近 '+(actualLights.join(' / ')||'无法稳定判断')+'。')}
+ }else if(claimedLight==='自然光'){
+  notes.push('文案提到“自然光”，但仅凭成片无法可靠证明光源类型；系统只展示检测到的冷暖倾向，不自动加分。');
  }
 
- if(/同一天同光线|同一光线|同光线/.test(raw)&&analyses.length>1){
+ // 2) "Same lighting" across multiple images is directly testable at a coarse level.
+ if(/同一天同光线|同一光线|同光线|同样光线/.test(raw)&&analyses.length>1){
   tested++;
-  const br=analyses.map(a=>a.metrics?.sceneBrightness).filter(Number.isFinite);
-  const mismatch=actual.length>1||(br.length>1&&Math.max(...br)-Math.min(...br)>20);
-  if(mismatch){score-=30;notes.push('文案声称多张图片在同一光线下，但图片之间的光线/明暗差异较明显。')}
-  else notes.push('多张图片的光线与明暗基本支持“同光线”描述。');
+  const br=metrics.map(m=>m.sceneBrightness).filter(Number.isFinite);
+  const sat=metrics.map(m=>m.sceneSaturation).filter(Number.isFinite);
+  const mismatch=actualLights.length>1
+    ||(br.length>1&&Math.max(...br)-Math.min(...br)>20)
+    ||(sat.length>1&&Math.max(...sat)-Math.min(...sat)>22);
+  if(mismatch){score-=30;notes.push('文案声称多张图片处于同一光线，但图片之间的冷暖、明暗或饱和度差异较明显。')}
+  else notes.push('多张图片的冷暖、明暗与饱和度基本支持“同光线”描述。');
  }
 
+ // 3) Broad colour-direction claims: intentionally coarse, never treated as proof.
+ const tone=imageToneDirection(analyses);
+ const warmClaim=/偏橘|橘调|橙调|暖调|偏棕|棕调|奶茶调|裸茶|杏仁奶茶/.test(raw);
+ const coolClaim=/偏粉|粉调|粉嫩|冷调|偏紫|紫调|玫红|梅子调/.test(raw);
+ if(warmClaim!==coolClaim&&tone.confidence!=='low'){
+  tested++;
+  const expected=warmClaim?'偏暖':'偏冷/偏粉紫';
+  const ok=tone.label===expected;
+  if(ok)notes.push('文案描述的综合色调方向（'+expected+'）与图片中的唇色方向基本一致。');
+  else{score-=18;notes.push('文案把颜色描述为“'+expected+'”，但图片中的唇色方向更接近“'+tone.label+'”。这可能来自光线、后期或个体唇色差异。')}
+ }
+
+ // 4) "Sheer/soft" vs "rich/vivid" can be checked only as a coarse saturation cue.
+ const lipSats=metrics.map(m=>m.saturation).filter(Number.isFinite);
+ const medSat=lipSats.length?[...lipSats].sort((a,b)=>a-b)[Math.floor(lipSats.length/2)]:null;
+ const sheerClaim=/清透|低饱和|淡淡|很淡|柔和|薄透|粉嫩清透/.test(raw);
+ const richClaim=/高饱和|浓郁|很浓|鲜艳|浓烈/.test(raw);
+ if(Number.isFinite(medSat)&&sheerClaim!==richClaim){
+  tested++;
+  const ok=sheerClaim?medSat<=48:medSat>=45;
+  if(ok)notes.push('文案对颜色浓淡的描述与图片唇部饱和度方向基本一致。');
+  else{score-=15;notes.push('文案对“'+(sheerClaim?'清透/低饱和':'浓郁/高饱和')+'”的描述，与图片唇部饱和度方向不完全一致。')}
+ }
+
+ // 5) Absolute claims are not validated merely because a photo exists.
  if(/完全没色差|和图片一模一样|实物和图一样/.test(raw)){
   tested++;
-  const colorScores=analyses.map(a=>a.metrics?.roiDetected?1:0);
-  if(colorScores.some(Boolean)){notes.push('“完全没色差”属于无法仅凭上传照片证明的绝对说法，已在文字风险中单独降权。');score-=10}
+  score-=10;
+  notes.push('“完全没色差 / 和实物一模一样”无法由上传图片单独证明，属于需要额外实物证据的绝对说法。');
+ }
+ if(/原相机|无滤镜|没滤镜|零修图|没修图/.test(raw)){
+  notes.push('“原相机 / 无滤镜 / 零修图”无法仅凭最终成片被可靠验证，因此不会自动增加图文一致性分。');
  }
 
- if(/原相机|无滤镜|没滤镜/.test(raw)){
-  notes.push('“原相机/无滤镜”无法仅凭单张成片被可靠验证，因此不会自动加可信分。');
- }
-
- return {score:tested?clampScore(score):null,notes,tested};
+ const finalScore=tested?clampScore(score):null;
+ return {
+  score:finalScore,notes,tested,
+  status:tested?'tested':'no_direct_claim',
+  tone
+ };
 }
 function trustVerdict(score){
  if(!Number.isFinite(score))return '当前证据不足，暂时无法形成稳定判断。';
@@ -709,7 +753,7 @@ function imageDetailEvidence(p,analyses,distEntry){
    notes.push(`与 ${match.officialLabel||'官方标准图'} 的唇部颜色比较：感知色差 ΔE00 ${match.deltaE}，颜色相似度 ${match.score}/100。`);
    if(match.variantUnspecified)notes.push('274 产品线未确认：这里只显示与三个官方标准图中最接近者的颜色相似度，不据此判断产品版本。');
    notes.push(match.score===0?'唇部颜色与官方标准图明显不同，不能用它代表该色号的颜色。':match.score<50?'唇部颜色与官方标准图差异较大。':'唇部颜色与官方标准图较接近，但这不是真实性结论。');
-  }else notes.push('缺少可靠唇部选区或自动重算的样本基准，未计算相似度。');
+  }else notes.push('缺少可靠唇部选区或当前可用参考样本，因此未计算颜色相似度。');
   return {index:i+1,view:x.views?.original,roi:x.views?.roi,lighting:m.lighting,notes};
  });
 }
@@ -953,7 +997,7 @@ function renderSeededResult({p,profile,rawText,analyses,visual,textReport,imageR
  const dbDetail=databaseComparisonDetails(p,profile,rawText,evidenceEntry,distEntry,imageReport,textReport);
  const dbList=dbDetail.items.map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>这次没有足够可比较的数据库证据，因此没有强行给出一致性结论。</li>';
  const crossHtml=hasImage&&hasText
-  ? `<section class="deep-explain-card"><div class="section-head"><div><div class="eyebrow">图片和文字互相支持吗？</div><h2>${Number.isFinite(crossModal?.score)?'图文一致性 '+crossModal.score+'/100':'当前没有足够可直接核验的图文声明'}</h2></div><p>只核对能够从图片验证的说法；“原相机”“无滤镜”等无法从成片可靠证明的声明不会自动加分。</p></div><ul class="database-detail-list">${(crossModal?.notes||[]).map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>当前文字没有提供可由图片直接核对的具体条件。</li>'}</ul></section>`
+  ? `<section class="deep-explain-card"><div class="section-head"><div><div class="eyebrow">图片和文字互相支持吗？</div><h2>${Number.isFinite(crossModal?.score)?'图文可核验一致性 '+crossModal.score+'/100':'本次没有可直接核验的图文声明'}</h2></div><p>系统会核对可从图片粗略验证的光线、综合色调、浓淡和多图条件；无法从成片证明的“原相机 / 无滤镜”等声明不会自动加分。</p></div><ul class="database-detail-list">${(crossModal?.notes||[]).map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>这段文字没有描述可由当前图片分析直接核对的光线、综合色调或浓淡条件，因此本项不参与总分，也不会被当成失败。</li>'}</ul></section>`
   :'';
 
  $('#seed-result').innerHTML=`
@@ -964,7 +1008,7 @@ function renderSeededResult({p,profile,rawText,analyses,visual,textReport,imageR
     <div><span>图片参考价值</span><b>${hasImage?(imageReport?.referenceScore??'无法判断'):'未提供'}</b></div>
     <div><span>文字参考价值</span><b>${hasText?textReport.referenceScore:'未提供'}</b></div>
     <div><span>真实样本一致性</span><b>${Number.isFinite(databaseAgreement)?databaseAgreement:'证据不足'}</b></div>
-    <div><span>图文一致性</span><b>${hasImage&&hasText?(Number.isFinite(crossModal?.score)?crossModal.score:'无法核验'):'未同时提供'}</b></div>
+    <div><span>图文可核验一致性</span><b>${hasImage&&hasText?(Number.isFinite(crossModal?.score)?crossModal.score:'无可核验声明'):'未同时提供'}</b></div>
     <div><span>与你的相关性</span><b>${personal.score}</b></div>
    </div>
   </div>
@@ -984,7 +1028,7 @@ function renderSeededResult({p,profile,rawText,analyses,visual,textReport,imageR
 
   ${crossHtml}
 
-  ${hasImage?`<section class="deep-explain-card"><div class="section-head"><div><div class="eyebrow">图片分数到底怎么来的</div><h2>逐张查看自动选区、光线和颜色差异</h2></div><p>颜色仍使用队友新版的自动唇部分割 + CIEDE2000；但它现在只是图片参考价值的一部分，不再冒充“真实性概率”。</p></div><div class="image-evidence-list">${imageDetailsHtml}</div></section>`:''}
+  ${hasImage?`<section class="deep-explain-card"><div class="section-head"><div><div class="eyebrow">图片分数到底怎么来的</div><h2>逐张查看自动选区、光线和颜色差异</h2></div><p>颜色分析采用自动唇部分割 + CIEDE2000 感知色差；它只用于判断图片的颜色参考价值，不等同于内容真实性。</p></div><div class="image-evidence-list">${imageDetailsHtml}</div></section>`:''}
   ${sampleUsageHtml(p)}
 
   ${p.key==='lancome-274'?variant274Html(evidenceEntry,rawText):''}
@@ -1335,7 +1379,7 @@ function addVerify(fs){verifyFiles.push(...fs.filter(f=>f.type.startsWith('image
 function renderVerifyPreviews(){const el=$('#previews');el.innerHTML=verifyFiles.map((f,i)=>`<div class="preview-card"><button class="remove-file" data-i="${i}">×</button><img src="${URL.createObjectURL(f)}" onload="window.URL.revokeObjectURL(this.src)"><div class="meta">${esc(f.name)}</div></div>`).join('');$$('.remove-file').forEach(b=>b.onclick=e=>{e.preventDefault();verifyFiles.splice(+b.dataset.i,1);renderVerifyPreviews()});$('#run-verify').disabled=!verifyFiles.length}
 async function runVerify(){const btn=$('#run-verify');btn.disabled=true;verifyAnalyses=[];$('#agent-run').classList.remove('hidden');const steps=$$('.agent-step');steps.forEach(x=>x.className='agent-step');steps[0].classList.add('active');for(let i=0;i<verifyFiles.length;i++){verifyAnalyses.push(await analyzeEvidenceFile(verifyFiles[i]));$('#vprogress').style.width=((i+1)/verifyFiles.length*55)+'%'}steps[0].className='agent-step done';steps[1].className='agent-step active';let p=null;if($('#match-product').value)p=await getProduct($('#match-product').value);await wait(220);const report=runFourAgents(verifyAnalyses,p);steps[1].className='agent-step done';steps[2].className='agent-step active';await wait(180);steps[2].className='agent-step done';steps[3].className='agent-step active';await wait(150);steps[3].className='agent-step done';$('#vprogress').style.width='100%';renderVerifyResults(report);btn.disabled=false;btn.textContent='重新分析'}
 function renderVerifyResults(r){const ranked=verifyAnalyses.map((x,i)=>({x,i,score:r.comparison.perImage[i]?.score})).filter(q=>Number.isFinite(q.score)).sort((a,b)=>b.score-a.score);$('#verify-results').innerHTML=`<section class="report-hero"><div class="panel"><div class="eyebrow">分析完成</div><div class="conclusion">${esc(r.summary)}</div><div class="plain-note">已比较 ${r.comparison.compared}/${verifyAnalyses.length} 张图片；未识别到唇部的图片不参与评分</div></div><div class="panel score-panel"><div class="score-ring" style="--score:${r.score??0}"><b>${r.score??'—'}</b></div><div class="score-label"><strong>颜色相似度</strong>根据唇部感知色差计算，不是真实性概率。</div></div></section><section class="panel report-section"><h3>最值得参考的上传图片</h3><div class="top-media">${ranked.slice(0,3).map((q,n)=>`<article class="media-card"><img src="${q.x.views.original}"><div class="media-card-body"><div class="rank">#${n+1} · ${q.score}/100</div><div class="source-line">${q.x.metrics.lighting}</div><div class="reason">${q.x.metrics.lighting} · 点击下方“查看图片分析依据”可看详细数值</div></div></article>`).join('')}</div></section><section class="panel report-section"><h3>查看图片分析依据</h3><div class="filter-row" id="diag-tabs">${verifyAnalyses.map((x,i)=>`<button class="filter-btn ${i?'':'active'}" data-img="${i}">图 ${i+1}</button>`).join('')}</div><div id="diag"></div></section><section class="details-grid"><div class="panel"><h3>为什么是这个分数？</h3>${r.findings.map(f=>`<div class="finding"><span class="severity ${f.severity}">${f.severity}</span><div><strong>${esc(f.type)}</strong><p>${esc(f.evidence)} · ${esc(f.impact)}</p></div></div>`).join('')||'<div class="plain-note">未触发明显视觉风险；仍不代表“绝对真实”。</div>'}</div><div class="panel"><h3>给内容创作者的改进建议</h3>${r.suggestions.map(s=>`<div class="review"><p><b>${esc(s.title)}</b><br>${esc(s.why)}<br><span style="color:var(--gold)">预期改善：</span>${esc(s.impact)}</p></div>`).join('')}</div></section>`;$$('#diag-tabs .filter-btn').forEach(b=>b.onclick=()=>showDiag(+b.dataset.img));showDiag(0)}
-function showDiag(i){const x=verifyAnalyses[i];$$('#diag-tabs .filter-btn').forEach((b,n)=>b.classList.toggle('active',n===i));$('#diag').innerHTML=`<div class="diagnostic-tabs"><button class="tab-btn active" data-v="original">原图</button><button class="tab-btn" data-v="roi">识别的唇部区域</button><button class="tab-btn" data-v="saturation">浓淡</button><button class="tab-btn" data-v="brightness">明暗</button><button class="tab-btn" data-v="composite">综合查看</button></div><div class="diag-view"><img id="diag-img" src="${x.views.original}"></div><div class="plain-note" style="margin-top:10px">拍摄环境：${x.metrics.lighting}。${x.metrics.roiDetected===false?esc(x.metrics.roiReason):(x.metrics.roiSource==='selected-lips'?'正在分析你标记的唇部。':'已识别唇部，排除口腔内部。')}详细颜色数值仅作为内部比较依据。</div>`;$$('[data-v]').forEach(b=>b.onclick=()=>{$$('[data-v]').forEach(z=>z.classList.remove('active'));b.classList.add('active');$('#diag-img').src=x.views[b.dataset.v]})}
+function showDiag(i){const x=verifyAnalyses[i];$$('#diag-tabs .filter-btn').forEach((b,n)=>b.classList.toggle('active',n===i));$('#diag').innerHTML=`<div class="diagnostic-tabs"><button class="tab-btn active" data-v="original">原图</button><button class="tab-btn" data-v="roi">识别的唇部区域</button><button class="tab-btn" data-v="saturation">浓淡</button><button class="tab-btn" data-v="brightness">明暗</button><button class="tab-btn" data-v="composite">综合查看</button></div><div class="diag-view"><img id="diag-img" src="${x.views.original}"></div><div class="plain-note" style="margin-top:10px">拍摄环境：${x.metrics.lighting}。${x.metrics.roiDetected===false?esc(x.metrics.roiReason):(x.metrics.roiSource==='selected-lips'?'正在分析你标记的唇部。':'已识别唇部，排除口腔内部。')}详细颜色数值仅用于辅助比较，不代表实物的绝对颜色。</div>`;$$('[data-v]').forEach(b=>b.onclick=()=>{$$('[data-v]').forEach(z=>z.classList.remove('active'));b.classList.add('active');$('#diag-img').src=x.views[b.dataset.v]})}
 
 async function tryon(){
  await getManifest();const param=new URLSearchParams((location.hash.split('?')[1]||''));const preset=param.get('p')||'ysl-610';page(`<div class="route-head"><a class="backlink" href="#/">← 首页</a><div class="eyebrow" style="margin-top:22px">自拍个性化试色</div><h1>别问“它适不适合所有人”。<br>先看它在这张自拍里可能怎么呈现。</h1><p>只分析当前照片中的颜色、光照与唇部位置；不推断种族、年龄、身份、健康或颜值。</p></div><section class="tryon-layout"><label class="photo-stage" id="selfie-stage"><input id="selfie-input" type="file" accept="image/png,image/jpeg,image/webp" hidden><div class="empty-stage" id="selfie-empty"><div class="upload-icon">＋</div><h3>上传自然光、无滤镜、嘴唇清晰的正脸自拍</h3><p>自拍仅用于本次浏览器内分析，不上传。</p></div><img id="selfie-img" class="hidden"><div class="toggle hidden" id="try-toggle" style="position:absolute;left:14px;bottom:14px"><button class="active" data-show="tryon">颜色预览</button><button data-show="original">原自拍</button></div></label><aside class="panel try-controls"><div><div class="eyebrow">Step 1</div><h3>选择色号</h3><div class="choice-grid" id="try-products">${manifest.products.map(p=>`<button class="choice ${p.key===preset?'active':''}" data-p="${p.key}"><b>#${p.shade}</b><br><small>${esc(p.brand)} · ${esc(p.name)}</small></button>`).join('')}</div></div><div><div class="eyebrow">Step 2 · 可选</div><h3>告诉我们你的使用情况</h3><div class="form-row"><select class="select" id="lip-prof"><option value="all">唇色：不确定</option><option>浅唇</option><option>深唇</option></select><select class="select" id="tone-prof"><option value="auto">冷暖：按照片</option><option value="warm">偏暖</option><option value="neutral">中性</option><option value="cool">偏冷</option></select></div><button class="primary-btn" id="run-try" disabled>分析这张自拍的拍摄情况</button><input id="debug" type="checkbox" hidden></div><div class="quality-list" id="quality"></div></aside></section><div id="try-results"></div>`);
