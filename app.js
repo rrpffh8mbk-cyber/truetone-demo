@@ -555,7 +555,7 @@ function extractSeedTextSignals(text,p,evidenceEntry=null){
  if(informationScore<20)referenceScore=Math.min(referenceScore,38);
  else if(informationScore<35)referenceScore=Math.min(referenceScore,52);
 
- if(informationScore<20)flags.unshift('文字信息量很低：缺少可核验的肤色/唇色、涂法、光线、质地或实际使用体验');
+ if(informationScore<20)flags.unshift('文字信息量很低：像“牛逼 / 绝了 / 好看”这类情绪评价本身不能证明内容可靠；缺少可核验的肤色/唇色、涂法、光线、质地或实际使用体验');
  else if(informationScore<40)flags.unshift('文字提供的可核验细节较少，不能只凭这段话做购买判断');
 
  return {
@@ -854,16 +854,16 @@ async function runSeededAnalysis(){
  const result=$('#seed-result'),run=$('#seed-run'),profile=getUserProfile();
  if(!purchaseTargetKey||!profile)return;
  const rawText=($('#seed-text')?.value||'').trim();
- run.disabled=true;run.textContent='正在自动识别唇部并比较颜色…';
+ run.disabled=true;run.textContent=seededFiles.length&&rawText?'正在交叉检查图片与文字…':seededFiles.length?'正在检查图片证据…':'正在核对文字证据…';
 
  result.innerHTML=`<section class="consumer-progress">
    <div class="eyebrow">试色有谱正在检查</div>
-   <h2>自动识别上传图片的唇部，再对照官方标准色和筛选后的样本。</h2>
+   <h2>分别检查图片、文字、真实样本库和与你的相关性。</h2>
    <div class="human-progress">
      <div class="hp active">读取上传内容</div>
      <div class="hp">自动识别唇部（首次加载稍慢）</div>
      <div class="hp">核对文字与真实消费者反馈</div>
-     <div class="hp">与对应官方标准色比较</div>
+     <div class="hp">与真实样本库交叉核对</div>
      <div class="hp">计算与你的参考相关性</div>
    </div>
    <div class="progress"><i id="seed-progress-bar"></i></div>
