@@ -1,7 +1,7 @@
 import {buildPersonalColor,personalColorCopy,personalSampleCopy,defaultPreviewVariant,PREVIEW_VARIANTS} from './personal-color.js?v=20261006-brand-v9';
-import {extractAuthorTags} from './review-text.js?v=20261006-personal-color-v5';
+import {extractAuthorTags,reviewTextAssessment} from './review-text.js?v=20261006-personal-color-v5';
 import {attachLibraryLabels,profileTagAssessment,rankReferenceMedia} from './library-tags.js?v=20261006-personal-color-v5';
-import {compareUploadedColors,compareLipColor} from './color-similarity.js?v=20261006-official-v3';
+import {compareUploadedColors,compareLipColor,deltaE2000} from './color-similarity.js?v=20261006-official-v3';
 import {analyzeEvidenceFile} from './lip-selection.js?v=20261006-official-v3';
 import {runFourAgents,buildProductConsumerSummary,hsvToHex,ANALYSIS_KEYWORDS,circularHueDistance} from './agents.js?v=20261006-personal-color-v5';
 import {createVirtualTryOn} from './tryon.js?v=20261006-natural-gloss-v6';
@@ -479,34 +479,92 @@ async function selfieHome(){
  updateRunState();run.onclick=runConsumerJourney;
 }
 
-function extractSeedTextSignals(text,p){
- const t=String(text||'').trim(),kw=p.analysis?.keywordCounts||{},flags=[],strengths=[],tags={lip:'',skin:'',makeup:'',lighting:'',application:''};
- const authorTags=extractAuthorTags(t);
+function clampScore(v,min=0,max=100){return Math.round(Math.max(min,Math.min(max,Number(v)||0)))}
+function evidenceLevelFromScore(v){return v>=70?'高':v>=40?'中':'低'}
+function corpusClaimAgreement(assessment,evidenceEntry){
+ const claims=evidenceEntry?.claims||{},rows=[];
+ for(const [key,claim] of Object.entries(assessment?.claims||{})){
+  const corpus=claims[key];
+  if(!corpus)continue;
+  const support=Number(corpus.support_count)||0,oppose=Number(corpus.oppose_count)||0,total=support+oppose;
+  if(!total)continue;
+  const matching=claim.stance==='support'?support:oppose;
+  rows.push({
+   key,label:corpus.label||key,stance:claim.stance,
+   score:Math.round(matching/total*100),
+   matching,total,support,oppose,quote:claim.evidence_quote||''
+  });
+ }
+ if(!rows.length)return {score:null,rows:[]};
+ const weight=rows.reduce((s,r)=>s+r.total,0);
+ return {score:Math.round(rows.reduce((s,r)=>s+r.score*r.total,0)/weight),rows};
+}
+function extractSeedTextSignals(text,p,evidenceEntry=null){
+ const t=String(text||'').trim(),flags=[],strengths=[],riskSignals=[],tags={lip:'',skin:'',makeup:'',lighting:'',application:''};
+ const assessment=reviewTextAssessment(t);
+ const authorTags=assessment.authorTags||extractAuthorTags(t);
  for(const [field,label] of Object.entries(authorTags))tags[field]=label.value;
- for(const [field,values] of Object.entries({lighting:[['自然光',/自然光|日光/],['室内暖光',/暖光|黄光/],['室内冷光',/冷光|白光/]],application:[['薄涂',/薄涂/],['厚涂',/厚涂/]]})){
+
+ for(const [field,values] of Object.entries({
+  lighting:[['自然光',/自然光|日光/],['室内暖光',/暖光|黄光/],['室内冷光',/冷光|白光/]],
+  application:[['薄涂',/薄涂/],['厚涂',/厚涂/],['正常涂',/正常涂|一层/]]
+ })){
   const hit=values.find(([,pattern])=>pattern.test(t));if(hit)tags[field]=hit[0];
  }
- const hype=[
-  [/闭眼冲|无脑冲|谁涂谁好看|谁涂谁显白/,'用了过于绝对的推荐语'],
-  [/全世界最好|天花板|封神|绝绝子/,'使用了强烈营销式表达'],
-  [/所有.*(?:黄皮|白皮|深唇|浅唇)|任何人都/,'把个体差异说成了人人适用']
+
+ const addRisk=(type,severity,penalty,evidence)=>{
+  if(riskSignals.some(x=>x.type===type))return;
+  riskSignals.push({type,severity,penalty,evidence});flags.push(evidence);
+ };
+ const riskPatterns=[
+  [/闭眼冲|无脑冲|谁涂谁好看|谁涂谁显白|任何人都|所有人都/,'万能适配承诺','high',20,'把个体差异说成了人人适用'],
+  [/一涂白(?:一|两|二|三|四|五|d+)个?度|白两个度|白三度/,'夸张显白承诺','high',18,'把视觉提气色夸张成明显改变肤色'],
+  [/全世界最好|天花板|封神|绝绝子|神中神|无敌/,'极端营销话术','medium',10,'使用了强烈营销式表达'],
+  [/牛逼|绝了|绝绝子|yyds|YYDS/,'低信息情绪夸赞','low',5,'主要是情绪化夸赞，本身几乎没有可核验信息'],
+  [/必须买|必须入|给我买|冲就完了|买它买它|不买后悔/,'购买施压','medium',8,'使用了明显的购买施压话术'],
+  [/完全不挑|一点都不挑|什么(?:肤色|唇色|妆容)都/,'无条件适用','high',18,'没有说明适用边界，却给出了无条件结论'],
+  [/完全不拔干|一点都不干|完全不沾杯|绝对不沾杯|完全不氧化|永远不氧化|完全没色差|一模一样/,'绝对性能承诺','medium',12,'对容易受个体和使用条件影响的表现使用了绝对化表述']
  ];
- hype.forEach(([re,msg])=>{if(re.test(t))flags.push(msg)});
+ riskPatterns.forEach(([re,type,severity,penalty,msg])=>{if(re.test(t))addRisk(type,severity,penalty,msg)});
+
  const contradictions=[
   [/不拔干|完全不干|一点都不干/,'拔干','文案称“不拔干”，但真实消费者样本中存在拔干反馈'],
   [/不沾杯|完全不沾杯/,'沾杯','文案称“不沾杯”，但真实消费者样本中存在沾杯反馈'],
   [/不氧化|不会氧化/,'氧化','文案称“不氧化”，但真实消费者样本中存在氧化/成膜后变化反馈'],
   [/完全没色差|和图片一模一样|实物和图一样/,'色差','文案把色差说得过于绝对，但样本库中存在颜色差异反馈']
  ];
- contradictions.forEach(([re,key,msg])=>{if(re.test(t)&&(p.reviews||[]).some(r=>r.product_scope==='target_context'&&(r.topics||[]).some(z=>z.label===key&&z.polarity==='reported')))flags.push(msg)});
- const contextWords=['深唇','浅唇','薄涂','厚涂','素颜','淡妆','浓妆','自然光','无滤镜','氧化','拔干','沾杯'];
+ contradictions.forEach(([re,key,msg])=>{
+  if(re.test(t)&&(p.reviews||[]).some(r=>r.product_scope==='target_context'&&(r.topics||[]).some(z=>z.label===key&&z.polarity==='reported')))addRisk('与真实反馈冲突','high',16,msg);
+ });
+
+ const contextWords=['深唇','浅唇','中唇','黄皮','白皮','黑皮','薄涂','厚涂','素颜','淡妆','浓妆','自然光','暖光','冷光','无滤镜','氧化','拔干','沾杯','色差'];
  const contextHits=contextWords.filter(x=>t.includes(x));
  if(contextHits.length>=2)strengths.push('写出了较具体的使用条件，而不是只给情绪化结论');
- if(/用了|小时|成膜|上嘴|实物|对比|复购|回购/.test(t))strengths.push('包含实际使用过程或购买后的信息');
- let score=84+Math.min(8,contextHits.length*2)-flags.length*7;
- score=Math.round(Math.max(35,Math.min(95,score)));
- const agreement=Math.round(Math.max(35,Math.min(95,88-flags.length*6+Math.min(6,contextHits.length))));
- return {score,agreement,flags,strengths,tags,contextHits};
+ if(/用了|小时|成膜|上嘴|实物|对比|复购|回购|喝水|吃饭|持妆/.test(t))strengths.push('包含实际使用过程或购买后的信息');
+
+ const informationScore=clampScore(assessment.informationScore);
+ const riskScore=clampScore(100-riskSignals.reduce((s,x)=>s+x.penalty,0));
+ const corpus=corpusClaimAgreement(assessment,evidenceEntry);
+
+ // Reference value answers "is this text useful for a purchase decision", not "is it true".
+ // Low-information praise therefore cannot receive a high score simply because no risky phrase was found.
+ const base=Number.isFinite(corpus.score)
+  ? informationScore*.55+riskScore*.25+corpus.score*.20
+  : informationScore*.70+riskScore*.30;
+ let referenceScore=clampScore(base);
+ if(informationScore<20)referenceScore=Math.min(referenceScore,38);
+ else if(informationScore<35)referenceScore=Math.min(referenceScore,52);
+
+ if(informationScore<20)flags.unshift('文字信息量很低：缺少可核验的肤色/唇色、涂法、光线、质地或实际使用体验');
+ else if(informationScore<40)flags.unshift('文字提供的可核验细节较少，不能只凭这段话做购买判断');
+
+ return {
+  score:referenceScore,referenceScore,informationScore,riskScore,
+  corpusAgreement:corpus.score,corpusRows:corpus.rows,
+  sufficiency:evidenceLevelFromScore(informationScore),
+  flags:[...new Set(flags)],strengths:[...new Set(strengths)],riskSignals,
+  tags,contextHits,assessment
+ };
 }
 function rangePenalty(v,range){
  if(!range||!Number.isFinite(v))return 0;
@@ -515,6 +573,105 @@ function rangePenalty(v,range){
  return 0;
 }
 function seededVisualAgreement(p,analyses){return compareUploadedColors(analyses,p.colorReference).score}
+
+function visualCorpusAgreement(p,analyses){
+ const ref=p.colorReference,samples=(ref?.samples||[]).filter(s=>{
+  if(!Array.isArray(s.metrics?.lab)||s.metrics.lab.length!==3||!s.metrics.lab.every(Number.isFinite))return false;
+  const v=ref?.selectedVariant;
+  return !v||v==='unknown'||p.key!=='lancome-274'||s.variant===v;
+ });
+ if(!samples.length||!analyses.length)return null;
+ const scores=[];
+ for(const a of analyses){
+  const lab=a.metrics?.lab;
+  if(!Array.isArray(lab)||lab.length!==3||!lab.every(Number.isFinite))continue;
+  const ds=samples.map(s=>deltaE2000(lab,s.metrics.lab)).filter(Number.isFinite).sort((x,y)=>x-y);
+  if(!ds.length)continue;
+  const nearest=ds.slice(0,Math.min(7,ds.length));
+  const median=nearest[Math.floor(nearest.length/2)];
+  scores.push(clampScore(100*Math.max(0,1-median/30)));
+ }
+ return scores.length?Math.round(scores.reduce((s,x)=>s+x,0)/scores.length):null;
+}
+function imageRiskAssessment(p,analyses,visual){
+ if(!analyses.length)return {referenceScore:null,riskScore:null,colorSimilarity:null,corpusAgreement:null,signals:[],sufficiency:'低'};
+ const signals=[];let penalties=0,reliable=0;
+ const add=(type,severity,penalty,evidence)=>{signals.push({type,severity,penalty,evidence});penalties+=penalty};
+ analyses.forEach((a,i)=>{
+  const m=a.metrics||{};
+  if(!m.roiDetected){add('唇部选区不足','medium',18,'图片 '+(i+1)+' 未识别到可靠唇部，无法稳定判断颜色');return}
+  reliable++;
+  if(m.sceneBrightness>82)add('画面过曝','medium',12,'图片 '+(i+1)+' 整体过亮，可能冲淡深色和灰调');
+  else if(m.sceneBrightness<28)add('画面偏暗','low',8,'图片 '+(i+1)+' 整体偏暗，颜色可能显得更深');
+  if(m.sceneSaturation>72||m.highSaturationRatio>45)add('画面饱和度偏高','medium',10,'图片 '+(i+1)+' 饱和度偏高，颜色冲击感可能被放大');
+  if(Number.isFinite(m.hueStd)&&m.hueStd>100)add('唇部颜色分散','medium',10,'图片 '+(i+1)+' 唇部颜色分布较分散，不适合单独代表实物色');
+  if(m.roiSource==='semantic-lips'&&Number.isFinite(m.segmentationConfidence)&&m.segmentationConfidence<.70)add('自动选区置信度偏低','low',6,'图片 '+(i+1)+' 的自动唇部选区需要谨慎解读');
+ });
+ if(analyses.length>1){
+  const ms=analyses.map(a=>a.metrics).filter(m=>m?.roiDetected);
+  if(ms.length>1){
+   const br=ms.map(m=>m.sceneBrightness),sr=ms.map(m=>m.sceneSaturation);
+   if(Math.max(...br)-Math.min(...br)>35)add('多图曝光不一致','medium',12,'同一组图片明暗差异较大，不宜直接做前后对比');
+   if(Math.max(...sr)-Math.min(...sr)>30)add('多图饱和度不一致','medium',10,'同一组图片浓淡差异较大，拍摄/处理条件可能不同');
+  }
+ }
+ const riskScore=clampScore(100-Math.min(65,penalties));
+ const colorSimilarity=Number.isFinite(visual?.score)?visual.score:null;
+ const corpusAgreement=visualCorpusAgreement(p,analyses);
+ const parts=[
+  {score:riskScore,weight:.45},
+  {score:colorSimilarity,weight:Number.isFinite(colorSimilarity)?.30:0},
+  {score:corpusAgreement,weight:Number.isFinite(corpusAgreement)?.25:0}
+ ];
+ let referenceScore=overallSeedReferenceValue(parts);
+ if(!reliable)referenceScore=Math.min(referenceScore,35);
+ return {referenceScore,riskScore,colorSimilarity,corpusAgreement,signals,reliable,total:analyses.length,sufficiency:reliable===analyses.length?'高':reliable?'中':'低'};
+}
+function crossModalAssessment(textReport,analyses){
+ if(!textReport||!analyses.length)return {score:null,notes:[],tested:0};
+ const t=textReport.assessment?String(textReport.assessment.rawText||''):''; // kept for schema compatibility
+ const notes=[];let score=100,tested=0;
+ const raw=String(textReport.rawText||'');
+ const actual=[...new Set(analyses.map(a=>a.metrics?.lighting).filter(Boolean))];
+
+ const claimed=textReport.tags?.lighting;
+ if(claimed){
+  tested++;
+  const ok=claimed==='自然光'
+   ? actual.every(x=>x==='中性光')
+   : claimed==='室内暖光'?actual.every(x=>x==='暖光')
+   : claimed==='室内冷光'?actual.every(x=>x==='冷光'):true;
+  if(!ok){score-=25;notes.push('文案写的是“'+claimed+'”，但图片检测到的光线更接近 '+actual.join(' / ')+'。')}
+  else notes.push('文案中的光线说明与图片检测结果基本一致。');
+ }
+
+ if(/同一天同光线|同一光线|同光线/.test(raw)&&analyses.length>1){
+  tested++;
+  const br=analyses.map(a=>a.metrics?.sceneBrightness).filter(Number.isFinite);
+  const mismatch=actual.length>1||(br.length>1&&Math.max(...br)-Math.min(...br)>20);
+  if(mismatch){score-=30;notes.push('文案声称多张图片在同一光线下，但图片之间的光线/明暗差异较明显。')}
+  else notes.push('多张图片的光线与明暗基本支持“同光线”描述。');
+ }
+
+ if(/完全没色差|和图片一模一样|实物和图一样/.test(raw)){
+  tested++;
+  const colorScores=analyses.map(a=>a.metrics?.roiDetected?1:0);
+  if(colorScores.some(Boolean)){notes.push('“完全没色差”属于无法仅凭上传照片证明的绝对说法，已在文字风险中单独降权。');score-=10}
+ }
+
+ if(/原相机|无滤镜|没滤镜/.test(raw)){
+  notes.push('“原相机/无滤镜”无法仅凭单张成片被可靠验证，因此不会自动加可信分。');
+ }
+
+ return {score:tested?clampScore(score):null,notes,tested};
+}
+function trustVerdict(score){
+ if(!Number.isFinite(score))return '当前证据不足，暂时无法形成稳定判断。';
+ if(score>=82)return '整体值得参考，但仍建议结合与你条件更接近的真实样本。';
+ if(score>=65)return '有一定参考价值，但其中有些信息需要谨慎看。';
+ if(score>=45)return '参考价值有限，建议不要只靠这条内容做购买决定。';
+ return '这条内容目前缺少足够可靠的信息，不建议作为主要购买依据。';
+}
 
 function lightingMeaning(label){
  return {
@@ -594,12 +751,14 @@ function variant274Html(entry,rawText){
   <div class="plain-note"><b>真实混淆案例：</b>${esc(vm.cross_variant_example.text)}</div>
  </section>`;
 }
-function databaseComparisonDetails(p,profile,rawText,evidenceEntry,distEntry,visualAgreement){
+function databaseComparisonDetails(p,profile,rawText,evidenceEntry,distEntry,imageReport,textReport){
  const kw=p.analysis?.keywordCounts||{},items=[];
- if(Number.isFinite(visualAgreement))items.push('图片与对应官方标准图的唇部颜色比较，颜色相似度为 '+visualAgreement+'/100；全部原始图片已检查，其中 '+(p.colorReference?.samples?.length||0)+' 张通过选区和标准色筛选。这不是真实性概率。');
+ if(Number.isFinite(imageReport?.colorSimilarity))items.push('上传图片与对应官方标准图的唇部颜色相似度为 '+imageReport.colorSimilarity+'/100；这是颜色接近程度，不是真实性概率。');
+ if(Number.isFinite(imageReport?.corpusAgreement))items.push('上传图片还与当前色号通过筛选的 '+(p.colorReference?.samples?.length||0)+' 张真实试色样本做了分布比较，综合色调一致性约为 '+imageReport.corpusAgreement+'/100。');
+ if(Number.isFinite(textReport?.corpusAgreement))items.push('上传文字中可明确识别的观点，与真实消费者支持/相悖证据比较后，一致性为 '+textReport.corpusAgreement+'/100。');
  const riskPairs=[['色差','色差'],['拔干','拔干'],['沾杯','沾杯'],['氧化','氧化/成膜变化']].filter(([k])=>kw[k]);
- if(riskPairs.length)items.push('真实消费者反复提到的风险里，'+riskPairs.map(([k,l])=>l+' '+kw[k]+' 次').join('、')+'。这些会作为文案核对依据，而不是只看好评数量。');
- if((p.analysis?.consumerDifferenceMentions||0)>0)items.push('共有 '+p.analysis.consumerDifferenceMentions+' 条文本明确提到偏色、色差或“和图片不一样”，所以系统会特别检查上传内容是否把个体差异说成绝对结论。');
+ if(riskPairs.length)items.push('真实消费者反复提到的风险里，'+riskPairs.map(([k,l])=>l+' '+kw[k]+' 次').join('、')+'。这些用于核对文案，不会因为是负面评价就被当成“假”。');
+ if((p.analysis?.consumerDifferenceMentions||0)>0)items.push('共有 '+p.analysis.consumerDifferenceMentions+' 条文本明确提到偏色、色差或“和图片不一样”，所以系统会检查上传内容是否把个体差异说成绝对结论。');
  const claims=relevantEvidenceClaims(profile,rawText,evidenceEntry);
  return {items,claims};
 }
@@ -738,21 +897,33 @@ async function runSeededAnalysis(){
 
   mark(1,'done');mark(2,'active');setBar('42%');
 
-  const textReport=rawText?extractSeedTextSignals(rawText,p):null;
+  const textReport=rawText?extractSeedTextSignals(rawText,p,evidenceEntry):null;if(textReport)textReport.rawText=rawText;
 
   mark(2,'done');mark(3,'active');setBar('64%');
 
   const visualAgreement=seededVisualAgreement(p,analyses,distEntry);
-  const databaseAgreement=visualAgreement;
+  const imageReport=imageRiskAssessment(p,analyses,visual);
+  const crossModal=crossModalAssessment(textReport,analyses);
+  const databaseAgreement=overallSeedReferenceValue([
+   {score:imageReport.corpusAgreement,weight:Number.isFinite(imageReport.corpusAgreement)?.55:0},
+   {score:textReport?.corpusAgreement,weight:Number.isFinite(textReport?.corpusAgreement)?.45:0}
+  ])||null;
+
   mark(3,'done');mark(4,'active');setBar('84%');
+
   const personal=seededPersonalRelevance(profile,textReport,p);
-  const overall=analyses.length?visualAgreement:(textReport?.score??null);
+  const overall=overallSeedReferenceValue([
+   {score:imageReport.referenceScore,weight:analyses.length?.35:0},
+   {score:textReport?.referenceScore,weight:textReport?.35:0},
+   {score:databaseAgreement,weight:Number.isFinite(databaseAgreement)?.20:0},
+   {score:crossModal.score,weight:Number.isFinite(crossModal.score)?.10:0}
+  ]);
   const cloudMedia=await fetchCloudReferenceMedia(p.key);
 
   mark(4,'done');setBar('100%');
 
   renderSeededResult({
-   p,profile,rawText,analyses,visual,textReport,
+   p,profile,rawText,analyses,visual,textReport,imageReport,crossModal,
    databaseAgreement,personal,overall,cloudMedia,
    evidenceEntry,distEntry,visualAgreement
   });
@@ -765,10 +936,12 @@ async function runSeededAnalysis(){
  }
 }
 
-function renderSeededResult({p,profile,rawText,analyses,visual,textReport,databaseAgreement,personal,overall,cloudMedia,evidenceEntry,distEntry,visualAgreement}){
+function renderSeededResult({p,profile,rawText,analyses,visual,textReport,imageReport,crossModal,databaseAgreement,personal,overall,cloudMedia,evidenceEntry,distEntry,visualAgreement}){
  const hasImage=analyses.length>0,hasText=!!textReport;
- const verdict=hasImage?visual.summary:'这里仅分析文字内容，未判断图片颜色。';
- const visualNotes=visual?(visual.findings||[]).slice(0,4).map(x=>'<li>'+esc(seedFindingText(x))+'</li>').join(''):'';
+ const verdict=trustVerdict(overall);
+ const visualNotes=imageReport?.signals?.length
+  ? imageReport.signals.slice(0,6).map(x=>'<li>'+esc(x.evidence)+'</li>').join('')
+  : (hasImage?'<li>没有发现明显的曝光、选区或多图一致性风险。</li>':'');
  const imageDetails=hasImage?imageDetailEvidence(p,analyses,distEntry):[];
  const imageDetailsHtml=imageDetails.map(d=>`<article class="image-evidence-detail">${d.view?`<img src="${d.view}" alt="上传图片 ${d.index}">`:''}<div><button type="button" class="ghost-btn" data-show-roi="${d.index-1}">查看自动选区</button><div class="image-detail-head"><b>图片 ${d.index}</b><span>${esc(d.lighting)}</span></div><ul>${d.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul></div></article>`).join('');
  const textFlags=textReport?.flags?.length?textReport.flags.map(x=>'<li>'+esc(x)+'</li>').join(''):'<li>暂未发现明显的绝对化或与样本库冲突的说法。</li>';
@@ -777,33 +950,48 @@ function renderSeededResult({p,profile,rawText,analyses,visual,textReport,databa
  const matchedReviews=personal.reviews||[];
  const reviewHtml=matchedReviews.length?matchedReviews.slice(0,3).map((r,i)=>`<article class="matched-review"><div class="match-rank">0${i+1}</div><div><div class="review-source">${esc(r.platform)} · ${esc(r.type||'消费者反馈')}</div><p>“${highlight(r.text)}”</p><small>这条反馈因为包含与你的唇色/妆面相近线索或较具体的使用体验，被优先展示。</small></div></article>`).join(''):'<div class="empty">当前没有足够明确的个性化文字样本。</div>';
  const profileText=profileSummary(profile);
- const dbDetail=databaseComparisonDetails(p,profile,rawText,evidenceEntry,distEntry,visualAgreement);
- const dbList=dbDetail.items.map(x=>'<li>'+esc(x)+'</li>').join('');
+ const dbDetail=databaseComparisonDetails(p,profile,rawText,evidenceEntry,distEntry,imageReport,textReport);
+ const dbList=dbDetail.items.map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>这次没有足够可比较的数据库证据，因此没有强行给出一致性结论。</li>';
+ const crossHtml=hasImage&&hasText
+  ? `<section class="deep-explain-card"><div class="section-head"><div><div class="eyebrow">图片和文字互相支持吗？</div><h2>${Number.isFinite(crossModal?.score)?'图文一致性 '+crossModal.score+'/100':'当前没有足够可直接核验的图文声明'}</h2></div><p>只核对能够从图片验证的说法；“原相机”“无滤镜”等无法从成片可靠证明的声明不会自动加分。</p></div><ul class="database-detail-list">${(crossModal?.notes||[]).map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>当前文字没有提供可由图片直接核对的具体条件。</li>'}</ul></section>`
+  :'';
+
  $('#seed-result').innerHTML=`
  <section class="seed-report">
   <div class="seed-report-hero">
-   <div><div class="eyebrow">${hasImage?'与该色号的颜色相似度':'文字参考价值'}</div><div class="big-score">${overall??'—'}<small>${overall===null?'':'/100'}</small></div><h2>${verdict}</h2><p>本次使用了：${hasImage?analyses.length+' 张图片':''}${hasImage&&hasText?' + ':''}${hasText?'文字内容':''}。颜色比较与文字核验单独展示，文字不会抬高颜色相似度。</p></div>
-   <div class="seed-score-grid">
-    <div><span>颜色相似度</span><b>${hasImage?(visual.score??'无法判断'):'未提供'}</b></div>
-    <div><span>文字参考价值</span><b>${hasText?textReport.score:'未提供'}</b></div>
-    <div><span>标准色筛选后的样本</span><b>${p.colorReference?.samples?.length||0} 张</b></div>
+   <div><div class="eyebrow">这条种草的综合参考价值</div><div class="big-score">${Number.isFinite(overall)?overall:'—'}<small>${Number.isFinite(overall)?'/100':''}</small></div><h2>${esc(verdict)}</h2><p>这个分数不是“真假概率”。它综合内容本身的信息量、图片参考风险、与真实样本的吻合程度，以及在有图有文时的图文一致性。缺少某一类证据不会被额外扣分。</p></div>
+   <div class="seed-score-grid trust-score-grid">
+    <div><span>图片参考价值</span><b>${hasImage?(imageReport?.referenceScore??'无法判断'):'未提供'}</b></div>
+    <div><span>文字参考价值</span><b>${hasText?textReport.referenceScore:'未提供'}</b></div>
+    <div><span>真实样本一致性</span><b>${Number.isFinite(databaseAgreement)?databaseAgreement:'证据不足'}</b></div>
+    <div><span>图文一致性</span><b>${hasImage&&hasText?(Number.isFinite(crossModal?.score)?crossModal.score:'无法核验'):'未同时提供'}</b></div>
     <div><span>与你的相关性</span><b>${personal.score}</b></div>
    </div>
   </div>
 
   <div class="seed-two-col">
-   <section class="seed-card"><div class="eyebrow">图片怎么看</div><h3>${hasImage?(visual.score===null?'无法计算颜色相似度':'颜色相似度 '+visual.score+'/100'):'这次没有上传图片'}</h3>${hasImage?`<ul>${visualNotes||'<li>'+esc(visual.summary)+'</li>'}</ul>`:'<p>所以本次不会对图片做任何推断。</p>'}</section>
-   <section class="seed-card"><div class="eyebrow">文字怎么说</div><h3>${hasText?'文字内容 '+textReport.score+'/100':'这次没有上传文字'}</h3>${hasText?`<ul>${textFlags}${textStrength}</ul>`:'<p>所以本次不会因为缺少文案而降低总分。</p>'}</section>
+   <section class="seed-card">
+    <div class="eyebrow">图片怎么看</div>
+    <h3>${hasImage?'图片参考价值 '+imageReport.referenceScore+'/100':'这次没有上传图片'}</h3>
+    ${hasImage?`<ul>${visualNotes}</ul><div class="trust-mini-metrics"><span>画面/选区可靠度 <b>${imageReport.riskScore}</b></span><span>官方色相似度 <b>${Number.isFinite(imageReport.colorSimilarity)?imageReport.colorSimilarity:'—'}</b></span><span>真实样本分布一致性 <b>${Number.isFinite(imageReport.corpusAgreement)?imageReport.corpusAgreement:'—'}</b></span></div><p class="plain-note">官方色相似度只说明照片中的唇色接近程度，不等于图片“是真的”。</p>`:'<p>所以本次不会对图片做任何推断。</p>'}
+   </section>
+   <section class="seed-card">
+    <div class="eyebrow">文字怎么说</div>
+    <h3>${hasText?'文字参考价值 '+textReport.referenceScore+'/100':'这次没有上传文字'}</h3>
+    ${hasText?`<div class="trust-mini-metrics"><span>信息充分度 <b>${textReport.informationScore}</b></span><span>夸张/绝对化风险后得分 <b>${textReport.riskScore}</b></span><span>真实评论一致性 <b>${Number.isFinite(textReport.corpusAgreement)?textReport.corpusAgreement:'暂无可核对观点'}</b></span></div><ul>${textFlags}${textStrength}</ul>`:'<p>所以本次不会因为缺少文案而降低总分。</p>'}
+   </section>
   </div>
 
-  ${hasImage?`<section class="deep-explain-card"><div class="section-head"><div><div class="eyebrow">图片分数到底怎么来的</div><h2>逐张查看自动选区和颜色差异</h2></div><p>相似度按与官方标准图的感知色差换算：色差 0 为 100，色差 30 及以上为 0。仅比较唇部像素。全部原图已检查，${p.colorReference?.samples?.length||0} 张通过筛选；旧红色筛选统计不参与评分。</p></div><div class="image-evidence-list">${imageDetailsHtml}</div></section>`:''}
+  ${crossHtml}
+
+  ${hasImage?`<section class="deep-explain-card"><div class="section-head"><div><div class="eyebrow">图片分数到底怎么来的</div><h2>逐张查看自动选区、光线和颜色差异</h2></div><p>颜色仍使用队友新版的自动唇部分割 + CIEDE2000；但它现在只是图片参考价值的一部分，不再冒充“真实性概率”。</p></div><div class="image-evidence-list">${imageDetailsHtml}</div></section>`:''}
   ${sampleUsageHtml(p)}
 
   ${p.key==='lancome-274'?variant274Html(evidenceEntry,rawText):''}
 
   <section class="database-agreement-card detailed-database">
-   <div><div class="eyebrow">不是只报“数据库里有多少条”</div><h2>具体比较了什么？</h2><ul class="database-detail-list">${dbList}</ul><p>下面只统计能明确判断“支持 / 相悖”的文本；模糊、答非所问或版本不明的内容不会硬塞进支持率。</p></div>
-   <div class="database-score"><b>${databaseAgreement??'—'}</b><span>${databaseAgreement===null?'':'/100'}<br>颜色相似度</span></div>
+   <div><div class="eyebrow">与整个真实样本库怎么比</div><h2>具体比较了哪些证据？</h2><ul class="database-detail-list">${dbList}</ul><p>文字只统计能明确判断“支持 / 相悖”的观点；图片同时参考官方标准色和通过筛选的真实试色分布。模糊证据不会被硬塞进高分。</p></div>
+   <div class="database-score"><b>${Number.isFinite(databaseAgreement)?databaseAgreement:'—'}</b><span>${Number.isFinite(databaseAgreement)?'/100':''}<br>真实样本一致性</span></div>
   </section>
 
   <section class="claim-evidence-panel">
@@ -812,7 +1000,7 @@ function renderSeededResult({p,profile,rawText,analyses,visual,textReport,databa
   </section>
 
   <section class="personal-relevance-card">
-   <div class="section-head"><div><div class="eyebrow">即使是真的，它对你有用吗？</div><h2>与你的参考相关性 ${personal.score}/100</h2></div><div class="profile-chips">${renderProfileChips(profile)}</div></div>
+   <div class="section-head"><div><div class="eyebrow">就算内容本身靠谱，它对你有用吗？</div><h2>与你的参考相关性 ${personal.score}/100</h2></div><div class="profile-chips">${renderProfileChips(profile)}</div></div>
    <p>${personal.matched.length?'这条内容里出现了与你相近的'+personal.matched.join('、')+'。':''}${personal.missing.length?' 但它没有明确说明'+personal.missing.join('、')+'，所以这部分不会被系统假装“已经匹配”。':''}</p>
   </section>
 
@@ -825,7 +1013,6 @@ function renderSeededResult({p,profile,rawText,analyses,visual,textReport,databa
  $('#seed-to-selfie').onclick=()=>{purchaseTargetKey=p.key;go('/selfie')};
  $('#seed-result').querySelectorAll('[data-show-roi]').forEach(button=>{let showing=false;button.onclick=()=>{showing=!showing;button.closest('.image-evidence-detail').querySelector('img').src=showing?analyses[Number(button.dataset.showRoi)].views.roi:analyses[Number(button.dataset.showRoi)].views.original;button.textContent=showing?'查看原图':'查看自动选区'}});
 }
-
 async function runConsumerJourney(){
  if(!selfieFile||!purchaseTargetKey)return;
  const result=$('#consumer-analysis'),run=$('#consumer-run'),key=purchaseTargetKey;
