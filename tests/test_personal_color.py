@@ -41,18 +41,23 @@ with sync_playwright() as p:
   page.locator('[data-view=tryon]').click();assert page.locator('#consumer-result-photo').get_attribute('src')==preview
   page.goto(BASE+'/#/shade/ysl-610',wait_until='networkidle');page.locator('#start-product-analysis').click();page.wait_for_selector('.personal-color-section')
   section=page.locator('.personal-color-section');assert section.get_attribute('data-personal-color')==expected['color']['hex']
+  assert section.get_attribute('data-color-scope')=='personal'
+  assert section.locator('[data-color-sample]').count()==5
+  assert section.locator('[data-general-sample]').count()<=5
+  assert '不参与本次取色' in section.locator('.general-color-evidence summary').inner_text()
   assert section.locator('[data-color-sample]').evaluate_all('(a)=>a.map(x=>x.dataset.colorSample)')==[s['id'] for s in expected['samples']]
-  section.locator('summary').click();assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+  section.locator('.color-evidence:not(.general-color-evidence) > summary').click();assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   if not BASE.startswith('https://'):
    section.screenshot(path=f'/tmp/truetone-color-{width}.png')
-  # Reproduce the reported ten unconfirmed images: no accepted, reliable black-skin match.
+  # Reproduce the reported unconfirmed images: no accepted, reliable black-skin match.
   page.evaluate('sessionStorage.setItem("truetone-user-profile",JSON.stringify({lip:"中唇",skin:"黑皮",makeup:"淡妆"}))')
   page.goto(BASE+'/#/search',wait_until='networkidle');page.goto(BASE+'/#/shade/ysl-610',wait_until='networkidle')
   page.locator('#start-product-analysis').click();page.wait_for_selector('.personal-color-section')
   general=page.locator('.personal-color-section')
   assert '暂无已确认匹配' in general.locator('.personal-color-headline').inner_text()
   assert '通用颜色参考' in general.locator('h3').inner_text()
-  assert general.locator('figcaption').count()==10
+  assert general.get_attribute('data-color-scope')=='general'
+  assert general.locator('figcaption').count()==5
   for text in general.locator('figcaption').all_text_contents():
    assert '原生唇色未说明' in text and '肤色判断把握较低' in text,text
    assert '条件尚未确认' not in text
@@ -65,12 +70,14 @@ with sync_playwright() as p:
   page.goto(BASE+'/#/search',wait_until='networkidle');page.goto(BASE+'/#/shade/ysl-610',wait_until='networkidle')
   page.locator('#start-product-analysis').click();page.wait_for_selector('.personal-color-section')
   assert page.locator('.personal-color-section').get_attribute('data-personal-color')!=expected['color']['hex'],'Profile must refresh the color even when product data is cached'
+  assert page.locator('.personal-color-section [data-color-sample]').count()==3
+  assert '未凑满 5 张' in page.locator('.personal-color-copy').inner_text()
   page.goto(BASE+'/#/shade/lancome-274',wait_until='networkidle');page.locator('#start-product-analysis').click();page.wait_for_selector('#shade-preview-variant')
   assert page.locator('#shade-preview-variant').input_value()=='intimatte'
   assert page.locator('.personal-color-section .finish-label').inner_text()=='柔雾哑光'
   page.locator('#shade-preview-variant').select_option('cream');page.wait_for_function('document.querySelector(".personal-color-section .finish-label")?.textContent==="哑光"')
   assert int(page.locator('.personal-color-section').get_attribute('data-sample-count'))<=4
-  assert '未凑满 10 张' in page.locator('.personal-color-copy').inner_text()
+  assert '未凑满 5 张' in page.locator('.personal-color-copy').inner_text()
   # P2's upload entry keeps the exact selected version in P1.
   page.locator('a[href*="/selfie?p=lancome-274"]').click();page.wait_for_selector('#consumer-variant')
   assert page.locator('#consumer-variant').input_value()=='cream'

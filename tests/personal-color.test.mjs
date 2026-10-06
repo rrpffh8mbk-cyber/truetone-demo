@@ -19,18 +19,30 @@ const fixture={key:'ysl-610',media:[make('wrong',{lip:'浅唇',skin:'白皙'},[9
   make('other',profile,[0,0,0],{product_key:'ysl-1936'}),...full]};
 const original=JSON.stringify(fixture);
 const chosen=buildPersonalColor(fixture,profile);
-assert.equal(chosen.usedCount,10);assert.equal(chosen.counts.full,10);
+assert.equal(chosen.usedCount,5);assert.equal(chosen.counts.full,5);
 assert.deepEqual(chosen.color.lab,[50,25,15]);
 assert.ok(chosen.samples.every(s=>s.id.startsWith('match-')||s.id==='duplicate'));
-assert.equal(new Set(chosen.samples.map(s=>s.source_image_sha256)).size,10);
+assert.equal(new Set(chosen.samples.map(s=>s.source_image_sha256)).size,5);
 assert.equal(JSON.stringify(fixture),original,'Personal selection must not mutate cached product data');
+const grouped={key:'ysl-610',media:[
+  make('same-post-low',{skin:'黄皮'},[30,20,10],{source_object_key:'fixtures/post1/a.jpg',referenceScore:70}),
+  make('same-post-best',{skin:'黄皮'},[50,25,15],{source_object_key:'fixtures/post1/b.jpg',referenceScore:95}),
+  make('second-person',{skin:'黄皮'},[50,25,15],{source_object_key:'fixtures/post2/a.jpg'}),
+  make('unknown-but-good',{},[99,-80,80],{source_object_key:'fixtures/post3/a.jpg',referenceScore:100})]};
+const separate=buildPersonalColor(grouped,profile);
+assert.equal(separate.usedCount,2);assert.equal(separate.scope,'personal');
+assert.deepEqual(separate.samples.map(s=>s.id),['same-post-best','second-person']);
+assert.deepEqual(separate.generalSamples.map(s=>s.id),['unknown-but-good']);
+assert.deepEqual(separate.color.lab,[50,25,15],'Unknown supplement must not dilute personal color');
+assert.match(personalColorCopy(separate).detail,/只找到 2 张.*未凑满 5/);
 const scarce=buildPersonalColor({key:'ysl-610',media:full.slice(0,4)},profile);
-assert.match(personalColorCopy(scarce).detail,/只找到 4 张.*未凑满 10/);
+assert.match(personalColorCopy(scarce).detail,/只找到 4 张.*未凑满 5/);
 assert.equal(buildPersonalColor({key:'ysl-610',media:[fixture.media[0]]},profile).color,null);
 const weak=make('weak',{lip:'浅唇',skin:'白皙'});weak.labelFields=Object.fromEntries(Object.entries(weak.labelFields).map(([k,v])=>[k,{...v,confidence:'low'}]));
 assert.equal(buildPersonalColor({key:'ysl-610',media:[weak]},profile).counts.unknown,1);
 assert.equal(buildPersonalColor({key:'ysl-610',media:[make('official',profile,[50,25,15],{wearerProfileEvidence:false})]},profile).usedCount,0);
-const robust=buildPersonalColor({key:'ysl-610',media:[...full.slice(0,9),make('outlier',profile,[90,80,-70])]},profile);
+const robust=buildPersonalColor({key:'ysl-610',media:[...full.slice(0,9),make('outlier',profile,[90,80,-70],{referenceScore:100})]},profile);
+assert.ok(robust.samples.some(s=>s.id==='outlier'));
 assert.deepEqual(robust.color.lab,[50,25,15],'One extreme photo must not determine the color');
 
 const tags=read('sample_tags_v1.json'),references=read('lip_color_reference_v3.json').products;
@@ -41,8 +53,13 @@ let selections=0;
 for(const key of Object.keys(references))for(const variant of key==='lancome-274'?['intimatte','cream','cream_gift']:[null])
   for(const lip of ['浅唇','中唇','深唇'])for(const skin of ['白皙','黄皮','黑皮']){
     const result=buildPersonalColor(product(key),{lip,skin},variant);
-    assert.ok(result.usedCount<=10);assert.equal(result.usedCount,result.samples.length);
+    assert.ok(result.usedCount<=5);assert.equal(result.usedCount,result.samples.length);
     assert.equal(new Set(result.samples.map(s=>s.source_image_sha256)).size,result.usedCount);
+    assert.equal(new Set(result.samples.map(s=>s.source_group)).size,result.usedCount);
+    assert.ok(result.generalSamples.length<=5);
+    const usedGroups=new Set(result.samples.map(s=>s.source_group));
+    for(const supplement of result.generalSamples){assert.ok(!usedGroups.has(supplement.source_group));assert.equal(supplement.matchedFields.length,0);}
+    if(result.scope==='personal'){assert.equal(result.counts.unknown,0);assert.ok(result.samples.every(s=>s.matchedFields.length>0));}
     for(const s of result.samples){
       const row=records.get(s.source_object_key);assert.equal(row.use_for_color_reference,true);assert.equal(row.wearer_profile_evidence,true);
       if(variant)assert.equal(s.variant,variant);
@@ -56,8 +73,11 @@ const cream=buildPersonalColor(product('lancome-274'),null,'cream');assert.equal
 const a=buildPersonalColor(product('ysl-610'),{lip:'浅唇',skin:'白皙'}),b=buildPersonalColor(product('ysl-610'),{lip:'深唇',skin:'黄皮'});
 assert.notEqual(a.color.hex,b.color.hex);assert.notDeepEqual(a.samples.map(s=>s.id),b.samples.map(s=>s.id));
 assert.notEqual(b.color.hex,'#b85f62','Personal color must replace the old hard-coded preview');
+assert.equal(a.usedCount,3,'White/light-lip photos belong to only three independent source posts');
+assert.equal(a.generalSamples.length,5);assert.equal(b.usedCount,5);
 const black=buildPersonalColor(product('ysl-610'),{lip:'中唇',skin:'黑皮'});
-assert.deepEqual(black.counts,{full:0,partial:0,unknown:10});
+assert.deepEqual(black.counts,{full:0,partial:0,unknown:5});
+assert.equal(black.scope,'general');assert.equal(black.generalSamples.length,0);
 assert.match(personalColorCopy(black).headline,/暂无已确认匹配.*通用参考/);
 assert.doesNotMatch(personalColorCopy(black).method,/与你条件相近的人/);
 for(const s of black.samples){assert.deepEqual(personalSampleCopy(s,black),['肤色判断把握较低','原生唇色未说明']);}

@@ -4,7 +4,8 @@ Serve the repository root with `python3 -m http.server 8000`.
 
 - `node tests/personal-color.test.mjs`: real-photo selection for 54 profile/version
   combinations, confirmed-mismatch exclusion, exact version isolation, duplicate
-  removal, Lab conversion, median robustness, actual sample counts and finish provenance.
+  removal, source-post diversity, five-photo limit, separation of unknown supplements,
+  Lab conversion, median robustness, actual sample counts and finish provenance.
 - `node tests/lip-finish.test.mjs`: gloss/matte differences, retained local contrast,
   unchanged face/teeth outside the mask, edge blending, no painted band under flat
   light, reflection following reversed source illumination and empty-mask handling.

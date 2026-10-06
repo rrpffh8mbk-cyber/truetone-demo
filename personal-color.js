@@ -1,6 +1,6 @@
 import {rankReferenceMedia} from './library-tags.js?v=20261006-personal-color-v5';
 
-export const PERSONAL_COLOR_SAMPLE_LIMIT=10;
+export const PERSONAL_COLOR_SAMPLE_LIMIT=5;
 export const PREVIEW_VARIANTS=[
   {id:'intimatte',label:'粉金管 274 · 柔雾哑光'},
   {id:'cream',label:'黑管 274 · 哑光'},
@@ -23,6 +23,20 @@ function hsv([r,g,b]){
   return {hue:(h+360)%360,saturation:max?d/max*100:0,brightness:max*100};
 }
 const median=values=>{const a=values.slice().sort((x,y)=>x-y),i=Math.floor(a.length/2);return a.length%2?a[i]:(a[i-1]+a[i])/2};
+export function referenceGroupKey(media){
+  const key=media.source_object_key||media.object_key||'',slash=key.lastIndexOf('/');
+  return slash>0?'source-post:'+key.slice(0,slash):'image:'+(media.sourceImageHash||media.id);
+}
+function distinctReferences(candidates,excluded=[]){
+  const hashes=new Set(excluded.map(m=>m.sourceImageHash||m.id)),groups=new Set(excluded.map(referenceGroupKey)),selected=[];
+  for(const m of candidates){
+    const hash=m.sourceImageHash||m.id,group=referenceGroupKey(m);
+    if(hashes.has(hash)||groups.has(group))continue;
+    hashes.add(hash);groups.add(group);selected.push(m);
+    if(selected.length===PERSONAL_COLOR_SAMPLE_LIMIT)break;
+  }
+  return selected;
+}
 
 export function buildPersonalColor(product,profile,variant=defaultPreviewVariant(product.key)){
   const requested=['lip','skin'].filter(k=>profile?.[k]);
@@ -35,26 +49,30 @@ export function buildPersonalColor(product,profile,variant=defaultPreviewVariant
   compatible.sort((a,b)=>matchedFields(b).length-matchedFields(a).length||
     b.recommendation.combinedScore-a.recommendation.combinedScore||
     b.recommendation.qualityScore-a.recommendation.qualityScore);
-  const seen=new Set(),selected=[];
-  for(const m of compatible){const key=m.sourceImageHash||m.id;if(seen.has(key))continue;seen.add(key);selected.push(m);if(selected.length===PERSONAL_COLOR_SAMPLE_LIMIT)break}
-  const samples=selected.map(m=>({id:m.id,source_object_key:m.source_object_key||m.object_key,
+  const matched=compatible.filter(m=>matchedFields(m).length>0),unknown=compatible.filter(m=>matchedFields(m).length===0);
+  const personal=distinctReferences(matched),scope=personal.length?'personal':'general';
+  const selected=personal.length?personal:distinctReferences(unknown);
+  const general=personal.length?distinctReferences(unknown,personal):[];
+  const sample=m=>({id:m.id,source_object_key:m.source_object_key||m.object_key,
+    source_group:referenceGroupKey(m),
     source_image_sha256:m.sourceImageHash,variant:m.variant,lab:m.metrics.lab.slice(),
     thumbnail:m.thumb||m.thumbnail||m.url,matchedFields:matchedFields(m),
     conditionLabels:Object.fromEntries(['lip','skin'].map(k=>[k,{
       value:m.labelFields?.[k]?.value||'不确定',confidence:m.labelFields?.[k]?.confidence||'unknown'}])),
     qualityScore:m.recommendation.qualityScore,combinedScore:m.recommendation.combinedScore,
-    roiSource:m.metrics.roiSource,segmentationConfidence:m.metrics.segmentationConfidence}));
+    roiSource:m.metrics.roiSource,segmentationConfidence:m.metrics.segmentationConfidence});
+  const samples=selected.map(sample),generalSamples=general.map(sample);
   let color=null;
   if(samples.length){const lab=[0,1,2].map(i=>median(samples.map(s=>s.lab[i]))),rgb=labToRgb(lab);
-    color={lab,rgb,hex:'#'+rgb.map(v=>v.toString(16).padStart(2,'0')).join(''),...hsv(rgb),source:'matched-real-lip-samples-v1'};
+    color={lab,rgb,hex:'#'+rgb.map(v=>v.toString(16).padStart(2,'0')).join(''),...hsv(rgb),source:scope==='personal'?'matched-real-lip-samples-v2':'general-real-lip-samples-v2'};
   }
   const counts={full:0,partial:0,unknown:0};
   for(const s of samples){if(requested.length&&s.matchedFields.length===requested.length)counts.full++;
     else if(s.matchedFields.length)counts.partial++;else counts.unknown++}
-  return {version:'2026-10-06-personal-color-v2',variant,profile:requested.length?{lip:profile.lip,skin:profile.skin}:null,
+  return {version:'2026-10-06-personal-color-v3',scope,variant,profile:requested.length?{lip:profile.lip,skin:profile.skin}:null,
     requestedFields:requested,targetCount:PERSONAL_COLOR_SAMPLE_LIMIT,usedCount:samples.length,eligibleCount:ranked.length,
-    compatibleCount:compatible.length,counts,samples,color,shortfall:samples.length<PERSONAL_COLOR_SAMPLE_LIMIT,
-    method:'Top compatible real wearer photos, prioritizing confirmed lip/skin matches and combined quality; component-wise median of premeasured lip-region CIELAB. No declared mismatch, official graphic, excluded image, duplicate bytes or cross-variant image.'};
+    compatibleCount:compatible.length,counts,samples,generalSamples,color,shortfall:samples.length<PERSONAL_COLOR_SAMPLE_LIMIT,
+    method:'Up to five distinct source posts/reviews, prioritizing confirmed lip/skin matches and combined quality; component-wise median of premeasured lip-region CIELAB. Unknown conditions never pad personal color. With no confirmed match or no profile, a separately declared general color is shown. No declared mismatch, official graphic, excluded image, duplicate bytes or cross-variant image.'};
 }
 
 export function personalSampleCopy(sample){
@@ -79,8 +97,9 @@ export function personalColorCopy(selection){
     if(c.unknown)facts.push(`${c.unknown} 张未能确认${names}，只作通用补充参考`)}
   const context=profile?(!hasMatch?'目前没有已确认与你条件相近的可用图片，以下只能提供这个色号的一般颜色方向。':''):
     '你尚未填写肤色或原生唇色，此处按图片参考质量取色；填写后会优先匹配你的条件。';
-  const detail=context+(facts.length?facts.join('；')+'。':'')+(selection.shortfall?`目前只找到 ${n} 张可用图，未凑满 10 张。`:
-    hasMatch?'优先选取相近条件、说明较完整的前 10 张。':'选取参考质量较高的前 10 张，条件未知的图片不代表已经与你匹配。');
+  const detail=context+(facts.length?facts.join('；')+'。':'')+(selection.shortfall?`目前只找到 ${n} 张可用图，未凑满 5 张。`:
+    hasMatch?'优先选取相近条件、参考质量较高的前 5 张。':'选取参考质量较高的前 5 张，条件未知的图片不代表已经与你匹配。')+
+    '同一条评价或帖子只取一张；条件都未知的图片不用于补足个人取色。';
   const method=profile&&hasMatch?'TrueTone 先找真实涂过这支口红、与你条件相近的人，再从她们的唇部提取颜色。你看到的预览有真实试色图片作依据。':
     'TrueTone 从真实上唇照片提取参考色，并保留取色依据；没有已确认匹配时，会明确展示通用参考。';
   return {headline,detail,method};
