@@ -1,4 +1,6 @@
-# TrueTone — Consumer Trust & Virtual Try-on Demo
+# 试色有谱 · TrueTone — Consumer Trust & Virtual Try-on Demo
+
+网站以「试色有谱」为中文主名称，TrueTone 为英文副名；宣传语为「参考真实试色，帮你选口红」。
 
 这是欧莱雅美妆科技黑客松 TrueTone 的**完整消费者端 Demo 骨架**，不再是轻量色号卡片展示。
 

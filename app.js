@@ -1,4 +1,4 @@
-import {buildPersonalColor,personalColorCopy,personalSampleCopy,defaultPreviewVariant,PREVIEW_VARIANTS} from './personal-color.js?v=20261006-top5-v8';
+import {buildPersonalColor,personalColorCopy,personalSampleCopy,defaultPreviewVariant,PREVIEW_VARIANTS} from './personal-color.js?v=20261006-brand-v9';
 import {extractAuthorTags} from './review-text.js?v=20261006-personal-color-v5';
 import {attachLibraryLabels,profileTagAssessment,rankReferenceMedia} from './library-tags.js?v=20261006-personal-color-v5';
 import {compareUploadedColors,compareLipColor} from './color-similarity.js?v=20261006-official-v3';
@@ -358,9 +358,9 @@ async function home(){
  const saved=getUserProfile(),draft=getUserProfileDraft();
  page(`
  <section class="consumer-hero gateway-hero">
-   <div class="eyebrow">TRUETONE · TRUST FIRST, THEN FIT</div>
-   <h1>先认识你，<br>再决定什么值得相信。</h1>
-   <p>同一支口红，在不同唇色、肤色和妆面上可能完全不同。TrueTone 先记录你主动提供的使用条件，再判断一条种草内容是否值得参考，或帮你从真实样本里找到更接近你的试色。</p>
+   <div class="eyebrow">试色有谱 · TrueTone</div>
+   <h1>参考真实试色，<br>帮你选口红。</h1>
+   <p>同一支口红，在不同唇色、肤色和妆面上可能完全不同。试色有谱先记录你主动提供的使用条件，再判断一条种草内容是否值得参考，或帮你从真实样本里找到更接近你的试色。</p>
  </section>
 
  <section class="profile-onboarding panel-soft">
@@ -378,7 +378,7 @@ async function home(){
  <section class="gateway-question ${saved?'':'hidden'}" id="gateway-question">
    <div class="eyebrow">02 · 从你的真实购买场景出发</div>
    <h2>你最近有被一支口红种草到吗？</h2>
-   <p>两条路径共用同一个真实样本库、评论证据和 TrueTone 可信度逻辑。</p>
+   <p>两条路径共用同一个真实样本库、评论证据和试色有谱可信度逻辑。</p>
    <div class="gateway-cards">
     <button class="gateway-card" id="gateway-seeded">
       <span class="gateway-index">A</span><b>有，我看到了一条很心动的种草</b>
@@ -409,7 +409,7 @@ async function selfieHome(){
  await getManifest();selfieFile=null;selfieResult=null;
  const profile=getUserProfile();if(!profile){go('/');return}
  page(`
- <section class="route-head consumer-route-head"><div><div class="eyebrow">从自己开始选</div><h1>看看这支口红对你有多大参考价值</h1><p>先上传自拍，再告诉 TrueTone 你正在考虑的色号。我们会先筛选可信内容，再找与你条件更接近的真实参考。</p></div><a href="#/" class="ghost-btn">修改我的信息</a></section>
+ <section class="route-head consumer-route-head"><div><div class="eyebrow">从自己开始选</div><h1>看看这支口红对你有多大参考价值</h1><p>先上传自拍，再告诉试色有谱你正在考虑的色号。我们会先筛选可信内容，再找与你条件更接近的真实参考。</p></div><a href="#/" class="ghost-btn">修改我的信息</a></section>
  <div class="profile-summary-bar"><b>你的条件</b>${renderProfileChips(profile)}</div>
  <section class="consumer-builder">
    <div class="builder-step">
@@ -431,7 +431,7 @@ async function selfieHome(){
          <label><span>品牌名</span><input id="consumer-brand" class="target-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="直接输入，如 ysl / 圣罗兰 / 兰蔻"></label>
          <label><span>色号 / 色号名</span><input id="consumer-shade" class="target-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="直接输入，如 610 / 274 / 冰乌龙"></label>
        </div>
-       <div id="consumer-variant-wrap" class="hidden"><label class="preview-variant-picker" for="consumer-variant"><span>选择你购买的 274 版本</span><select id="consumer-variant" class="select">${previewVariantOptions()}</select><small>只使用同一版本的图片取色。</small></label></div><div class="target-match empty-state" id="target-match">输入品牌和色号后，TrueTone 会确认是否已收录该产品。</div>
+       <div id="consumer-variant-wrap" class="hidden"><label class="preview-variant-picker" for="consumer-variant"><span>选择你购买的 274 版本</span><select id="consumer-variant" class="select">${previewVariantOptions()}</select><small>只使用同一版本的图片取色。</small></label></div><div class="target-match empty-state" id="target-match">输入品牌和色号后，试色有谱会确认是否已收录该产品。</div>
        <p class="demo-support">支持直接输入中英文品牌名和色号：YSL / 圣罗兰 610、1936；Lancôme / 兰蔻 274、275。</p>
      </div>
    </div>
@@ -447,7 +447,7 @@ async function selfieHome(){
  const input=$('#consumer-selfie-input'),zone=$('#consumer-selfie-zone'),preview=$('#consumer-selfie-preview'),empty=$('#consumer-selfie-empty'),replace=$('#consumer-replace-photo'),run=$('#consumer-run'),brandInput=$('#consumer-brand'),shadeInput=$('#consumer-shade'),matchBox=$('#target-match');
  function updateRunState(){
    const ok=!!selfieFile&&!!purchaseTargetKey;run.disabled=!ok;
-   run.textContent=!selfieFile?'上传自拍后开始分析':!purchaseTargetKey?'请输入已收录的品牌与色号':'开始 TrueTone 分析';
+   run.textContent=!selfieFile?'上传自拍后开始分析':!purchaseTargetKey?'请输入已收录的品牌与色号':'开始分析';
  }
  function updateTargetMatch(){
    const p=resolveDemoProduct(brandInput.value,shadeInput.value);purchaseTargetKey=p?.key||null;$('#consumer-variant-wrap').classList.toggle('hidden',p?.key!=='lancome-274');
@@ -590,7 +590,7 @@ function variant274Html(entry,rawText){
   <h2>版本混淆不是噪音，本身就是消费者风险。</h2>
   <p>淘宝数据能明确拆成 3 个版本：${vm.taobao_variants.map(v=>esc(v.label)).join('、')}。但小红书的 ${x.main_posts} 篇主帖并没有统一的版本字段：其中 ${x.explicit_lipglaze_or_mirror_posts} 篇明确提到唇釉/镜面，${x.explicit_xiaomanyao_posts} 篇提到“小蛮腰”，还有 ${x.no_clear_variant_posts} 篇仅写“274”而无法确认。</p>
   <div class="variant-detection"><span>这次上传文字的版本识别</span><b>${esc(detected.label)}</b><em>置信度：${detected.confidence}</em></div>
-  <p>因此 TrueTone 不会强行把所有小红书 274 内容塞进淘宝的三个版本。版本明确时做版本内比较；版本不明确时只用于“274 色号家族”层面的证据，并降低版本判断的确定性，而不是直接把它判成假。</p>
+  <p>因此试色有谱不会强行把所有小红书 274 内容塞进淘宝的三个版本。版本明确时做版本内比较；版本不明确时只用于“274 色号家族”层面的证据，并降低版本判断的确定性，而不是直接把它判成假。</p>
   <div class="plain-note"><b>真实混淆案例：</b>${esc(vm.cross_variant_example.text)}</div>
  </section>`;
 }
@@ -639,7 +639,7 @@ async function seeded(){
  await getManifest();const profile=getUserProfile();if(!profile){go('/');return}
  purchaseTargetKey=null;seededFiles=[];
  page(`
- <section class="route-head consumer-route-head"><div><div class="eyebrow">被种草之后，先别急着下单</div><h1>把那条让你心动的内容给 TrueTone</h1><p>图片和文字可以分别上传，也可以一起上传。我们只分析你实际提供的证据，不会因为缺少另一部分就扣分。</p></div><a href="#/" class="ghost-btn">修改我的信息</a></section>
+ <section class="route-head consumer-route-head"><div><div class="eyebrow">被种草之后，先别急着下单</div><h1>把那条让你心动的内容给试色有谱</h1><p>图片和文字可以分别上传，也可以一起上传。我们只分析你实际提供的证据，不会因为缺少另一部分就扣分。</p></div><a href="#/" class="ghost-btn">修改我的信息</a></section>
  <div class="profile-summary-bar"><b>你的条件</b>${renderProfileChips(profile)}</div>
 
  <section class="seeded-form panel-soft">
@@ -698,7 +698,7 @@ async function runSeededAnalysis(){
  run.disabled=true;run.textContent='正在自动识别唇部并比较颜色…';
 
  result.innerHTML=`<section class="consumer-progress">
-   <div class="eyebrow">TrueTone 正在检查</div>
+   <div class="eyebrow">试色有谱正在检查</div>
    <h2>自动识别上传图片的唇部，再对照官方标准色和筛选后的样本。</h2>
    <div class="human-progress">
      <div class="hp active">读取上传内容</div>
@@ -910,7 +910,7 @@ function stableConsumerDecision(p,profile,match){
  return {lead,detail:fit+'。'+risk,action};
 }
 function cleanAgentCopy(s,max=150){
- let x=String(s||'').replace(/TrueTone\s*Score\s*\d+/gi,'').replace(/Match\s*Score\s*\d+/gi,'').replace(/[（(]\s*[，,;；:\s]*[）)]/g,'').replace(/\s+/g,' ').trim();
+ let x=String(s||'').replace(/(?:TrueTone|试色有谱)\s*Score\s*\d+/gi,'').replace(/Match\s*Score\s*\d+/gi,'').replace(/[（(]\s*[，,;；:\s]*[）)]/g,'').replace(/\s+/g,' ').trim();
  return x.length>max?x.slice(0,max).replace(/[，,;；。]\s*$/,'')+'。':x;
 }
 
@@ -922,7 +922,7 @@ function renderConsumerResult(p,profile,reviews,media,match,expected,cloudNarrat
  const reviewsHtml=reviews.length?reviews.map((r,i)=>`<article class="matched-review"><div class="match-rank">0${i+1}</div><div><div class="review-source">${r.platform} · ${r.type||'评论'}${r.repeatBuyer?' · 复购/已购高信息量线索':''}</div><p>“${highlight(r.text)}”</p><small>匹配原因：${profile.lip!=='不确定'&&r.text.includes(profile.lip)?'与你主动填写的唇色情况一致；':''}${r.negativeEvidence?'包含具体负向/差异体验，信息量高；':''}与你填写的使用条件相关。</small></div></article>`).join(''):'<div class="empty">当前没有足够的可匹配原文评论。</div>';
  $('#consumer-analysis').innerHTML=`
  <section class="personal-result">
-   <div class="result-title"><div><div class="eyebrow">你的 TrueTone 购买参考</div><h2>${esc(p.brand)} #${p.shade} · ${esc(p.name)}</h2><p>不是替你宣布“适合 / 不适合”，而是根据这张自拍的拍摄情况和可信消费者证据告诉你：这个方向对你有多大参考价值。</p></div><button class="ghost-btn" id="back-to-form">重新选择</button></div>
+   <div class="result-title"><div><div class="eyebrow">你的试色有谱购买参考</div><h2>${esc(p.brand)} #${p.shade} · ${esc(p.name)}</h2><p>不是替你宣布“适合 / 不适合”，而是根据这张自拍的拍摄情况和可信消费者证据告诉你：这个方向对你有多大参考价值。</p></div><button class="ghost-btn" id="back-to-form">重新选择</button></div>
    ${cloudNarrative?.runtime==="aliyun-model-studio"?`<div class="cloud-connected-badge"><span>本次分析</span><b>✓ 已完成多来源交叉分析</b></div>`:``}
    <div class="personal-hero-grid">
     <div class="tryon-card"><div class="tryon-image"><img id="consumer-result-photo" src="${selfieResult.tryon}"><div class="toggle result-toggle"><button class="active" data-view="tryon">颜色预览</button><button data-view="original">原自拍</button></div></div><div class="tryon-caption"><div class="preview-color-row">${previewSwatch(p,'preview-swatch')}<div><b>#${p.shade} · ${esc(p.name)}</b><p class="finish-label">${esc(p.finish.label)} · ${expected.tone}</p><p class="personal-color-headline">${esc(colorCopy.headline)}</p><p class="personal-color-copy">${esc(colorCopy.detail)}</p><p class="personal-color-method">${esc(colorCopy.method)}</p><p>${esc(p.finish.note)}</p></div></div>${colorSourceDetails(p.personalColor)}${generalReferenceDetails(p.personalColor)}<small>颜色预览是视觉模拟，不是品牌官方色卡或精准 AR 试色；实物仍会受原生唇色、光线与涂抹厚度影响。</small></div></div>
@@ -942,7 +942,7 @@ function renderConsumerResult(p,profile,reviews,media,match,expected,cloudNarrat
       <div class="panel trust-story-card platform-card"><h3>不同平台看起来一样吗？</h3><p>${esc(platformSummary)}</p></div>
       <div class="panel trust-story-card risk-card"><h3>购买前最值得注意</h3><ul class="consumer-bullets">${riskItems.slice(0,4).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
       <div class="panel trust-story-card"><h3>这些差异不一定是修图</h3><ul class="consumer-bullets">${(normalItems.length?normalItems:['当前证据不足以细分更多正常变化。']).slice(0,4).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
-      <div class="panel"><h3>同色号也可能有版本差异</h3><p>${p.skuLines?.length>1?`当前样本里同一色号出现 ${p.skuLines.length} 个产品线 / 包装或版本标签。TrueTone 会分开看，避免把版本差异误当成“修图”。`:'当前样本里没有明显的同色号版本混淆。'}</p></div>
+      <div class="panel"><h3>同色号也可能有版本差异</h3><p>${p.skuLines?.length>1?`当前样本里同一色号出现 ${p.skuLines.length} 个产品线 / 包装或版本标签。试色有谱会分开看，避免把版本差异误当成“修图”。`:'当前样本里没有明显的同色号版本混淆。'}</p></div>
     </div>
     <details class="tech-details"><summary>想看更详细的分析依据？</summary><div class="details-grid"><div class="panel"><h3>这张自拍的拍摄情况</h3><p>光照：${selfieResult.light.label}<br>画面明暗：${selfieResult.light.brightness}%<br>当前照片可见面部颜色：${selfieResult.faceRef.hex} · ${selfieResult.faceRef.tone}</p></div><div class="panel"><h3>网络样本的综合查看色调</h3><p>本次从 ${p.personalColor.usedCount} 张试色图的唇部提取。<br>参考值：H ${p.personalColor.color.hue.toFixed(1)}° · S ${p.personalColor.color.saturation.toFixed(1)}% · B ${p.personalColor.color.brightness.toFixed(1)}%</p></div></div></details>
    </section>
@@ -964,7 +964,7 @@ async function search(){
 async function shade(k){
  const m=meta(k);
  if(!m)return home();
- page(`<div class="route-head"><a class="backlink" href="#/search">← 返回色号库</a><div class="eyebrow" style="margin-top:22px">${esc(m.brand)} · ${esc(m.product)}</div><h1>#${m.shade} ${esc(m.name)}</h1><p>先别急着看分数。TrueTone 会把不同平台的试色、评价和使用体验放在一起，告诉你哪些更值得参考、哪些要谨慎看。</p></div>
+ page(`<div class="route-head"><a class="backlink" href="#/search">← 返回色号库</a><div class="eyebrow" style="margin-top:22px">${esc(m.brand)} · ${esc(m.product)}</div><h1>#${m.shade} ${esc(m.name)}</h1><p>先别急着看分数。试色有谱会把不同平台的试色、评价和使用体验放在一起，告诉你哪些更值得参考、哪些要谨慎看。</p></div>
  <section class="analysis-start">
   <div class="panel analysis-intro">
    <div class="eyebrow">我们会看这些内容</div>
@@ -981,7 +981,7 @@ async function shade(k){
     <div class="agent-step" data-a="3">挑出最值得先看的内容</div>
     <div class="agent-step" data-a="4">怎样让试色更容易比较</div>
    </div>
-   <button class="primary-btn" id="start-product-analysis" style="width:100%;margin-top:16px">开始 TrueTone 分析</button>
+   <button class="primary-btn" id="start-product-analysis" style="width:100%;margin-top:16px">开始分析</button>
    <div class="progress" style="margin-top:12px"><i id="product-progress"></i></div>
   </div>
  </section>`);
@@ -1035,7 +1035,7 @@ function shade274FamilyAnalysisHtml(evidenceEntry,distEntry){
  <section class="variant-insight-card family-overview">
    <div class="eyebrow">274 不应被当成一个完全统一的产品</div>
    <h2>同一个“274”，至少包含 3 个明确版本；小红书还混有版本不明和旧款内容。</h2>
-   <p>淘宝数据可以明确拆成 3 个产品版本，因此 TrueTone 会在版本内做颜色与评价比较。小红书没有统一版本字段，所以不会被强行映射到其中某一个版本。</p>
+   <p>淘宝数据可以明确拆成 3 个产品版本，因此试色有谱会在版本内做颜色与评价比较。小红书没有统一版本字段，所以不会被强行映射到其中某一个版本。</p>
    <div class="variant-card-grid">${variantCards}</div>
    <div class="family-policy">
     <b>小红书怎么处理？</b>
@@ -1077,7 +1077,7 @@ async function shadeReport(k,variant=defaultPreviewVariant(k)){
          return `<article class="variant-card"><div class="variant-name">${esc(label)}</div><p>浓淡中位 ${d.saturation.median}% · 明暗中位 ${d.brightness.median}%</p><small>${d.n} 张可解析图片 · 色彩中心约 ${d.hue.circular_center.toFixed(1)}°</small></article>`;
        }).join('')}
       </div>
-      <div class="plain-note">这三个版本的综合色调接近，但浓淡、明暗和质地来源并不完全相同，因此 TrueTone 不再用一个综合色块代表全部“274”。</div>
+      <div class="plain-note">这三个版本的综合色调接近，但浓淡、明暗和质地来源并不完全相同，因此试色有谱不再用一个综合色块代表全部“274”。</div>
      </section>`
   : `<section class="details-grid">${colorDirectionHtml(p)}<div class="panel"><h3>小红书和淘宝看起来差多少？</h3>${metric('颜色方向差异',a.platformDiff.hue,90,'°')}${metric('浓淡差异',Math.abs(a.platformDiff.saturation),35,'%')}${metric('明暗差异',Math.abs(a.platformDiff.brightness),35,'%')}<div class="plain-note">详细数值已收进分析依据，主页面只保留消费者能直接理解的差异。</div></div></section>`;
 
@@ -1108,7 +1108,7 @@ async function shadeReport(k,variant=defaultPreviewVariant(k)){
  <section class="details-grid">
   <div class="panel"><h3>${is274?'为什么 274 不能只看一个总分？':'为什么会得到这个参考分？'}</h3>
    ${is274
-    ? `<div class="plain-note">因为这个色号的风险不是单一的“图片异常”，还包括版本归属不清、旧款与新款混杂、回答者引用另一个 274 产品等证据归属问题。TrueTone 会把这些不确定性单独说明，而不是全部折算成“内容造假”。</div>`
+    ? `<div class="plain-note">因为这个色号的风险不是单一的“图片异常”，还包括版本归属不清、旧款与新款混杂、回答者引用另一个 274 产品等证据归属问题。试色有谱会把这些不确定性单独说明，而不是全部折算成“内容造假”。</div>`
     : ((a.findings||[]).length?(a.findings||[]).map(f=>`<div class="finding"><span class="severity ${f.severity}">${f.severity==='high'?'高风险':f.severity==='medium'?'中风险':'低风险'}</span><div><strong>${esc(f.type)}</strong><p>在 ${f.count||1} 个样本里出现，因此会降低一些参考价值。</p></div></div>`).join(''):'<div class="plain-note">目前没有看到特别强的异常信号，但这仍不代表每一张图都能完全还原实物。</div>')}
   </div>
   <div class="panel"><h3>哪些差异属于正常变化？</h3><div class="review-list">${c.normal.map(x=>`<div class="review"><p>${esc(x)}</p></div>`).join('')||'<div class="plain-note">当前文本证据不足以细分更多正常变化。</div>'}</div></div>
@@ -1116,7 +1116,7 @@ async function shadeReport(k,variant=defaultPreviewVariant(k)){
 
  <section class="panel report-section"><div class="section-head"><div><div class="eyebrow">怎样让试色更容易比较</div><h2 style="font-size:28px">如果你想知道“怎样的种草更值得信”</h2></div><p>这部分总结了什么样的试色内容更容易被消费者正确比较。</p></div><div class="review-list">${creatorAdviceForProduct(p).map(s=>`<article class="review"><p><b>${esc(s.title)}</b><br><span style="color:var(--muted)">我们发现：</span>${esc(s.issue)}<br><span style="color:var(--muted)">可以怎么做：</span>${esc(s.how)}<br><span style="color:var(--muted)">这样做的原因：</span>${esc(s.why)}<br><span style="color:var(--gold)">会带来的好处：</span>${esc(s.impact)}</p></article>`).join('')}</div></section>
 
- <section class="cta-band"><div><h3>想知道 #${p.shade} 在你脸上可能怎么呈现？</h3><p>${is274?'如果是 274，最好先确认具体版本；无法确认时，TrueTone 会按家族级参考而不是假装精确到某一版。':'上传自拍后，TrueTone 会优先从真实样本里找更接近你当前光照和使用情况的参考图与评论。'}</p></div><a class="primary-btn" href="#/selfie?p=${p.key}${p.selectedPreviewVariant?'&v='+p.selectedPreviewVariant:''}">上传自拍</a></section>
+ <section class="cta-band"><div><h3>想知道 #${p.shade} 在你脸上可能怎么呈现？</h3><p>${is274?'如果是 274，最好先确认具体版本；无法确认时，试色有谱会按家族级参考而不是假装精确到某一版。':'上传自拍后，试色有谱会优先从真实样本里找更接近你当前光照和使用情况的参考图与评论。'}</p></div><a class="primary-btn" href="#/selfie?p=${p.key}${p.selectedPreviewVariant?'&v='+p.selectedPreviewVariant:''}">上传自拍</a></section>
  <section class="cta-band"><div><h3>喜欢这个方向吗？</h3><p>不喜欢也没关系，可以换成更橘、更浅或不同质地，再看相似色号。</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="secondary-btn" id="like">喜欢，看看相似色</button><button class="ghost-btn" id="warmer">想更橘一点</button><a class="ghost-btn" href="#/compare">我在纠结两个色号</a></div></section>`);
 
  const variantSelect=$('#shade-preview-variant');
@@ -1141,7 +1141,7 @@ function recommend(p,warm){const candidates=manifest.products.filter(x=>x.key!==
 function openMedia(p,id){const m=p.media.find(x=>x.id===id);if(!m)return;modalContent.innerHTML=`<div class="eyebrow">${m.platform} · 这张图的参考价值</div><h2 id="modal-title">参考价值 ${Math.round(m.referenceScore||0)}/100</h2>${m.thumb?`<img src="${m.thumb}" style="width:100%;max-height:520px;object-fit:contain;background:#090807;border-radius:14px">`:''}<div class="details-grid" style="margin-top:15px"><div class="panel"><h3>图片观感</h3><p>颜色方向 ${m.metrics?.hue??'—'}°<br>浓淡 ${m.metrics?.saturation??'—'}%<br>明暗 ${m.metrics?.brightness??'—'}%<br>光照：${m.metrics?.lighting||'—'}</p></div><div class="panel"><h3>为什么值得看 / 为什么要谨慎</h3><p>${esc((m.reasons||[]).join('；')||'当前样本未记录额外说明')}</p></div></div>`;openModal()}
 
 async function verify(){
- await getManifest();page(`<div class="route-head"><a class="backlink" href="#/">← 首页</a><div class="eyebrow" style="margin-top:22px">上传试色核验</div><h1>这张试色，值得你参考吗？</h1><p>图片只在当前浏览器中读取像素。可一次上传多张；多图会自动做跨图一致性比较与推荐排序。</p></div><section class="upload-shell"><label class="dropzone" id="drop"><input id="verify-input" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden><div><div class="upload-icon">＋</div><h3>拖进来，或点这里选择图片</h3><p>JPG / PNG / WEBP · 支持多张 · 可删除、追加</p></div></label><div class="file-previews" id="previews"></div><div class="form-row"><select class="select" id="source"><option>小红书</option><option>淘宝/电商</option><option>用户实拍</option><option>其他</option></select><select class="select" id="match-product"><option value="">不与已有色号比较</option>${opts('')}</select><button class="primary-btn" id="run-verify" disabled>开始 TrueTone 分析</button></div><div class="progress"><i id="vprogress"></i></div><div class="agent-run hidden" id="agent-run"><div class="agent-steps"><div class="agent-step" data-a="1">颜色与光线</div><div class="agent-step" data-a="2">不同图片是否一致</div><div class="agent-step" data-a="3">购买参考</div><div class="agent-step" data-a="4">内容透明度建议</div></div></div></section><div id="verify-results"></div>`);
+ await getManifest();page(`<div class="route-head"><a class="backlink" href="#/">← 首页</a><div class="eyebrow" style="margin-top:22px">上传试色核验</div><h1>这张试色，值得你参考吗？</h1><p>图片只在当前浏览器中读取像素。可一次上传多张；多图会自动做跨图一致性比较与推荐排序。</p></div><section class="upload-shell"><label class="dropzone" id="drop"><input id="verify-input" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden><div><div class="upload-icon">＋</div><h3>拖进来，或点这里选择图片</h3><p>JPG / PNG / WEBP · 支持多张 · 可删除、追加</p></div></label><div class="file-previews" id="previews"></div><div class="form-row"><select class="select" id="source"><option>小红书</option><option>淘宝/电商</option><option>用户实拍</option><option>其他</option></select><select class="select" id="match-product"><option value="">不与已有色号比较</option>${opts('')}</select><button class="primary-btn" id="run-verify" disabled>开始分析</button></div><div class="progress"><i id="vprogress"></i></div><div class="agent-run hidden" id="agent-run"><div class="agent-steps"><div class="agent-step" data-a="1">颜色与光线</div><div class="agent-step" data-a="2">不同图片是否一致</div><div class="agent-step" data-a="3">购买参考</div><div class="agent-step" data-a="4">内容透明度建议</div></div></div></section><div id="verify-results"></div>`);
  const input=$('#verify-input'),drop=$('#drop');drop.ondragover=e=>{e.preventDefault();drop.classList.add('drag')};drop.ondragleave=()=>drop.classList.remove('drag');drop.ondrop=e=>{e.preventDefault();drop.classList.remove('drag');addVerify([...e.dataTransfer.files])};input.onchange=()=>addVerify([...input.files]);$('#run-verify').onclick=runVerify
 }
 function addVerify(fs){verifyFiles.push(...fs.filter(f=>f.type.startsWith('image/')));renderVerifyPreviews()}
@@ -1155,14 +1155,14 @@ async function tryon(){
  const input=$('#selfie-input'),stage=$('#selfie-stage');stage.onclick=e=>{if(e.target.closest('.toggle'))return;input.click()};input.onchange=()=>{selfieFile=input.files[0];if(!selfieFile)return;const u=URL.createObjectURL(selfieFile);$('#selfie-img').src=u;$('#selfie-img').classList.remove('hidden');$('#selfie-empty').classList.add('hidden');$('#run-try').disabled=false};$$('#try-products .choice').forEach(b=>b.onclick=e=>{e.preventDefault();$$('#try-products .choice').forEach(x=>x.classList.remove('active'));b.classList.add('active')});$('#run-try').onclick=runTry
 }
 async function runTry(){if(!selfieFile)return;const btn=$('#run-try');btn.disabled=true;btn.textContent='正在识别唇部…';const p=await getPreviewProduct($('#try-products .active').dataset.p);try{selfieResult=await createVirtualTryOn(selfieFile,p,$('#debug').checked);$('#selfie-img').src=selfieResult.tryon;$('#try-toggle').classList.remove('hidden');$$('#try-toggle button').forEach(b=>b.onclick=e=>{e.preventDefault();$$('#try-toggle button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#selfie-img').src=selfieResult[b.dataset.show]});$('#quality').innerHTML=selfieResult.quality.map(x=>`<div class="quality"><span>${esc(x.label)}</span><b>${esc(x.value)}</b></div>`).join('');renderTryResult(p)}catch(e){$('#quality').innerHTML=`<div class="sku-warning">${esc(e.message)}</div>`}finally{btn.disabled=false;btn.textContent='重新分析'}}
-function renderTryResult(p){const r=selfieResult,a=p.analysis,lip=$('#lip-prof').value,tone=$('#tone-prof').value;let reviews=p.reviews.filter(x=>a.representativeReviewIds.includes(x.id));if(lip!=='all'){const t=reviews.filter(x=>x.text.includes(lip));if(t.length)reviews=t}if(tone==='warm'){const t=reviews.filter(x=>/黄皮|暖调|偏暖/.test(x.text));if(t.length)reviews=t}if(tone==='cool'){const t=reviews.filter(x=>/冷白|冷调|偏冷/.test(x.text));if(t.length)reviews=t}reviews=reviews.slice(0,3);const top=personalizedMedia(p,r);const c=p.personalColor.color,expected={h:c.hue,s:Math.max(5,c.saturation+(r.faceRef.saturation-30)*.08),b:Math.max(5,Math.min(95,c.brightness+(r.light.brightness-60)*.12))};$('#try-results').innerHTML=`${colorDirectionHtml(p)}<section class="details-grid"><div class="panel"><div class="eyebrow">这张自拍的拍摄情况质量</div><h3>当前照片颜色参考</h3><div style="display:flex;gap:14px;align-items:center"><span class="swatch-dot" style="width:58px;height:58px;background:${r.faceRef.hex}"></span><div class="plain-note">${r.faceRef.tone}<br>${r.faceRef.hex} · 明度 ${r.faceRef.brightness}% · 浓淡 ${r.faceRef.saturation}%<br><small>仅代表当前照片。</small></div></div></div><div class="panel"><div class="eyebrow">预计呈现</div><h3>#${p.shade} 在这张自拍的拍摄情况中可能怎么呈现？</h3><div class="plain-note">当前为 <b style="color:#fff">${r.light.label}</b>。结合多来源参考色域，预计呈现 H ${expected.h.toFixed(1)}° · S ${expected.s.toFixed(1)}% · B ${expected.b.toFixed(1)}%。</div><div class="swatches" style="margin-top:12px"><span class="swatch-dot" title="TrueTone 参考中心" style="background:${hsvToHex(c.hue,c.saturation,c.brightness)}"></span><span class="swatch-dot" title="这张自拍的拍摄情况预计" style="background:${hsvToHex(expected.h,expected.s,expected.b)}"></span></div><div class="disclaimer">颜色预览为视觉模拟，仅供参考，不代表实物最终效果。</div></div></section><section class="panel report-section"><div class="section-head"><div><div class="eyebrow">Personal reference</div><h2 style="font-size:28px">最值得你参考的 3 张真实试色</h2></div><p>综合图片参考质量与唇色、肤色、妆容标签匹配。</p></div><div class="top-media">${top.map((m,i)=>`<article class="media-card"><img src="${m.thumb}"><div class="media-card-body"><div class="rank">#${i+1} · ${Math.round(m.recommendation.combinedScore)}/100</div><div class="source-line">${m.platform} · ${m.metrics.lighting}</div><div class="reason">${esc((m.reasons||[])[0]||'接近参考色域')}</div>${recommendationCopy(m)}</div></article>`).join('')}</div></section><section class="panel report-section"><div class="section-head"><div><div class="eyebrow">Matched comments</div><h2 style="font-size:28px">最匹配的 3 条消费者反馈</h2></div></div><div class="review-list">${reviews.map(reviewCard).join('')||'<div class="plain-note">当前没有足够匹配文本。</div>'}</div></section><section class="cta-band"><div><h3>下一步：回到完整色号报告</h3><p>把自拍预览、真实 Top 3、消费者反馈和 SKU 信息放在一起做购买判断。</p></div><a class="secondary-btn" href="#/shade/${p.key}">查看 #${p.shade} 报告</a></section>`}
+function renderTryResult(p){const r=selfieResult,a=p.analysis,lip=$('#lip-prof').value,tone=$('#tone-prof').value;let reviews=p.reviews.filter(x=>a.representativeReviewIds.includes(x.id));if(lip!=='all'){const t=reviews.filter(x=>x.text.includes(lip));if(t.length)reviews=t}if(tone==='warm'){const t=reviews.filter(x=>/黄皮|暖调|偏暖/.test(x.text));if(t.length)reviews=t}if(tone==='cool'){const t=reviews.filter(x=>/冷白|冷调|偏冷/.test(x.text));if(t.length)reviews=t}reviews=reviews.slice(0,3);const top=personalizedMedia(p,r);const c=p.personalColor.color,expected={h:c.hue,s:Math.max(5,c.saturation+(r.faceRef.saturation-30)*.08),b:Math.max(5,Math.min(95,c.brightness+(r.light.brightness-60)*.12))};$('#try-results').innerHTML=`${colorDirectionHtml(p)}<section class="details-grid"><div class="panel"><div class="eyebrow">这张自拍的拍摄情况质量</div><h3>当前照片颜色参考</h3><div style="display:flex;gap:14px;align-items:center"><span class="swatch-dot" style="width:58px;height:58px;background:${r.faceRef.hex}"></span><div class="plain-note">${r.faceRef.tone}<br>${r.faceRef.hex} · 明度 ${r.faceRef.brightness}% · 浓淡 ${r.faceRef.saturation}%<br><small>仅代表当前照片。</small></div></div></div><div class="panel"><div class="eyebrow">预计呈现</div><h3>#${p.shade} 在这张自拍的拍摄情况中可能怎么呈现？</h3><div class="plain-note">当前为 <b style="color:#fff">${r.light.label}</b>。结合多来源参考色域，预计呈现 H ${expected.h.toFixed(1)}° · S ${expected.s.toFixed(1)}% · B ${expected.b.toFixed(1)}%。</div><div class="swatches" style="margin-top:12px"><span class="swatch-dot" title="试色有谱参考中心" style="background:${hsvToHex(c.hue,c.saturation,c.brightness)}"></span><span class="swatch-dot" title="这张自拍的拍摄情况预计" style="background:${hsvToHex(expected.h,expected.s,expected.b)}"></span></div><div class="disclaimer">颜色预览为视觉模拟，仅供参考，不代表实物最终效果。</div></div></section><section class="panel report-section"><div class="section-head"><div><div class="eyebrow">Personal reference</div><h2 style="font-size:28px">最值得你参考的 3 张真实试色</h2></div><p>综合图片参考质量与唇色、肤色、妆容标签匹配。</p></div><div class="top-media">${top.map((m,i)=>`<article class="media-card"><img src="${m.thumb}"><div class="media-card-body"><div class="rank">#${i+1} · ${Math.round(m.recommendation.combinedScore)}/100</div><div class="source-line">${m.platform} · ${m.metrics.lighting}</div><div class="reason">${esc((m.reasons||[])[0]||'接近参考色域')}</div>${recommendationCopy(m)}</div></article>`).join('')}</div></section><section class="panel report-section"><div class="section-head"><div><div class="eyebrow">Matched comments</div><h2 style="font-size:28px">最匹配的 3 条消费者反馈</h2></div></div><div class="review-list">${reviews.map(reviewCard).join('')||'<div class="plain-note">当前没有足够匹配文本。</div>'}</div></section><section class="cta-band"><div><h3>下一步：回到完整色号报告</h3><p>把自拍预览、真实 Top 3、消费者反馈和 SKU 信息放在一起做购买判断。</p></div><a class="secondary-btn" href="#/shade/${p.key}">查看 #${p.shade} 报告</a></section>`}
 
 async function compare(){
  await getManifest();page(`<div class="route-head"><a class="backlink" href="#/">← 首页</a><div class="eyebrow" style="margin-top:22px">色号对比</div><h1>纠结两个颜色？放在同一把尺子上。</h1><p>比较多来源参考色域、证据充分度与消费者反馈，而不只比较官方商品图。</p></div><div class="compare-pickers"><div class="compare-col"><select id="ca" class="select" style="width:100%">${opts('ysl-610')}</select></div><div class="compare-col"><select id="cb" class="select" style="width:100%">${opts('lancome-274')}</select></div></div><div id="cmp"></div>`);$('#ca').onchange=renderCmp;$('#cb').onchange=renderCmp;renderCmp()
 }
 async function renderCmp(){const [a,b]=await Promise.all([getProduct($('#ca').value),getProduct($('#cb').value)]);const cp=p=>`<div class="shade-brand">${esc(p.brand)}</div><div class="shade-code">#${p.shade}</div><div class="shade-name">${esc(p.name)} · ${esc(p.texture)}</div><div class="shade-swatch" style="height:130px;margin:18px 0;background:radial-gradient(circle at 40% 35%,${color(p)},#61342e 55%,#251515 100%)"></div><div class="compare-stat"><div class="stat"><b>${p.analysis.score}</b><span>样本颜色一致性</span></div><div class="stat"><b>${p.analysis.evidenceSufficiency}</b><span>证据充分度</span></div><div class="stat"><b>${p.analysis.center.saturation}%</b><span>浓淡</span></div><div class="stat"><b>${p.analysis.center.brightness}%</b><span>明度</span></div></div><a class="secondary-btn" style="margin-top:14px" href="#/shade/${p.key}">看完整报告</a>`;$('#cmp').innerHTML=`<div class="comparison"><div class="panel">${cp(a)}</div><div class="panel">${cp(b)}</div></div><section class="panel report-section"><h3>一眼看懂差异</h3><div class="plain-note">参考色域中心的环形色相距离约 <b style="color:#fff">${circularHueDistance(a.analysis.center.hue,b.analysis.center.hue).toFixed(1)}°</b>；浓淡差 ${Math.abs(a.analysis.center.saturation-b.analysis.center.saturation).toFixed(1)}%，明度差 ${Math.abs(a.analysis.center.brightness-b.analysis.center.brightness).toFixed(1)}%。</div></section>`}
 
-function openAbout(){modalContent.innerHTML=`<div class="eyebrow">How it works</div><h2 id="modal-title">TrueTone 不是一个“真假按钮”</h2><p>当前公开版保留项目原有四个 Agent 的职责：先做真实像素与环境分析，再按固定规则审查风险，再把证据翻译成消费者报告，最后给内容改进建议。</p><div class="method-flow"><div><b>Agent 1</b>HSV / 光照 / ROI 候选区 / 真实像素诊断</div><div><b>Agent 2</b>异常 / 跨图一致性 / 0–100 评分</div><div><b>Agent 3</b>一句话结论 / Top 3 / 评论证据</div><div><b>Agent 4</b>拍摄与创作者改进建议</div></div><p>现有产品报告使用已结构化导入的小红书 + 淘宝 sample data；169 张 JPG 已离线做真实像素统计，29 个视频保留来源与媒体元数据。自拍使用 MediaPipe Face Mesh 的唇部 landmarks → outer polygon − inner mouth mask，避免把牙齿和口腔涂色。</p><p><b style="color:#fff">关于“真实 Agent”：</b>这里的四 Agent 是会实际运行的确定性分析模块，不是随机 UI。公开 GitHub Pages 不安全地存放任何大模型 API Key；后续接入 Base44 安全后端时，可以让 LLM 只做语言整合，评分与证据仍由可复现逻辑提供。</p>`;openModal()}
+function openAbout(){modalContent.innerHTML=`<div class="eyebrow">How it works</div><h2 id="modal-title">试色有谱不是一个“真假按钮”</h2><p>当前公开版保留项目原有四个 Agent 的职责：先做真实像素与环境分析，再按固定规则审查风险，再把证据翻译成消费者报告，最后给内容改进建议。</p><div class="method-flow"><div><b>Agent 1</b>HSV / 光照 / ROI 候选区 / 真实像素诊断</div><div><b>Agent 2</b>异常 / 跨图一致性 / 0–100 评分</div><div><b>Agent 3</b>一句话结论 / Top 3 / 评论证据</div><div><b>Agent 4</b>拍摄与创作者改进建议</div></div><p>现有产品报告使用已结构化导入的小红书 + 淘宝 sample data；169 张 JPG 已离线做真实像素统计，29 个视频保留来源与媒体元数据。自拍使用 MediaPipe Face Mesh 的唇部 landmarks → outer polygon − inner mouth mask，避免把牙齿和口腔涂色。</p><p><b style="color:#fff">关于“真实 Agent”：</b>这里的四 Agent 是会实际运行的确定性分析模块，不是随机 UI。公开 GitHub Pages 不安全地存放任何大模型 API Key；后续接入 Base44 安全后端时，可以让 LLM 只做语言整合，评分与证据仍由可复现逻辑提供。</p>`;openModal()}
 function openModal(){modal.hidden=false;modal.setAttribute('aria-hidden','false');modal.style.display='grid';modal.style.pointerEvents='auto';document.body.style.overflow='hidden'}function closeModal(){modal.style.display='none';modal.style.pointerEvents='none';modal.hidden=true;modal.setAttribute('aria-hidden','true');document.body.style.overflow=''}function wait(ms){return new Promise(r=>setTimeout(r,ms))}
 async function router(){try{await getManifest();const p=(location.hash.slice(1)||'/').split('?')[0];if(p==='/'||p==='/home')return home();if(p==='/seeded')return seeded();if(p==='/selfie')return selfieHome();if(p==='/search')return search();if(p.startsWith('/shade/'))return shade(p.split('/')[2]);if(p==='/verify')return verify();if(p==='/tryon')return tryon();if(p==='/compare')return compare();return home()}catch(e){console.error(e);page(`<div class="route-head"><h1>数据加载失败</h1><p>${esc(e.message)}</p><a class="secondary-btn" href="#/">返回首页</a></div>`)}}
 $('#open-method').onclick=openAbout;$('#modal-close').onclick=closeModal;modal.onclick=e=>e.target===modal&&closeModal();document.addEventListener('keydown',e=>e.key==='Escape'&&closeModal());window.addEventListener('hashchange',router);router();

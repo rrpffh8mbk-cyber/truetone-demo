@@ -86,7 +86,7 @@ export function personalSampleCopy(sample){
 }
 
 export function personalColorCopy(selection){
-  if(!selection?.usedCount)return {headline:'相近条件的样本还不够，暂不生成参考色',detail:'当前没有通过筛选且与你已确认条件相容的试色图。可以先查看真实图片，或调整产品版本。',method:'TrueTone 从数据库里真实涂过这支口红的唇部取色，并保留取色依据。'};
+  if(!selection?.usedCount)return {headline:'相近条件的样本还不够，暂不生成参考色',detail:'当前没有通过筛选且与你已确认条件相容的试色图。可以先查看真实图片，或调整产品版本。',method:'试色有谱从数据库里真实涂过这支口红的唇部取色，并保留取色依据。'};
   const n=selection.usedCount,c=selection.counts,profile=selection.profile;
   const hasMatch=c.full+c.partial>0;
   const headline=profile?(hasMatch?`为你从 ${n} 张真实试色里取色`:`暂无已确认匹配 · 以下 ${n} 张为通用参考`):`从 ${n} 张参考质量较高的真实试色里取色`;
@@ -100,7 +100,7 @@ export function personalColorCopy(selection){
   const detail=context+(facts.length?facts.join('；')+'。':'')+(selection.shortfall?`目前只找到 ${n} 张可用图，未凑满 5 张。`:
     hasMatch?'优先选取相近条件、参考质量较高的前 5 张。':'选取参考质量较高的前 5 张，条件未知的图片不代表已经与你匹配。')+
     '同一条评价或帖子只取一张；条件都未知的图片不用于补足个人取色。';
-  const method=profile&&hasMatch?'TrueTone 先找真实涂过这支口红、与你条件相近的人，再从她们的唇部提取颜色。你看到的预览有真实试色图片作依据。':
-    'TrueTone 从真实上唇照片提取参考色，并保留取色依据；没有已确认匹配时，会明确展示通用参考。';
+  const method=profile&&hasMatch?'试色有谱先找真实涂过这支口红、与你条件相近的人，再从她们的唇部提取颜色。你看到的预览有真实试色图片作依据。':
+    '试色有谱从真实上唇照片提取参考色，并保留取色依据；没有已确认匹配时，会明确展示通用参考。';
   return {headline,detail,method};
 }
