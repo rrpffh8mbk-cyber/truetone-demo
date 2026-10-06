@@ -51,7 +51,9 @@ with sync_playwright() as p:
         page.locator('#seed-text').fill('薄涂自然，很适合日常。')
         page.locator('#seed-images').set_input_files(upload)
         page.locator('#seed-run').click()
-        page.wait_for_selector('.image-evidence-detail',timeout=180000)
+        page.wait_for_selector('.seed-report',timeout=180000)
+        page.locator('.upload-diagnostics > summary').click()
+        page.wait_for_selector('.image-evidence-detail')
         assert page.locator('.lip-selector').count()==0,'Automatic flow must not require manual selection'
         assert page.locator('.big-score').inner_text()=='0/100'
         text=page.locator('.image-evidence-detail').inner_text()
@@ -61,7 +63,8 @@ with sync_playwright() as p:
         before=page.locator('.image-evidence-detail img').get_attribute('src')
         page.locator('[data-show-roi]').click()
         assert page.locator('.image-evidence-detail img').get_attribute('src')!=before
-        page.locator('#seed-run').click();page.wait_for_selector('.image-evidence-detail',timeout=20000)
+        page.locator('#seed-run').click();page.wait_for_selector('.seed-report',timeout=20000)
+        page.locator('.upload-diagnostics > summary').click();page.wait_for_selector('.image-evidence-detail')
         assert page.locator('.big-score').inner_text()=='0/100','Text and sample priors must not inflate similarity'
         page.goto(BASE+'/#/verify',wait_until='networkidle')
         blank=page.evaluate("""()=>{const c=document.createElement('canvas');c.width=100;c.height=100;c.getContext('2d').fillRect(0,0,100,100);return c.toDataURL().split(',')[1]}""")

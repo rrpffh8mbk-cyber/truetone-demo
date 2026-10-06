@@ -13,6 +13,8 @@ with sync_playwright() as p:
  for key,product in catalog['products'].items():
   page.goto('http://127.0.0.1:8000/#/shade/'+key,wait_until='networkidle')
   page.locator('#start-product-analysis').click()
+  page.wait_for_selector('#top-media')
+  page.locator('.sample-usage').locator('..').locator(':scope > summary').click()
   page.wait_for_selector('.sample-usage')
   usage=page.locator('.sample-usage');text=usage.inner_text();c=product['coverage']
   assert f'已检查 {c["available_inputs"]} 张：使用 {c["accepted"]} 张，不使用 {c["excluded"]} 张' in text,text

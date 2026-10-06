@@ -53,7 +53,7 @@ export function assessReferenceMedia(media,profile){
   const fullText=['review_body','author_body'].includes(media.reviewText?.status);
   const reporter=clamp((roi?40:0)+(fullText?30:text?15:0)+Math.min(30,fields*10));
   const contextual=Object.values(media.reviewFields||{}).filter(l=>l.value!=='不确定'&&l.evidence_quote).length;
-  const transparency=clamp((media.source_object_key||media.object_key?30:0)+(fullText?30:text?15:0)+Math.min(30,contextual*10)+(/无滤镜|原相机|原图|自然光/.test(text)?10:0));
+  const transparency=clamp((media.source_object_key||media.object_key?30:0)+(fullText?30:text?15:0)+Math.min(30,contextual*10)+(media.sourceImageHash?10:0));
   const agents={colorAnalyst,referenceAuditor,reporter,creatorAdvisor:transparency};
   const qualityScore=.4*colorAnalyst+.3*referenceAuditor+.2*reporter+.1*transparency;
   const match=profileTagAssessment(media,profile);

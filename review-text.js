@@ -1,17 +1,27 @@
 // Author tags and suitability opinions are different kinds of evidence.
 const LABEL_PATTERNS={
-  lip:[['深唇',/(?:我(?:也|就)?(?:是|属于)?|本人(?:是)?|自己是|本)深唇|(?:我(?:的|本身)?|本人)(?:原生)?唇色(?:本身)?(?:是|比较|偏|很|有点|特别)?(?:深|重)/],['浅唇',/(?:我(?:也|就)?(?:是|属于)?|本人(?:是)?|自己是|本)浅唇|(?:我(?:的|本身)?|本人)(?:原生)?唇色(?:本身)?(?:是|比较|偏|很|有点|特别)?(?:浅|淡)/],['中唇',/(?:我是?|本人是?)中唇|(?:我的?|本人)唇色(?:是)?中等/]],
+  lip:[['深唇',/(?:我(?:这种|这个|也|就)?(?:是|属于)?|本人(?:是)?|自己是|本)深唇|(?:我(?:的|本身)?|本人)(?:原生)?唇色(?:本身)?(?:是|比较|偏|很|有点|特别)?(?:深|重)/],['浅唇',/(?:我(?:这种|这个|也|就)?(?:是|属于)?|本人(?:是)?|自己是|本)浅唇|(?:我(?:的|本身)?|本人)(?:原生)?唇色(?:本身)?(?:是|比较|偏|很|有点|特别)?(?:浅|淡)/],['中唇',/(?:我是?|本人是?)中唇|(?:我的?|本人)唇色(?:是)?中等/]],
   skin:[['白皙',/(?:我(?:(?:也|就|算)是|是)?|本人是?|自己是|本)(?:个)?(?:黄一白|黄二白|冷白皮|暖白皮|白皮|白皙)/],['黄皮',/(?:我(?:(?:也|就|算)是|是)?|本人是?|自己是|本)(?:个)?(?:黄皮|自然偏黄)/],['黑皮',/(?:我(?:(?:也|就|算)是|是)?|本人是?|自己是|本)(?:个)?黑皮/]],
   makeup:[['素颜',/(?:我(?:是|平时|今天)?|本人|今天|这次|纯|现在)(?:都是?|是|就)?素颜|素颜(?:浅|薄|厚)?涂了/],['淡妆',/(?:我(?:今天|平时)?|本人|今天|这次)(?:化|画|是|带|化了)?(?:淡妆|通勤妆|日常妆)/],['浓妆',/(?:我(?:今天|平时)?|本人|今天|这次)(?:化|画|是|带|化了)?浓妆/]]
 };
 export function extractAuthorTags(text){
   const result={};
+  // Enumerated self-reports stop before the next clause: recommendations to
+  // other people ("我是黄皮，深唇慎入") must not become the author's lip tag.
+  const self=String(text||'').match(/(?:我是|本人是)([^，,。；;\n]{1,25})/);
+  if(self&&/[、\/]/.test(self[1])){
+    const lips=['浅唇','中唇','深唇'].filter(value=>self[1].split(/[、\/]/).includes(value));
+    if(lips.length===1)result.lip={value:lips[0],confidence:'high',basis:'comment_self_report',evidence_quote:self[0]};
+  }
+  const makeup=String(text||'').match(/(?:我(?:平时)?|平时)(?:基本|一般|通常)(?:都是|是|化)?(淡妆|浓妆|素颜)/);
+  if(makeup)result.makeup={value:makeup[1],confidence:'high',basis:'comment_self_report',evidence_quote:makeup[0]};
   const compound=String(text||'').match(/(?:我(?:也|就)?是?|本人是?)(?:黄皮|白皮|黄一白|黄二白|冷白皮|暖白皮)(深唇|浅唇)/);
   if(compound)result.lip={value:compound[1],confidence:'high',basis:'comment_self_report',evidence_quote:compound[0]};
   for(const [field,patterns] of Object.entries(LABEL_PATTERNS)){
     const hits=patterns.flatMap(([value,re])=>{const m=String(text||'').match(re);return m?[{value,confidence:'high',basis:'comment_self_report',evidence_quote:m[0]}]:[]});
     // Contradictory self-reports require review rather than first-match selection.
     if(hits.length===1)result[field]=hits[0];
+    else if(hits.length>1)delete result[field];
   }
   return result;
 }

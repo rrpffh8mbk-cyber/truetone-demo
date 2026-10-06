@@ -64,3 +64,9 @@ python3 tests/test_real_official.py --manifest /private/manifest.json
 This uses verified real model weights, checks substantial lip area rather than
 a corner-only selection, and verifies each official image scores 100 against
 its own product/variant. Raw images remain in the external manifest directory.
+
+## Evidence-first journey (2026-10-07)
+
+- `node tests/evidence-assessment.test.mjs`: known three-case pressure tests, no high text baseline, independent color/text decisions, negative experiences as information, negated claims, unverifiable shooting statements, exact version boundaries and source-backed brand briefs. This is regression coverage, not an independent accuracy evaluation.
+- `python3 tests/test_evidence_journey.py`: desktop/mobile evidence-first entry without a required profile, three one-click cases, editing and rerunning rather than preloaded answers, unchanged saved user conditions, unsupported products, separated score labels and downloadable brand action evidence. Segmentation is a test double; text analysis, data loading and recommendation use the real modules.
+- `TRUETONE_REAL_CASES=1 python3 tests/test_evidence_journey.py`: same known three cases with verified real BiSeNet weights; additionally writes `data/evaluation/demo_cases_v1.json` as a reproducible measurement record. The website never reads this file as an answer. TLS and model checksums remain verified.

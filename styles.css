@@ -342,3 +342,30 @@ body:not(.modal-open) #modal-backdrop[aria-hidden="true"]{
 .personal-color-samples img{width:100%;height:145px;object-fit:contain;background:#17120f;border-radius:12px;display:block}
 .personal-color-samples figcaption{font-size:12px;line-height:1.6;color:var(--muted);margin-top:7px;overflow-wrap:anywhere}
 @media(max-width:760px){.personal-color-samples{grid-template-columns:repeat(2,minmax(0,1fr))}.personal-color-samples img{height:125px}.preview-variant-picker select{font-size:14px}}
+
+/* Evidence comes first; optional visual simulations stay secondary. */
+.evidence-hero{padding-bottom:28px}.evidence-hero h1{max-width:900px}
+.evidence-primary-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:28px}
+.proof-steps{display:flex;gap:22px;flex-wrap:wrap;margin-top:30px;color:var(--muted);font-size:13px;line-height:1.8}
+.proof-steps b{color:var(--gold);margin-right:5px}
+.benchmark-section{margin:20px 0 32px}.benchmark-section h2{font:500 clamp(23px,3vw,32px) Georgia,'Songti SC',serif}
+.benchmark-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.benchmark-card{display:block;padding:23px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#201511,#100c0b);text-decoration:none;color:var(--ink);transition:border-color .2s}
+.benchmark-card:hover{border-color:var(--gold)}.benchmark-card b{display:block;font-size:21px}.benchmark-card p{color:var(--muted);line-height:1.7;margin:12px 0}.benchmark-card>span:last-child{color:var(--gold);font-size:13px}
+.scope-note{font-size:12px;line-height:1.8;color:var(--muted2);overflow-wrap:anywhere}
+.scope-strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:20px 0;margin-bottom:34px}
+.scope-strip b,.scope-strip span{display:block;line-height:1.8}.scope-strip b{color:var(--gold);font-weight:500}.scope-strip p{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:0}
+.auxiliary-entry{margin:24px 0;padding:18px 22px;border:1px solid var(--line);border-radius:16px}
+.auxiliary-entry summary,.tech-details summary{cursor:pointer;line-height:1.7;color:var(--gold)}
+.auxiliary-entry p,.brand-action-panel p{color:var(--muted);line-height:1.8;font-size:13px}.profile-ready{color:var(--muted);font-size:13px;line-height:1.7}
+.demo-case-notice{border-left:3px solid var(--gold);padding:15px 20px;margin:20px 0;background:#1b1310}.demo-case-notice p{color:var(--muted);font-size:13px;line-height:1.8}.demo-case-notice a{color:var(--gold)}
+.evidence-result-hero{display:block}.evidence-result-hero h2{font-size:clamp(26px,4vw,40px);line-height:1.4}.evidence-result-hero p{max-width:850px;line-height:1.9}
+.evidence-dimensions{align-items:start}.color-assessment .big-score{font-size:48px}.color-assessment .big-score small{font-size:17px}
+.text-risk-label{border-left:3px solid var(--gold);padding:10px 13px;line-height:1.6;background:#211710}
+.text-risk-label.high{border-color:#d8977c}.text-risk-label.low{border-color:#8ab59b}
+.uncertainty-note{font-size:12px;line-height:1.8;color:var(--muted)}.text-rubric{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}.text-rubric summary{cursor:pointer;line-height:1.8;color:var(--gold)}
+.rubric-row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:9px 0;font-size:12px;color:var(--muted)}.rubric-row b{color:var(--ink);white-space:nowrap}
+.evidence-stage{margin-top:32px}.evidence-stage h2{font:500 28px Georgia,'Songti SC',serif}.evidence-stage>p{color:var(--muted);font-size:13px;line-height:1.8}.evidence-quote small{display:block;color:var(--muted2);line-height:1.7;margin-top:10px;font-size:10px;overflow-wrap:anywhere}
+.brand-actions{display:grid;gap:12px;margin-bottom:18px}.brand-actions article{border:1px solid var(--line);border-radius:12px;padding:18px}.brand-actions h3{font-size:18px;line-height:1.5}
+.method-flow{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:760px){.benchmark-grid{grid-template-columns:1fr}.benchmark-card{padding:20px}.proof-steps{display:grid;gap:6px}.evidence-primary-actions{align-items:stretch}.evidence-primary-actions a{width:100%}.evidence-hero h1{font-size:clamp(33px,8vw,43px);line-height:1.2}.auxiliary-entry{padding:16px}.method-flow{grid-template-columns:1fr}.seed-card,.evidence-result-hero{min-width:0}.demo-case-notice{padding:13px 15px}}

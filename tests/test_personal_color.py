@@ -79,6 +79,7 @@ with sync_playwright() as p:
   assert int(page.locator('.personal-color-section').get_attribute('data-sample-count'))<=4
   assert '未凑满 5 张' in page.locator('.personal-color-copy').inner_text()
   # P2's upload entry keeps the exact selected version in P1.
+  page.locator('.shade-selfie-preview > summary').click()
   page.locator('a[href*="/selfie?p=lancome-274"]').click();page.wait_for_selector('#consumer-variant')
   assert page.locator('#consumer-variant').input_value()=='cream'
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')

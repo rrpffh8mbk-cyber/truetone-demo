@@ -1,0 +1,50 @@
+{
+  "evaluationType": "known_demo_stress_cases_not_blind_validation",
+  "ruleVersion": "evidence-reference-v1",
+  "baseCommitBeforeChanges": "f8fa10baad9164bc6ec6a9a8a64a5fc94ffa0193",
+  "workingTreeIncludesEvaluationChanges": true,
+  "modelSha256": "0d9bd318e46987c3bdbfacae9e2c0f461cae1c6ac6ea6d43bbe541a91727e33f",
+  "inputSha256": {
+    "app.js": "56b92d5cc91d607618fc98142da419ab7904ab1089cba6bbc12d9ea293e71348",
+    "demo-cases.js": "334c3fb2bd0393b9577cf81da85d11f9c42833e40995db78daef8a8c37a2054b",
+    "evidence-assessment.js": "6ebd27bddbab39b250a9770c3ec722d4089a1b23e1c0ee879ded078e06b2603e",
+    "review-text.js": "608ca85c0ef553e6913dd4903edc41e2d2709c73f166d525fe0017537f3f5f9a",
+    "library-tags.js": "8ca3d4412e09bde5558d0d3a63a2c293f7d53c381fe1524bde12d0a3d19553e0",
+    "personal-color.js": "ee2954df563664ba0327fcf9abdf62e289b88854722f40072eeb8a742c096fe3",
+    "brand-actions.js": "f970bc6c15127539570f50ae8b1e013516a53d16a53368fc0d7d5c3b5f97d6d5",
+    "data/catalog/lip_color_reference_v3.json": "ce4a707179653bbcfef6342c3ef7e415d034b202db3d561ec6278e40b3e38eb8",
+    "data/catalog/review_catalog_v2.json": "78db14576ec68f0e5b0fa88edb3ec08f0bcf01cac76f74c47ffd4156125aee6e",
+    "data/demo-cases/experience.jpg": "1ca9d49e76af41286930936f6acff54752fd65c8eb185548ce038f38a19b241b",
+    "data/demo-cases/marketing.jpg": "4546d26ca6b693eade37d1d45f87582fe2a989fd56692764056f55a2494d0c81",
+    "data/demo-cases/variant.jpg": "9b94bf2248e2f49ad9858846e99e293d972e5b8e67d5926b6df08de5e29d4e44"
+  },
+  "profile": {
+    "skin": "黄皮",
+    "lip": "深唇",
+    "makeup": "淡妆"
+  },
+  "results": [
+    {
+      "case": "marketing",
+      "textScore": 0,
+      "imageColorSimilarity": 73,
+      "decision": "caution",
+      "roiNotes": "查看自动选区\n图片 1\n暖光（画面表现）\n画面偏暖，可能影响橘、棕调观感；不能仅凭像素确认真实光源。\n已自动分割上唇和下唇，排除皮肤、牙齿与口腔。\n与 YSL-610 官方标准图 的唇部颜色比较：感知色差 ΔE00 8.23，颜色相似度 73/100。\n唇部颜色与官方标准图较接近，但这不是真实性结论。"
+    },
+    {
+      "case": "variant",
+      "textScore": 46,
+      "imageColorSimilarity": 81,
+      "decision": "clarify",
+      "roiNotes": "查看自动选区\n图片 1\n暖光（画面表现）\n画面偏暖，可能影响橘、棕调观感；不能仅凭像素确认真实光源。\n已自动分割上唇和下唇，排除皮肤、牙齿与口腔。\n与 兰蔻 #274 声色限定原声裸茶 的唇部颜色比较：感知色差 ΔE00 5.59，颜色相似度 81/100。\n274 产品线未确认：这里只显示与三个官方标准图中最接近者的颜色相似度，不据此判断产品版本。\n唇部颜色与官方标准图较接近，但这不是真实性结论。"
+    },
+    {
+      "case": "experience",
+      "textScore": 100,
+      "imageColorSimilarity": 85,
+      "decision": "reference",
+      "roiNotes": "查看自动选区\n图片 1\n暖光（画面表现）\n画面偏暖，可能影响橘、棕调观感；不能仅凭像素确认真实光源。\n已自动分割上唇和下唇，排除皮肤、牙齿与口腔。\n与 YSL-610 官方标准图 的唇部颜色比较：感知色差 ΔE00 4.53，颜色相似度 85/100。\n唇部颜色与官方标准图较接近，但这不是真实性结论。"
+    }
+  ],
+  "limitations": "No independent human truth labels, calibrated trust probability, cross-product accuracy or business outcome was measured."
+}

@@ -1,4 +1,4 @@
-import {rankReferenceMedia} from './library-tags.js?v=20261006-personal-color-v5';
+import {rankReferenceMedia} from './library-tags.js?v=20261007-evidence-v10';
 
 export const PERSONAL_COLOR_SAMPLE_LIMIT=5;
 export const PREVIEW_VARIANTS=[
