@@ -13,18 +13,20 @@ network_cache={}
 def remote(route):
  url=route.request.url
  if url not in network_cache:
-  with urllib.request.urlopen(url,timeout=90) as r:network_cache[url]=(r.status,r.read(),r.headers.get('Content-Type','application/octet-stream'))
+  with urllib.request.urlopen(urllib.request.Request(url,headers={"Cache-Control":"no-cache"}),timeout=90) as r:network_cache[url]=(r.status,r.read(),r.headers.get('Content-Type','application/octet-stream'))
  status,body,ct=network_cache[url];route.fulfill(status=status,body=body,content_type=ct,headers={'Access-Control-Allow-Origin':'*'})
 result=[]
 with sync_playwright() as p:
  browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True)
  for width,height in [(1280,900),(390,844)]:
   ctx=browser.new_context(viewport={'width':width,'height':height})
+  if BASE.startswith('https://'):ctx.grant_permissions(['local-network-access'])
   if BASE.startswith('https://'):ctx.route(BASE+'/**',remote)
   ctx.route('https://cdn.jsdelivr.net/**',remote)
   ctx.route('**/models/resnet18.onnx',lambda r:r.fulfill(status=302,headers={'Access-Control-Allow-Origin':'*','Location':f'http://127.0.0.1:{server.server_port}/{model.name}'}))
   ctx.route('https://*.fcapp.run/**',lambda r:r.fulfill(status=200,body='{"media":[]}',content_type='application/json',headers={'Access-Control-Allow-Origin':'*'}))
   page=ctx.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+  page.on('requestfailed',lambda r:print('Network failure:',r.url.split('?')[0],r.failure,flush=True))
   def run(brand,shade,image,text):
    page.goto(BASE+'/#/seeded',wait_until='networkidle');page.wait_for_selector('#seed-run')
    page.locator('#seed-brand').fill(brand);page.locator('#seed-shade').fill(shade);page.locator('#seed-images').set_input_files(str(image));page.locator('#seed-text').fill(text);page.locator('#seed-run').click();page.wait_for_selector('.seed-report',timeout=240000)
