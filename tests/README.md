@@ -79,3 +79,7 @@ its own product/variant. Raw images remain in the external manifest directory.
 - `python tests/test_forensics.py`: desktop/mobile test bench, runtime results rather than preloaded labels, visible localisation and honest source-unavailable state.
 - `TRUETONE_REAL_FORENSICS=1 python tests/test_forensics.py`: actual checksum-verified quantized ViT running in browser WASM, including a documented held-out miss. Test downloads use verified TLS for the runtime and a local CORS server for verified model bytes to avoid large Playwright RPC payloads. It does not stub inference.
 - `node scripts/evaluate_forensic_reference.mjs test` and the Python generation evaluator produce held-out measurements. [Report](../docs/forensics/benchmark-report.md) defines the explicit source-gallery input, counterfactual edit labels, limitations and model failures. Runtime regression passes do not establish universal authenticity detection.
+
+## A/B/C acceptance
+
+`python tests/test_acceptance_abc.py` checks the actual main upload journey on desktop/mobile with real BiSeNet. It asserts orange overlay pixels, explicit no-source abstention, and separately checks absolute-claim and unknown-version advice while official-image colour similarity is at least 90. Requires authorised release originals via `TRUETONE_ORIGINAL_MANIFEST` (default local cache); `TRUETONE_TEST_URL` targets the live site. See [record](../docs/acceptance/abc-report.md).

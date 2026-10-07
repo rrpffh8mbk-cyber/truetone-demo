@@ -1,5 +1,5 @@
-import {analyzeVisualForensics} from './visual-forensics.js?v=20261007-forensic-v11';
-import {forensicHtml,bindGenerationChecks} from './forensic-ui.js?v=20261007-forensic-v11';
+import {analyzeVisualForensics} from './visual-forensics.js?v=20261007-acceptance-v12';
+import {forensicHtml,bindGenerationChecks} from './forensic-ui.js?v=20261007-acceptance-v12';
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));let sequence=0;
 async function check(file,context='用户上传图片，处理历史未知。'){
  const seq=++sequence;$('#forensic-result').innerHTML='<p>正在进行源图匹配和局部变化检测…</p>';const report=await analyzeVisualForensics(file);if(seq!==sequence)return;const original=URL.createObjectURL(file);$('#forensic-result').innerHTML=`<p class="scope-note">${esc(context)}</p><img class="forensic-original" src="${original}" alt="本次检查图片">${forensicHtml([report])}`;$('#forensic-result img').onload=()=>URL.revokeObjectURL(original);bindGenerationChecks($('#forensic-result'),[file]);

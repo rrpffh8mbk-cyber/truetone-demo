@@ -17,3 +17,12 @@ const coordinated=coordinateEvidence({hasImage:true,forensics:[{status:'local-ch
 assert.equal(coordinateEvidence({hasImage:true,forensics:[{status:'source-unavailable'}]}).stages[0].status,'unverified');
 assert.equal(summary.generation.usableAsAuthenticityGate,false);assert.equal(summary.generation.generatedDetected,0,'Keep documented model failures visible');
 console.log('Forensic content matching, benign controls, local edits, abstention, leakage and coordinator checks passed');
+// Unknown image verification cannot become a positive reference headline through detailed text.
+const detailed={score:100,riskLevel:'low',risks:[],variant:null};
+const unavailable=coordinateEvidence({textReport:detailed,visual:{score:100},hasImage:true,forensics:[{status:'source-unavailable'}]});
+assert.equal(unavailable.decision.level,'clarify');assert.match(unavailable.decision.title,/无法核验/);assert.equal(unavailable.truthProbability,null);
+const highRisk=coordinateEvidence({textReport:{...detailed,riskLevel:'high',risks:[{id:'universal'}]},visual:{score:100},hasImage:true,forensics:[{status:'no-local-change'}]});
+assert.equal(highRisk.decision.level,'caution');assert.ok(highRisk.actions.some(a=>a.id==='check-claims'));
+for(const id of ['unknown','legacy']){const version=coordinateEvidence({textReport:{...detailed,variant:{id}},visual:{score:100},hasImage:true,forensics:[{status:'no-local-change'}]});assert.equal(version.decision.level,'clarify');assert.ok(version.actions.some(a=>a.id==='confirm-version'))}
+const incomplete=coordinateEvidence({textReport:detailed,visual:{score:100},hasImage:true,forensics:[{status:'unavailable'}]});assert.equal(incomplete.decision.level,'clarify');
+console.log('A/B/C independence: no source abstains; perfect colour cannot cancel claims/version risks');

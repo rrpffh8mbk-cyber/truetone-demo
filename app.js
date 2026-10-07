@@ -1,15 +1,15 @@
-import {coordinateEvidence} from './trust-agent.js?v=20261007-forensic-v11';
-import {analyzeVisualForensics} from './visual-forensics.js?v=20261007-forensic-v11';
-import {forensicHtml,bindGenerationChecks} from './forensic-ui.js?v=20261007-forensic-v11';
-import {crossModalAssessment,visualCorpusAgreement} from './cross-modal.js?v=20261007-forensic-v11';
-import {assessEvidenceText,evidenceDecision,detectProductVariant} from './evidence-assessment.js?v=20261007-forensic-v11';
-import {DEMO_CASES} from './demo-cases.js?v=20261007-forensic-v11';
-import {buildBrandActionPlan} from './brand-actions.js?v=20261007-forensic-v11';
-import {buildPersonalColor,personalColorCopy,personalSampleCopy,defaultPreviewVariant,PREVIEW_VARIANTS} from './personal-color.js?v=20261007-forensic-v11';
-import {attachLibraryLabels,profileTagAssessment,rankReferenceMedia} from './library-tags.js?v=20261007-forensic-v11';
+import {coordinateEvidence} from './trust-agent.js?v=20261007-acceptance-v12';
+import {analyzeVisualForensics} from './visual-forensics.js?v=20261007-acceptance-v12';
+import {forensicHtml,bindGenerationChecks} from './forensic-ui.js?v=20261007-acceptance-v12';
+import {crossModalAssessment,visualCorpusAgreement} from './cross-modal.js?v=20261007-acceptance-v12';
+import {assessEvidenceText,evidenceDecision,detectProductVariant} from './evidence-assessment.js?v=20261007-acceptance-v12';
+import {DEMO_CASES} from './demo-cases.js?v=20261007-acceptance-v12';
+import {buildBrandActionPlan} from './brand-actions.js?v=20261007-acceptance-v12';
+import {buildPersonalColor,personalColorCopy,personalSampleCopy,defaultPreviewVariant,PREVIEW_VARIANTS} from './personal-color.js?v=20261007-acceptance-v12';
+import {attachLibraryLabels,profileTagAssessment,rankReferenceMedia} from './library-tags.js?v=20261007-acceptance-v12';
 import {compareUploadedColors,compareLipColor} from './color-similarity.js?v=20261006-official-v3';
 import {analyzeEvidenceFile} from './lip-selection.js?v=20261006-official-v3';
-import {runFourAgents,buildProductConsumerSummary,hsvToHex,ANALYSIS_KEYWORDS,circularHueDistance} from './agents.js?v=20261007-forensic-v11';
+import {runFourAgents,buildProductConsumerSummary,hsvToHex,ANALYSIS_KEYWORDS,circularHueDistance} from './agents.js?v=20261007-acceptance-v12';
 import {createVirtualTryOn} from './tryon.js?v=20261006-natural-gloss-v6';
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -588,7 +588,7 @@ async function seeded(){
 
   <div class="seeded-input-grid">
    <div class="seeded-upload-card">
-    <div class="eyebrow">02A · 图片证据</div><h3>上传种草图</h3><p>可以 1 张，也可以多张。自动找到唇部，对照标准图里的颜色；色差不能证明修图或真假。</p>
+    <div class="eyebrow">02A · 图片证据</div><h3>上传种草图</h3><p>可以 1 张，也可以多张。先核对可比源图的局部变化，再找唇部比较颜色；没有源图时明确保留无法判定。</p>
     <label class="seeded-drop" for="seed-images"><input class="native-image-input" id="seed-images" type="file" accept="image/*" multiple><b>＋ 选择一张或多张图片</b><span>JPG / PNG / WEBP（其他格式取决于浏览器）</span></label>
     <div class="seed-preview-grid" id="seed-preview-grid"></div>
    </div>
