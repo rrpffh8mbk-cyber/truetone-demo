@@ -1,0 +1,155 @@
+{
+  "version": "held-out-forensics-v1",
+  "date": "2026-10-07",
+  "reference": {
+    "negatives": 48,
+    "negativesFalsePositive": 0,
+    "positives": 60,
+    "positivesDetected": 40,
+    "meanIoUAllPositives": 0.3987031319844162,
+    "unmatchedPositives": 1
+  },
+  "generation": {
+    "threshold": 0.89,
+    "generated": 6,
+    "generatedDetected": 0,
+    "controlSignalsOverThreshold": 0,
+    "controls": 48,
+    "independentGenerationFamilies": 1,
+    "usableAsAuthenticityGate": false
+  },
+  "byKind": [
+    {
+      "kind": "control",
+      "label": "未施加新增编辑",
+      "positive": false,
+      "count": 12,
+      "detected": 0,
+      "unmatched": 0,
+      "meanIoU": 0.0
+    },
+    {
+      "kind": "jpeg",
+      "label": "JPEG 重压缩",
+      "positive": false,
+      "count": 12,
+      "detected": 0,
+      "unmatched": 0,
+      "meanIoU": 0.0
+    },
+    {
+      "kind": "resize",
+      "label": "缩小后恢复尺寸",
+      "positive": false,
+      "count": 12,
+      "detected": 0,
+      "unmatched": 0,
+      "meanIoU": 0.0
+    },
+    {
+      "kind": "exposure",
+      "label": "整体曝光 / 白平衡变化",
+      "positive": false,
+      "count": 12,
+      "detected": 0,
+      "unmatched": 0,
+      "meanIoU": 0.0
+    },
+    {
+      "kind": "local_color",
+      "label": "较轻局部改色",
+      "positive": true,
+      "count": 12,
+      "detected": 0,
+      "unmatched": 0,
+      "meanIoU": 0.0
+    },
+    {
+      "kind": "local_color_strong",
+      "label": "较强局部改色",
+      "positive": true,
+      "count": 12,
+      "detected": 12,
+      "unmatched": 0,
+      "meanIoU": 0.6705321914559462
+    },
+    {
+      "kind": "smoothing",
+      "label": "局部纹理平滑",
+      "positive": true,
+      "count": 12,
+      "detected": 5,
+      "unmatched": 0,
+      "meanIoU": 0.03729857151668225
+    },
+    {
+      "kind": "local_shadow",
+      "label": "局部明暗调整",
+      "positive": true,
+      "count": 12,
+      "detected": 12,
+      "unmatched": 0,
+      "meanIoU": 0.7809740234518534
+    },
+    {
+      "kind": "splice",
+      "label": "唇部拼接",
+      "positive": true,
+      "count": 12,
+      "detected": 11,
+      "unmatched": 1,
+      "meanIoU": 0.504710873497599
+    },
+    {
+      "kind": "ai_generated",
+      "label": "已知 AI 生成图",
+      "positive": false,
+      "count": 6,
+      "detected": 0,
+      "unmatched": 6,
+      "meanIoU": 0.0
+    }
+  ],
+  "failures": {
+    "missedLocalEdits": [
+      "sample-08f271df3a3f5f06-local_color",
+      "sample-8f5721d085d7a6a4-local_color",
+      "sample-9d8bbb690488ea43-local_color",
+      "sample-9d8bbb690488ea43-smoothing",
+      "sample-9d8bbb690488ea43-splice",
+      "sample-8eed99804a49b379-local_color",
+      "sample-0ba8b3b7cab06801-local_color",
+      "sample-0ba8b3b7cab06801-smoothing",
+      "sample-6e8b966b7605b724-local_color",
+      "sample-6f4c75e82534ebdd-local_color",
+      "sample-6f4c75e82534ebdd-smoothing",
+      "sample-2e796502ea2118c6-local_color",
+      "sample-2e796502ea2118c6-smoothing",
+      "sample-27e65a240e0f2aa0-local_color",
+      "sample-27e65a240e0f2aa0-smoothing",
+      "sample-5932bf5089af50ab-local_color",
+      "sample-5932bf5089af50ab-smoothing",
+      "sample-cf2f22b886e9a3b0-local_color",
+      "sample-840c6b222ce8d24a-local_color",
+      "sample-840c6b222ce8d24a-smoothing"
+    ],
+    "falseAlerts": [],
+    "missedGenerated": [
+      "generated-1-ai_generated",
+      "generated-2-ai_generated",
+      "generated-3-ai_generated",
+      "generated-4-ai_generated",
+      "generated-5-ai_generated",
+      "generated-6-ai_generated"
+    ]
+  },
+  "contracts": {
+    "sourceSplit": "12 calibration and 12 held-out source-post groups; donor posts stay in same split.",
+    "negativeDefinition": "No additional local editing applied by this benchmark; source authenticity is unknown.",
+    "referenceAssisted": "Gallery includes comparable baseline images as an explicit inference input; not a blind single-image forgery task.",
+    "generated": "Six crops from one independently generated contact sheet; all held-out, correlated, one generator family.",
+    "maskDefinition": "Applied alpha >0.05; actual controlled editing region, not claimed human annotation.",
+    "scope": "Four lipstick shades; controlled operations do not measure prevalence or real-world deception accuracy."
+  },
+  "frozenConfigSha256": "bd3ca0cd7fe1f4d0034c1c71cf847cde85a95a92dd0e15b53dddec91484b5539"
+}

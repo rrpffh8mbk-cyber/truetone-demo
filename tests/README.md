@@ -72,3 +72,10 @@ its own product/variant. Raw images remain in the external manifest directory.
 - `TRUETONE_REAL_CASES=1 python3 tests/test_evidence_journey.py`: same known three cases with verified real BiSeNet weights; additionally writes `data/evaluation/demo_cases_v1.json` as a reproducible measurement record. The website never reads this file as an answer. TLS and model checksums remain verified.
 
 - `node tests/cross-modal.test.mjs`: preserved concurrent upstream warm/cool/saturation comparison, unprovable shooting claims and exact-version nearest-image comparisons; separate from trust probability.
+
+## Visual forensics (2026-10-07)
+
+- `node tests/visual-forensics.test.mjs`: content-based original matching, benign compression/resize/exposure, actual localisation of controlled edits, abstention for unrelated/generated images, source/donor split isolation, frozen hashes and coordinator decisions.
+- `python tests/test_forensics.py`: desktop/mobile test bench, runtime results rather than preloaded labels, visible localisation and honest source-unavailable state.
+- `TRUETONE_REAL_FORENSICS=1 python tests/test_forensics.py`: actual checksum-verified quantized ViT running in browser WASM, including a documented held-out miss. Test downloads use verified TLS for the runtime and a local CORS server for verified model bytes to avoid large Playwright RPC payloads. It does not stub inference.
+- `node scripts/evaluate_forensic_reference.mjs test` and the Python generation evaluator produce held-out measurements. [Report](../docs/forensics/benchmark-report.md) defines the explicit source-gallery input, counterfactual edit labels, limitations and model failures. Runtime regression passes do not establish universal authenticity detection.

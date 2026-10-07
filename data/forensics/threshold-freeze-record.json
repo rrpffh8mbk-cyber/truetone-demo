@@ -1,0 +1,158 @@
+{
+  "version": "forensic-contract-v1",
+  "frozenAt": "2026-10-07T06:28:30.929Z",
+  "detector": {
+    "version": "reference-residual-v1",
+    "size": 128,
+    "matchMin": 0.97,
+    "residualMin": 16,
+    "minRegion": 18,
+    "minChangedFraction": 0.0015,
+    "smoothingPasses": 2
+  },
+  "generation": {
+    "signalThreshold": 0.89,
+    "thresholdMethod": "Upper bound of calibration controls + 0.05, rounded up. No known-generated positives used for calibration; not probability calibration.",
+    "calibrationControlMaximum": 0.8399646878242493
+  },
+  "selection": {
+    "targetFalsePositiveRate": 0.05,
+    "trials": [
+      {
+        "config": {
+          "version": "reference-residual-v1",
+          "size": 128,
+          "matchMin": 0.97,
+          "residualMin": 12,
+          "minRegion": 18,
+          "minChangedFraction": 0.0015,
+          "smoothingPasses": 1
+        },
+        "fp": 7,
+        "tp": 52,
+        "neg": 48,
+        "pos": 60,
+        "falsePositiveRate": 0.14583333333333334,
+        "recall": 0.8666666666666667
+      },
+      {
+        "config": {
+          "version": "reference-residual-v1",
+          "size": 128,
+          "matchMin": 0.97,
+          "residualMin": 16,
+          "minRegion": 18,
+          "minChangedFraction": 0.0015,
+          "smoothingPasses": 1
+        },
+        "fp": 3,
+        "tp": 38,
+        "neg": 48,
+        "pos": 60,
+        "falsePositiveRate": 0.0625,
+        "recall": 0.6333333333333333
+      },
+      {
+        "config": {
+          "version": "reference-residual-v1",
+          "size": 128,
+          "matchMin": 0.97,
+          "residualMin": 20,
+          "minRegion": 18,
+          "minChangedFraction": 0.0015,
+          "smoothingPasses": 1
+        },
+        "fp": 0,
+        "tp": 37,
+        "neg": 48,
+        "pos": 60,
+        "falsePositiveRate": 0,
+        "recall": 0.6166666666666667
+      },
+      {
+        "config": {
+          "version": "reference-residual-v1",
+          "size": 128,
+          "matchMin": 0.97,
+          "residualMin": 12,
+          "minRegion": 18,
+          "minChangedFraction": 0.0015,
+          "smoothingPasses": 2
+        },
+        "fp": 3,
+        "tp": 51,
+        "neg": 48,
+        "pos": 60,
+        "falsePositiveRate": 0.0625,
+        "recall": 0.85
+      },
+      {
+        "config": {
+          "version": "reference-residual-v1",
+          "size": 128,
+          "matchMin": 0.97,
+          "residualMin": 16,
+          "minRegion": 18,
+          "minChangedFraction": 0.0015,
+          "smoothingPasses": 2
+        },
+        "fp": 1,
+        "tp": 38,
+        "neg": 48,
+        "pos": 60,
+        "falsePositiveRate": 0.020833333333333332,
+        "recall": 0.6333333333333333
+      },
+      {
+        "config": {
+          "version": "reference-residual-v1",
+          "size": 128,
+          "matchMin": 0.97,
+          "residualMin": 20,
+          "minRegion": 18,
+          "minChangedFraction": 0.0015,
+          "smoothingPasses": 2
+        },
+        "fp": 0,
+        "tp": 37,
+        "neg": 48,
+        "pos": 60,
+        "falsePositiveRate": 0,
+        "recall": 0.6166666666666667
+      }
+    ],
+    "chosen": {
+      "config": {
+        "version": "reference-residual-v1",
+        "size": 128,
+        "matchMin": 0.97,
+        "residualMin": 16,
+        "minRegion": 18,
+        "minChangedFraction": 0.0015,
+        "smoothingPasses": 2
+      },
+      "fp": 1,
+      "tp": 38,
+      "neg": 48,
+      "pos": 60,
+      "falsePositiveRate": 0.020833333333333332,
+      "recall": 0.6333333333333333
+    }
+  },
+  "codeSha256": "bec2bbd1f75a1e2c7fe2bcf2ac36fb4a0ee22d5e6f001342a854579d9a319876",
+  "benchmarkSha256": "7e5730023182abbff7acb1bdf916f3a55e4ffc67349ea90bbbe8bef4ce039ada",
+  "calibrationGroups": [
+    "9650fee0be3743fc",
+    "875507333d1b8f87",
+    "a32eb3a584cddd63",
+    "263f0c81ab619af3",
+    "3b2449776714fffb",
+    "8d3060897e82b6df",
+    "5299011b39001a5b",
+    "70d44e3832e6d52d",
+    "79d266f0c9595b4a",
+    "896fd0810e7e0ad3",
+    "17537c212032806e",
+    "339ad35dc7770bfa"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "date": "2026-10-07",
+  "generatorTool": "image_gen",
+  "returnedGeneratorVersion": null,
+  "parentImage": "generated-contact-sheet.png",
+  "parentSha256": "b6fa50f7811acd4fa509520e42c25c1bfa83f4be7b37b60350bb6caf58ee5b05",
+  "independentGenerationFamilies": 1,
+  "description": "One 3-by-2 contact sheet of six fictional adult beauty-selfie portraits, varied light and lipstick finish, made during this task; each crop stays entirely in the held-out test. Generator exact version and a reproducible random seed are not exposed by the tool.",
+  "reference": "Crop rectangles and output SHA256 are recorded in benchmark.json."
+}

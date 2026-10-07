@@ -2,15 +2,16 @@
 
 **同一支口红，哪条试色值得参考？**
 
-不是看到一张漂亮照片就做购买决定。试色有谱先比较同产品的照片颜色与文案依据，再从可追溯的真人体验中优先找条件相近的证据。
+不是看到一张漂亮照片就做购买决定。试色有谱先检查图像处理线索，再比较同产品的照片颜色与文案依据，再从可追溯的真人体验中优先找条件相近的证据。
 
 [体验网站](https://rrpffh8mbk-cyber.github.io/truetone-demo/) · [演示与验证协议](docs/DEMO_PROTOCOL.md) · [数据来源](DATA_PROVENANCE.md) · [运行检查](tests/README.md)
 
-## 正式演示只证明三件事
+## 正式演示的四步核验
 
-1. **同一支口红为什么看起来不一样**：自动找唇部、对照对应版本的标准图，分别展示颜色差异与版本不确定性。不能凭色差断言修图或真假。
-2. **哪些证据值得参考**：检查本人条件、具体使用体验和绝对承诺；消费者支持与不同体验保留原文，不用好评率代替证据。
-3. **哪些证据更接近你**：在可靠样本中结合已确认的唇色、肤色、妆面推荐 TOP3。原生唇色只采用作者明确自述；条件缺失不补猜。
+1. **图像有哪些处理线索**：先核对可比源图的局部改色、纹理和拼接差异；缺少源图时放弃定位。实验性生成分类器不作为通过依据。
+2. **同一支口红为什么看起来不一样**：自动找唇部、对照对应版本的标准图，分别展示颜色差异与版本不确定性。不能凭色差断言修图或真假。
+3. **哪些证据值得参考**：检查本人条件、具体使用体验和绝对承诺；消费者支持与不同体验保留原文，不用好评率代替证据。
+4. **哪些证据更接近你**：在可靠样本中结合已确认的唇色、肤色、妆面推荐 TOP3。原生唇色只采用作者明确自述；条件缺失不补猜。
 
 首页主入口是“检查一条种草”，不填写个人条件也可使用。附件提供的三个固定案例已加入一键体验：夸张种草、274 版本混淆、具体使用体验。点击后由同一算法实际分析，不读取预设结果。它们是已知演示/压力测试案例，**不能当作独立盲测、准确率或跨品牌泛化证明**。
 
@@ -38,6 +39,9 @@
 
 | 机制 | 实现 |
 | --- | --- |
+| 可比源图的局部差异定位 | `visual-forensics.js`、`data/forensics/` |
+| 实验性全图生成模型 | `generation-signals.js` |
+| Evidence / Trust Agent 编排 | `trust-agent.js` |
 | 同产品、同版本边界与可追溯证据 | `review-text.js`、`data/catalog/`、`demo-cases.js` |
 | 可比较的唇部颜色 | `semantic-lips.js`、`lips.js`、`color-similarity.js` |
 | 图文冷暖/浓淡与样本近邻色差（辅助依据） | `cross-modal.js` |
@@ -55,3 +59,15 @@ python3 -m http.server 8000
 ```
 
 检查方法见 [tests/README.md](tests/README.md)。原始大文件在用户上传的 GitHub Release `data_original`，仓库保存派生数据、缩略图与使用记录。公开前端不保存大模型 API Key，云端语言整合失败时仍可运行本地证据分析。
+
+## 2026-10-07：按团队提供的赛题建议加入图像取证
+
+[可运行的篡改风险测试台](https://rrpffh8mbk-cyber.github.io/truetone-demo/forensics.html) 用内容匹配找到对应源图，再用全局曝光拟合与局部残差定位新增差异。不同人的照片、官方色差和标签匹配不充当伪造检测。主流程为 **视觉处理线索 → 图文一致性 → 同产品证据 → 个人参考 → 建议**；自拍预览仍为辅助体验。Evidence / Trust Agent 是专项模块的确定性编排器，不是四个独立 LLM 投票。
+
+[受控报告](docs/forensics/benchmark-report.md)：24 个原帖组，12 调参 / 12 保留测试，拼接供体不跨组；阈值冻结后，48 个正常处理对照的局部差异误报为 0，60 个新增编辑检出 40，所有新增编辑平均区域 IoU 为 0.399。**较轻改色 0/12 检出，已知生成图 0/6 触发模型**。不隐藏失败，不将原始模型响应包装为真假概率。6 个生成裁片来自一个生成家族，来源图片也未经真实相机原图认证，不能宣称通用造假识别准确率。
+
+可复核文件见 [测试清单](data/forensics/benchmark.json)、[冻结配置](data/forensics/frozen-config.json)、[汇总与漏检](data/forensics/test-summary.json) 和 [模型归属与校验](docs/forensics/MODEL_ATTRIBUTION.md)。已有色号评估示例仍是演示案例；新的受控实验也不替代真实内容的独立人工盲评。
+
+复现：`node scripts/evaluate_forensic_reference.mjs test`；按模型归属页安装 Python 依赖并校验冻结模型后运行 `scripts/evaluate_generation_model.py --phase test`，最后 `python scripts/summarize_forensics.py`。区域标签是实际受控操作的记录，不是检测模块预测后再当作答案。
+
+[六页新版演示稿](docs/forensics/TrueTone_Trust_Guardian_Demo.pptx) · [PDF](docs/forensics/TrueTone_Trust_Guardian_Demo.pdf)。所有数字对应这次实测；品牌收益以待验证的行动与指标表达，不承诺商业转化提升。
